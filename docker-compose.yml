@@ -1,0 +1,39 @@
+version: '3.1'
+
+services:
+
+  chrome-x86:
+    image: selenium/standalone-chrome:124.0
+    hostname: chrome
+    ports:
+      - "5900:5900"
+      - "4444:4444"
+    privileged: true
+    shm_size: 2g
+
+  chrome-arm:
+    image: seleniarm/standalone-chromium:124.0
+    hostname: chrome
+    ports:
+      - "5900:5900"
+      - "4444:4444"
+    privileged: true
+    shm_size: 2g
+
+  appointment-x86:
+      build:
+        context: .
+        dockerfile: Dockerfile
+      depends_on:
+        - chrome-x86
+      environment:
+        HOSTNAME: chrome-x86
+
+  appointment-arm:
+      build:
+        context: .
+        dockerfile: Dockerfile
+      depends_on:
+        - chrome-arm
+      environment:
+        HOSTNAME: chrome-arm

@@ -1,0 +1,4 @@
+selenium==4.8.2
+python-telegram-bot==20.7
+requests
+python-dotenv
