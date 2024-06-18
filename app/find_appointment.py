@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 import asyncio
 import json
@@ -9,14 +11,14 @@ from enum import Enum
 from dotenv import load_dotenv
 
 import telegram
-from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 
 import requests
 
+from selenium_utils import find_request, get_browser
+
 FAR_FAR_AWAY_IN_THE_FUTURE = datetime(2050, 1, 1)
 HTTP_UNAUTHORIZED = 401
-MAX_BROWSER_REQUEST_UPDATE_ATTEMPS = 10
 SELENIUM_IMPLICIT_WAIT = 10
 WAIT_SECONDS_BEETWEEN_ITERATIONS = 60 * 5
 
@@ -31,29 +33,15 @@ class DoctorNotFound(Exception):
 
 logger = logging.getLogger(__name__)
 
-def send_message(message: str, token: str) -> None:
+def send_message(message: str, token: str, chat_id: int) -> None:
     logger.info(message)
 
     async def _send(message):
         bot = telegram.Bot(token=token)
-        await bot.send_message(chat_id=658553143, text=message)
+        await bot.send_message(chat_id=chat_id, text=message)
 
     asyncio.run(_send(message))
 
-
-def get_browser(hostname:str, port: int) -> webdriver.Chrome:
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--no-sandbox")
-    options.add_argument("enable-automation")
-    options.add_argument("--disable-infobars")
-    options.add_argument("--disable-dev-shm-usage")
-    options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
-    options.set_capability("browserName", "chrome")
-    options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
-
-    return webdriver.Remote(command_executor=f"http://{hostname}:{port}", options=options)
 
 class Place(Enum):
     NUEVA_CBA = "NUEVA CBA"
@@ -66,7 +54,6 @@ def get_doctor_data(browser: webdriver.Chrome, name: str, place: Place):
 
     search_doctor_input = browser.find_element("id", "inputElementoBuscadorPortal")
     search_doctor_input.send_keys(name)
-    browser.implicitly_wait(SELENIUM_IMPLICIT_WAIT)
     selector = browser.find_element("xpath", f"//*[contains(text(), '{name}')]")
     (selector
         .find_element("xpath", "./..")
@@ -83,31 +70,6 @@ def get_doctor_data(browser: webdriver.Chrome, name: str, place: Place):
     return doctor_payload
 
 
-def find_request(browser: webdriver.Chrome, url: str):
-    """Finds a request sent in the browser logs.
-
-    This will only allow us to access the request payload (not the response)
-    This works because we enabled logging capabilities with
-        options.set_capability(
-           "goog:loggingPrefs", {"performance": "ALL"}
-    )
-    """
-    attempts = 1
-
-    while attempts < MAX_BROWSER_REQUEST_UPDATE_ATTEMPS:
-        logs = browser.get_log("performance")
-        for log in logs:
-            if 'message' in log:
-                message = json.loads(log['message'])
-                message = message.get('message', {})
-                if message.get('method') == 'Network.requestWillBeSent':
-                    request = message.get('params', {}).get('request', {})
-                    if request.get('url', '').endswith(url):
-                        return request
-
-        time.sleep(1)
-
-
 def get_auth(browser: webdriver.Chrome):
     """Gets the auth header from the browser requests.
 
@@ -117,7 +79,7 @@ def get_auth(browser: webdriver.Chrome):
     request = find_request(browser, 'ObtenerTurnosParaPortalPorFiltro')
     auth_header = request.get('headers', {}).get('Authorization')
     if not auth_header:
-        raise Exception('No auth found')
+        raise Exception('Check username or password')
 
     return auth_header
 
@@ -189,7 +151,15 @@ def setup_logging():
     logging.getLogger('seleniumwire.request').setLevel(logging.CRITICAL)
 
 
-def main(browser: webdriver.Chrome, user: str, password: str, doctor_name: str, place: Place):
+def main(
+    browser: webdriver.Chrome,
+    user: str,
+    password: str,
+    doctor_name: str,
+    place: Place,
+    telegram_token: str,
+    chat_id: int
+):
     logger.info("Logging-in")
 
     login(browser, user, password)
@@ -198,7 +168,9 @@ def main(browser: webdriver.Chrome, user: str, password: str, doctor_name: str, 
     doctor = get_doctor_data(browser, doctor_name, place)
     browser.close()
 
-    send_message(f'Will start looking for a better appointment for doctor {doctor_name} at {place}')
+    send_message(f'Will start looking for a better appointment for doctor {doctor_name} at {place.value}',
+                 chat_id=chat_id,
+                 token=telegram_token)
 
     best_date = FAR_FAR_AWAY_IN_THE_FUTURE
     while True:
@@ -211,13 +183,13 @@ def main(browser: webdriver.Chrome, user: str, password: str, doctor_name: str, 
                 break
 
             if best_date_so_far > best_date:
-                send_message(f'Lost better date: {best_date_so_far}')
+                send_message(f'Lost better date: {best_date_so_far}', chat_id=chat_id, token=telegram_token)
                 best_date = best_date_so_far
-                send_message(f'New better date: {best_date_so_far}')
+                send_message(f'New better date: {best_date_so_far}', chat_id=chat_id, token=telegram_token)
 
             if best_date_so_far < best_date:
                 best_date = best_date_so_far
-                send_message(f'Found better date: {best_date_so_far}')
+                send_message(f'Found better date: {best_date_so_far}', chat_id=chat_id, token=telegram_token)
 
             time.sleep(WAIT_SECONDS_BEETWEEN_ITERATIONS)
 
@@ -241,6 +213,7 @@ def get_value(args, name) -> str:
         'telegram_token': 'TELEGRAM_TOKEN',
         'doctor_name': 'DOCTOR_NAME',
         'place': 'PLACE',
+        'telegram_id': 'TELEGRAM_ID'
     }
 
     if name not in args:
@@ -259,11 +232,12 @@ def get_value(args, name) -> str:
 if __name__ == '__main__':
     setup_logging()
     parser = argparse.ArgumentParser()
-    parser.add_argument('--hostname', type=str, default='localhost')
-    parser.add_argument('--port', type=int, default=4444)
+    parser.add_argument('--hostname', type=str)
+    parser.add_argument('--port', type=int)
     parser.add_argument('--username', type=str)
     parser.add_argument('--password', type=str)
     parser.add_argument('--telegram_token', type=str)
+    parser.add_argument('--telegram_id', type=int)
     parser.add_argument('--doctor_name', type=str)
     parser.add_argument('--place', type=str)
 
@@ -278,16 +252,18 @@ if __name__ == '__main__':
     telegram_token = get_value(args_dict, 'telegram_token')
     doctor_name = get_value(args_dict, 'doctor_name')
     place = get_value(args_dict, 'place')
+    telegram_id = get_value(args_dict, 'telegram_id')
+
     if place in Place.__members__:
         place = Place[place]
     else:
         raise ValueError(f"Invalid place {place}. Must be one of {', '.join(Place.__members__)}")
 
     driver = get_browser(hostname, port)
-
+    driver.implicitly_wait(SELENIUM_IMPLICIT_WAIT)
 
     try:
-        main(driver, username , password, doctor_name, place)
+        main(driver, username , password, doctor_name, place, telegram_token, telegram_id)
 
     except Exception as e:
         logger.error(e)

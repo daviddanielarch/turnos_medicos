@@ -19,13 +19,21 @@ services:
       - "4444:4444"
     privileged: true
     shm_size: 2g
+    healthcheck:
+      test: /opt/bin/check-grid.sh --host 0.0.0.0 --port 4444
+      interval: 5s
+      timeout: 10s
+      retries: 5
 
   appointment-x86:
       build:
         context: .
         dockerfile: Dockerfile
       depends_on:
-        - chrome-x86
+        chrome-x86:
+          condition: service_healthy
+      env_file:
+        - .env
       environment:
         HOSTNAME: chrome-x86
 
@@ -34,6 +42,9 @@ services:
         context: .
         dockerfile: Dockerfile
       depends_on:
-        - chrome-arm
+        chrome-arm:
+          condition: service_healthy
+      env_file:
+        - .env
       environment:
         HOSTNAME: chrome-arm
