@@ -4,45 +4,27 @@ from django.utils import timezone
 
 from turnos.appointments import Allende
 from turnos.models import BestAppointmentFound, FindAppointment, PacienteAllende
-from turnos.selenium_utils import get_browser
+from turnos.services.auth import AllendeAuthService
 from turnos.telegram import send_message
 
 
 class Command(BaseCommand):
     help = "Find medical appointments"
 
-    def login(self, user: PacienteAllende):
-        driver = get_browser(settings.SELENIUM_HOSTNAME, settings.SELENIUM_PORT)
-        driver.implicitly_wait(settings.SELENIUM_IMPLICIT_WAIT)
-
-        allende = Allende(user.token)
-        auth_header = allende.login(driver, user.docid, user.password)
-        print(f"Updating token for {user.docid}")
-        user.token = auth_header
-        user.save()
-
-        driver.close()
-        driver.quit()
-
-        return auth_header
-
     def handle(self, *args, **options):
         user = PacienteAllende.objects.first()
-        if not Allende.is_authorized(user.token):
-            self.login(user)
-            # The token will get updated in the database
-            user.refresh_from_db()
+        auth_service = AllendeAuthService(user)
+        auth_service.login()
 
         allende = Allende(user.token)
-
         appointments_to_find = FindAppointment.objects.filter(active=True)
         for appointment in appointments_to_find:
             doctor_data = {
                 "IdPaciente": user.id_paciente,
-                "IdServicio": appointment.tipo_de_turno.id_servicio,
-                "IdSucursal": appointment.doctor.id_sucursal,
+                "IdServicio": appointment.doctor.especialidad.id_servicio,
+                "IdSucursal": appointment.doctor.especialidad.id_sucursal,
                 "IdRecurso": appointment.doctor.id_recurso,
-                "IdEspecialidad": appointment.doctor.id_especialidad,
+                "IdEspecialidad": appointment.doctor.especialidad.id_especialidad,
                 "IdTipoRecurso": appointment.doctor.id_tipo_recurso,
                 "Prestaciones": [
                     {

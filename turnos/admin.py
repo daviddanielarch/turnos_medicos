@@ -1,14 +1,18 @@
-from django.contrib import admin
 from django import forms
-from django.urls import path
-from django.http import JsonResponse
+from django.contrib import admin, messages
 from django.db.models import Q
+from django.http import JsonResponse
+from django.urls import path
+
+from turnos.services.data_loader import DataLoader
+
 from .models import (
-    FindAppointment,
+    AppointmentType,
     BestAppointmentFound,
-    PacienteAllende,
     Doctor,
-    TipoDeTurno,
+    Especialidad,
+    FindAppointment,
+    PacienteAllende,
 )
 
 
@@ -42,9 +46,11 @@ class FindAppointmentAdmin(admin.ModelAdmin):
 
     def get_tipos_turno(self, request, doctor_id):
         try:
-            doctor = Doctor.objects.get(id_recurso=doctor_id)
-            tipos_turno = TipoDeTurno.objects.filter(id_servicio=doctor.id_servicio)
-            data = [{"id": tt.id_tipo_turno, "name": tt.name} for tt in tipos_turno]
+            doctor = Doctor.objects.get(id=doctor_id)
+            tipos_turno = AppointmentType.objects.filter(
+                especialidad=doctor.especialidad
+            )
+            data = [{"id": tt.id, "name": tt.name} for tt in tipos_turno]
             return JsonResponse({"tipos_turno": data})
         except Doctor.DoesNotExist:
             return JsonResponse({"tipos_turno": []})
@@ -69,20 +75,64 @@ class DoctorAdmin(admin.ModelAdmin):
     list_display = [
         "name",
         "especialidad",
-        "servicio",
-        "sucursal",
         "id_recurso",
         "id_tipo_recurso",
-        "id_especialidad",
-        "id_sucursal",
-        "id_servicio",
     ]
-    list_filter = ["especialidad", "servicio", "sucursal"]
+    list_filter = ["especialidad"]
     search_fields = ["name"]
 
 
-@admin.register(TipoDeTurno)
+@admin.register(AppointmentType)
 class TipoDeTurnoAdmin(admin.ModelAdmin):
-    list_display = ["name", "id_tipo_turno", "id_servicio"]
-    list_filter = ["id_servicio"]
+    list_display = ["name", "id_tipo_turno"]
     search_fields = ["name"]
+
+
+@admin.register(Especialidad)
+class EspecialidadAdmin(admin.ModelAdmin):
+    list_display = ["name", "sucursal"]
+    search_fields = ["name"]
+    actions = ["load_data_for_especialidad"]
+
+    def load_data_for_especialidad(self, request, queryset):
+        """
+        Admin action to load appointment types and doctors data for selected especialidades
+        """
+        data_loader = DataLoader()
+        success_count = 0
+        error_count = 0
+
+        for especialidad in queryset:
+            try:
+                data_loader.load_especialidad(especialidad)
+                success_count += 1
+                self.message_user(
+                    request,
+                    f"Successfully loaded data for {especialidad.name}",
+                    messages.SUCCESS,
+                )
+            except Exception as e:
+                error_count += 1
+                self.message_user(
+                    request,
+                    f"Error loading data for {especialidad.name}: {str(e)}",
+                    messages.ERROR,
+                )
+
+        if success_count > 0:
+            self.message_user(
+                request,
+                f"Successfully loaded data for {success_count} especialidad(es)",
+                messages.SUCCESS,
+            )
+
+        if error_count > 0:
+            self.message_user(
+                request,
+                f"Failed to load data for {error_count} especialidad(es)",
+                messages.WARNING,
+            )
+
+    load_data_for_especialidad.short_description = (
+        "Load appointment types and doctors data"
+    )

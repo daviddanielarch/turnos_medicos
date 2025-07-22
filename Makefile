@@ -11,3 +11,6 @@ run-appointment-finder-x86:
 run-appointment-finder-arm:
 	docker-compose build
 	docker-compose up appointment-arm
+
+psql:
+	PGPASSWORD=pgpassword psql -h localhost -p 5433 -U pguser liftoff

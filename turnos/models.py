@@ -1,16 +1,34 @@
 from django.db import models
 
 
-SUCURSAL_CHOICES = [
-    ("Cerro", "CERRO"),
-    ("Nueva Cba", "NUEVA CBA"),
-]
-
-
-class TipoDeTurno(models.Model):
+class Especialidad(models.Model):
     name = models.CharField(max_length=255)
-    id_tipo_turno = models.IntegerField(primary_key=True)
-    id_servicio = models.IntegerField(db_index=True)
+    id_especialidad = models.IntegerField()
+    id_servicio = models.IntegerField()
+    id_sucursal = models.IntegerField()
+    sucursal = models.CharField(max_length=255)
+    servicio = models.CharField(max_length=255)
+
+    def from_json(self, json_data):
+        self.name = json_data["Especialidad"]
+        self.id_especialidad = json_data["IdEspecialidad"]
+        self.id_servicio = json_data["IdServicio"]
+        self.id_sucursal = json_data["IdSucursal"]
+        self.sucursal = json_data["Sucursal"]
+        self.servicio = json_data["Servicio"]
+        return self
+
+    def __str__(self):
+        return f"{self.name} - {self.sucursal}"
+
+    class Meta:
+        unique_together = ["id_especialidad", "id_sucursal", "id_servicio"]
+
+
+class AppointmentType(models.Model):
+    name = models.CharField(max_length=255)
+    id_tipo_turno = models.IntegerField()
+    especialidad = models.ForeignKey(Especialidad, on_delete=models.CASCADE)
 
     def from_json(self, json_data):
         """
@@ -30,6 +48,9 @@ class TipoDeTurno(models.Model):
     def __str__(self):
         return f"{self.name}"
 
+    class Meta:
+        unique_together = ["id_tipo_turno", "especialidad"]
+
 
 class Doctor(models.Model):
     """
@@ -37,50 +58,20 @@ class Doctor(models.Model):
     """
 
     name = models.CharField(max_length=255, db_index=True)
-    especialidad = models.CharField(max_length=255)
-    servicio = models.CharField(max_length=255)
-    sucursal = models.CharField(max_length=255)
-    id_recurso = models.IntegerField(primary_key=True)
+    id_recurso = models.IntegerField()
     id_tipo_recurso = models.IntegerField()
-    id_especialidad = models.IntegerField()
-    id_sucursal = models.IntegerField()
-    id_servicio = models.CharField(max_length=255)
-
-    @classmethod
-    def from_json(cls, json_data):
-        """
-        {
-            "IdRecurso": 23463,
-            "IdTipoRecurso": 1,
-            "NumeroMatricula": 23463,
-            "Nombre": "BARRERA ROSANA FABIANA",
-            "IdEspecialidad": 30,
-            "Especialidad": "ALERGIA",
-            "IdServicio": 9,
-            "Servicio": "ALERGIA",
-            "IdSucursal": 2,
-            "Sucursal": "CERRO"
-        }
-        """
-        doctor = cls()
-        doctor.name = json_data["Nombre"]
-        doctor.especialidad = json_data["Especialidad"]
-        doctor.servicio = json_data["Servicio"]
-        doctor.sucursal = json_data["Sucursal"]
-        doctor.id_recurso = json_data["IdRecurso"]
-        doctor.id_tipo_recurso = json_data["IdTipoRecurso"]
-        doctor.id_especialidad = json_data["IdEspecialidad"]
-        doctor.id_sucursal = json_data["IdSucursal"]
-        doctor.id_servicio = json_data["IdServicio"]
-        return doctor
+    especialidad = models.ForeignKey(Especialidad, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.name} - {self.especialidad} - {self.sucursal}"
+        return f"{self.name} - {self.especialidad} - {self.especialidad.sucursal}"
+
+    class Meta:
+        unique_together = ["id_recurso", "especialidad"]
 
 
 class FindAppointment(models.Model):
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
-    tipo_de_turno = models.ForeignKey(TipoDeTurno, on_delete=models.CASCADE)
+    tipo_de_turno = models.ForeignKey(AppointmentType, on_delete=models.CASCADE)
     active = models.BooleanField(default=False)
 
     def __str__(self):

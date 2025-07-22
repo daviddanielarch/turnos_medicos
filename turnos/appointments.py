@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
+import json
 import logging
 from datetime import datetime
 
 import requests
-from selenium import webdriver
 
-from turnos.selenium_utils import find_request
+from turnos.selenium_utils import SeleniumSettings, find_request, get_browser
 
 HTTP_OK = 200
 HTTP_UNAUTHORIZED = 401
@@ -20,35 +20,61 @@ logger = logging.getLogger(__name__)
 
 
 class Allende:
-    def __init__(self, auth_header: str = None):
+    def __init__(
+        self, auth_header: str = None, selenium_settings: SeleniumSettings = None
+    ):
         self.auth_header = auth_header
+        self.selenium_settings = selenium_settings
+        self.user_id = None
 
-    @classmethod
-    def login(self, browser: webdriver.Chrome, user: str, password: str):
-        if self.is_authorized():
+    def get_user_id(self):
+        return self.user_id
+
+    def get_auth_header(self):
+        return self.auth_header
+
+    def login(self, user: str, password: str):
+        if self.is_authorized(self.auth_header):
             return self.auth_header
 
-        # Open the login page URL
-        browser.get("https://miportal.sanatorioallende.com/auth/loginPortal")
+        browser = get_browser(
+            self.selenium_settings.hostname, self.selenium_settings.port
+        )
+        browser.implicitly_wait(self.selenium_settings.implicit_wait)
 
-        # Find the email and password fields
-        email_field = browser.find_element("name", "inputNroDocumento")
-        password_field = browser.find_element("name", "inputPassword")
+        try:
+            # Open the login page URL
+            browser.get("https://miportal.sanatorioallende.com/auth/loginPortal")
 
-        # Enter the email and password
-        email_field.send_keys(user)
-        password_field.send_keys(password)
+            # Find the email and password fields
+            email_field = browser.find_element("name", "inputNroDocumento")
+            password_field = browser.find_element("name", "inputPassword")
 
-        # Find the login button and click it
-        login_button = browser.find_element("xpath", "//button[@type='submit']")
-        login_button.click()
+            # Enter the email and password
+            email_field.send_keys(user)
+            password_field.send_keys(password)
 
-        request = find_request(self.browser, "ObtenerTurnosParaPortalPorFiltro")
-        auth_header = request.get("headers", {}).get("Authorization")
-        if not auth_header:
-            raise Exception("Check username or password")
+            # Find the login button and click it
+            login_button = browser.find_element("xpath", "//button[@type='submit']")
+            login_button.click()
 
-        self.auth_header = auth_header
+            request = find_request(browser, "ObtenerTurnosParaPortalPorFiltro")
+            auth_header = request.get("headers", {}).get("Authorization")
+            # get the user id from the request
+
+            self.user_id = json.loads(request.get("postData", {})).get("IdPaciente")
+            if not self.user_id:
+                raise Exception("Could not get user id")
+
+            self.auth_header = auth_header
+
+            if not auth_header:
+                raise Exception("Check username or password")
+
+        finally:
+            browser.close()
+            browser.quit()
+
         return auth_header
 
     @classmethod
@@ -95,3 +121,42 @@ class Allende:
             appointments.append(date_and_time)
 
         return appointments
+
+    def get_available_doctors(
+        self, id_especialidad: str, id_servicio: str, id_sucursal: str
+    ):
+        response = requests.get(
+            f"https://miportal.sanatorioallende.com/backend/api/recurso/ObtenerTodosDeUnServicioEnSucursalConEspecialidadParaPortalWeb/{id_servicio}/{id_sucursal}/{id_especialidad}/329130/2/1227/66",
+            headers={"authorization": self.auth_header},
+        )
+
+        if response.status_code == HTTP_UNAUTHORIZED:
+            raise UnauthorizedException()
+
+        """
+        Response is a list of this:
+            {
+                "Id": 23463,
+                "IdTipoRecurso": 1,
+                "TipoRecurso": "Profesional",
+                "Nombre": "BARRERA ROSANA FABIANA",
+                "Atiende": true,
+                "VisiblePortalWeb": true,
+                "Matricula": 23463,
+                "ProfesionalQueAtiende": null
+            },
+        """
+        return response.json()
+
+    def get_available_appointment_types(
+        self, id_especialidad: str, id_servicio: str, id_sucursal: str
+    ):
+        response = requests.get(
+            f"https://miportal.sanatorioallende.com/backend/api/PrestacionMedica/ObtenerPorRecursoEspecialidadServicioSucursalParaPortalWeb/0/0/{id_especialidad}/{id_servicio}/{id_sucursal}",
+            headers={"authorization": self.auth_header},
+        )
+
+        if response.status_code == HTTP_UNAUTHORIZED:
+            raise UnauthorizedException()
+
+        return response.json()

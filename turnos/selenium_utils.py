@@ -1,10 +1,17 @@
 import json
 import time
 
-from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 MAX_BROWSER_REQUEST_UPDATE_ATTEMPS = 10
+
+
+class SeleniumSettings:
+    def __init__(self, hostname: str, port: int, implicit_wait: int):
+        self.hostname = hostname
+        self.port = port
+        self.implicit_wait = implicit_wait
 
 
 def get_browser(hostname: str, port: int) -> webdriver.Chrome:

@@ -1,28 +1,17 @@
-from django.core.management.base import BaseCommand
-from turnos.models import TipoDeTurno, Doctor
 import json
+
+from django.conf import settings
+from django.core.management.base import BaseCommand
+
+from turnos.models import Especialidad
+from turnos.services.data_loader import DataLoader
 
 
 class Command(BaseCommand):
     help = "Populate the database with doctors parsed from the website"
 
     def handle(self, *args, **options):
-        doctor = json.loads(
-            """{
-            "IdRecurso": 23463,
-            "IdTipoRecurso": 1,
-            "NumeroMatricula": 23463,
-            "Nombre": "BARRERA ROSANA FABIANA",
-            "IdEspecialidad": 30,
-            "Especialidad": "ALERGIA",
-            "IdServicio": 9,
-            "Servicio": "ALERGIA",
-            "IdSucursal": 2,
-            "Sucursal": "CERRO"
-        }"""
-        )
-        doctor = Doctor.from_json(doctor)
-        doctor.save()
+        especialidades = Especialidad.objects.filter(name="ALERGIA")
 
-        tipo_de_turno = TipoDeTurno(id_tipo_turno=5495, name="Consulta", id_servicio=9)
-        tipo_de_turno.save()
+        for especialidad in especialidades:
+            DataLoader().load_especialidad(especialidad)

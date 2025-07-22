@@ -1,50 +1,19 @@
 version: '3.1'
 
 services:
-
-  chrome-x86:
-    image: selenium/standalone-chrome:124.0
-    hostname: chrome
+  postgres:
+    image: postgres:15
+    container_name: psql
+    environment:
+      POSTGRES_DB: liftoff
+      POSTGRES_USER: pguser
+      POSTGRES_PASSWORD: pgpassword
     ports:
-      - "5900:5900"
-      - "4444:4444"
-    privileged: true
-    shm_size: 2g
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
-  chrome-arm:
-    image: seleniarm/standalone-chromium:124.0
-    hostname: chrome
-    ports:
-      - "5900:5900"
-      - "4444:4444"
-    privileged: true
-    shm_size: 2g
-    healthcheck:
-      test: /opt/bin/check-grid.sh --host 0.0.0.0 --port 4444
-      interval: 5s
-      timeout: 10s
-      retries: 5
-
-  appointment-x86:
-      build:
-        context: .
-        dockerfile: Dockerfile
-      depends_on:
-        chrome-x86:
-          condition: service_healthy
-      env_file:
-        - .env
-      environment:
-        HOSTNAME: chrome-x86
-
-  appointment-arm:
-      build:
-        context: .
-        dockerfile: Dockerfile
-      depends_on:
-        chrome-arm:
-          condition: service_healthy
-      env_file:
-        - .env
-      environment:
-        HOSTNAME: chrome-arm
+volumes:
+  postgres_data:
+  redis_data:
