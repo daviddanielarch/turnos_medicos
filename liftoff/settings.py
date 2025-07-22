@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "turnos",
+    "sanatorio_allende",
 ]
 
 MIDDLEWARE = [
@@ -141,9 +141,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CSRF_TRUSTED_ORIGINS = ["https://app-service-production-ccd5.up.railway.app/*"]
 
 # Admin site configuration
-ADMIN_SITE_HEADER = "Turnos Allende"
-ADMIN_SITE_TITLE = "Turnos Allende"
-ADMIN_INDEX_TITLE = "Welcome to Turnos Allende"
+ADMIN_SITE_HEADER = "Sanatorio Allende"
+ADMIN_SITE_TITLE = "Sanatorio Allende"
+ADMIN_INDEX_TITLE = "Welcome to Sanatorio Allende"
 
 SELENIUM_HOSTNAME = os.environ.get("SELENIUM_HOSTNAME", "localhost")
 SELENIUM_PORT = os.environ.get("SELENIUM_PORT", 4444)
