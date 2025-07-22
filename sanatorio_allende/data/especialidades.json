@@ -1,0 +1,1341 @@
+{
+    "Especialidades": [
+        {
+            "IdEspecialidad": 21,
+            "Especialidad": "NEUROLOGIA",
+            "IdServicio": 7,
+            "Servicio": "NEUROLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 86,
+            "Especialidad": "VERTIGO",
+            "IdServicio": 7,
+            "Servicio": "NEUROLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 107,
+            "Especialidad": "ESCLEROSIS MULTIPLE",
+            "IdServicio": 7,
+            "Servicio": "NEUROLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 109,
+            "Especialidad": "NEUROMUSCULARES (MIASTENIA/MIOPATIAS)",
+            "IdServicio": 7,
+            "Servicio": "NEUROLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 111,
+            "Especialidad": "TRASTORNOS DE MEMORIA (DEMENCIA)",
+            "IdServicio": 7,
+            "Servicio": "NEUROLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 112,
+            "Especialidad": "TRASTORNOS DEL SUEÑO",
+            "IdServicio": 7,
+            "Servicio": "NEUROLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 75,
+            "Especialidad": "CLINICA MEDICA",
+            "IdServicio": 5,
+            "Servicio": "CLINICA MEDICA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 87,
+            "Especialidad": "GERONTOLOGIA",
+            "IdServicio": 5,
+            "Servicio": "CLINICA MEDICA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 146,
+            "Especialidad": "Unidad de Seguimiento Pos COVID",
+            "IdServicio": 5,
+            "Servicio": "CLINICA MEDICA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 75,
+            "Especialidad": "CLINICA MEDICA",
+            "IdServicio": 5,
+            "Servicio": "CLINICA MEDICA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 87,
+            "Especialidad": "GERONTOLOGIA",
+            "IdServicio": 5,
+            "Servicio": "CLINICA MEDICA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 146,
+            "Especialidad": "Unidad de Seguimiento Pos COVID",
+            "IdServicio": 5,
+            "Servicio": "CLINICA MEDICA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 112,
+            "Especialidad": "TRASTORNOS DEL SUEÑO",
+            "IdServicio": 7,
+            "Servicio": "NEUROLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 86,
+            "Especialidad": "VERTIGO",
+            "IdServicio": 7,
+            "Servicio": "NEUROLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 107,
+            "Especialidad": "ESCLEROSIS MULTIPLE",
+            "IdServicio": 7,
+            "Servicio": "NEUROLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 108,
+            "Especialidad": "Neurologia - PARKINSON TEMBLOR",
+            "IdServicio": 7,
+            "Servicio": "NEUROLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 109,
+            "Especialidad": "NEUROMUSCULARES (MIASTENIA/MIOPATIAS)",
+            "IdServicio": 7,
+            "Servicio": "NEUROLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 110,
+            "Especialidad": "EPILEPSIA/CONVULSIONES",
+            "IdServicio": 7,
+            "Servicio": "NEUROLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 111,
+            "Especialidad": "TRASTORNOS DE MEMORIA (DEMENCIA)",
+            "IdServicio": 7,
+            "Servicio": "NEUROLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 114,
+            "Especialidad": "ACV (ENFERMEDAD CEREBRO VASCULAR)",
+            "IdServicio": 7,
+            "Servicio": "NEUROLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 115,
+            "Especialidad": "DOLOR DE CABEZA (CEFALEA/MIGRAÑA)",
+            "IdServicio": 7,
+            "Servicio": "NEUROLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 21,
+            "Especialidad": "NEUROLOGIA",
+            "IdServicio": 7,
+            "Servicio": "NEUROLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 146,
+            "Especialidad": "Unidad de Seguimiento Pos COVID",
+            "IdServicio": 7,
+            "Servicio": "NEUROLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 2,
+            "Especialidad": "GINECOLOGIA",
+            "IdServicio": 8,
+            "Servicio": "GINECOLOGIA Y OBSTETRICIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 76,
+            "Especialidad": "Ginecología - OBSTETRICIA",
+            "IdServicio": 8,
+            "Servicio": "GINECOLOGIA Y OBSTETRICIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 78,
+            "Especialidad": "Ginecología - MASTOLOGIA",
+            "IdServicio": 8,
+            "Servicio": "GINECOLOGIA Y OBSTETRICIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 81,
+            "Especialidad": "Ginecología - MENOPAUSIA",
+            "IdServicio": 8,
+            "Servicio": "GINECOLOGIA Y OBSTETRICIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 82,
+            "Especialidad": "EMBARAZO DE RIESGO",
+            "IdServicio": 8,
+            "Servicio": "GINECOLOGIA Y OBSTETRICIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 154,
+            "Especialidad": "ASESORAMIENTO DE LACTANCIA",
+            "IdServicio": 8,
+            "Servicio": "GINECOLOGIA Y OBSTETRICIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 2,
+            "Especialidad": "GINECOLOGIA",
+            "IdServicio": 8,
+            "Servicio": "GINECOLOGIA Y OBSTETRICIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 76,
+            "Especialidad": "Ginecología - OBSTETRICIA",
+            "IdServicio": 8,
+            "Servicio": "GINECOLOGIA Y OBSTETRICIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 154,
+            "Especialidad": "ASESORAMIENTO DE LACTANCIA",
+            "IdServicio": 8,
+            "Servicio": "GINECOLOGIA Y OBSTETRICIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 24,
+            "Especialidad": "UROLOGIA",
+            "IdServicio": 4,
+            "Servicio": "UROLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 24,
+            "Especialidad": "UROLOGIA",
+            "IdServicio": 4,
+            "Servicio": "UROLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 7,
+            "Especialidad": "GASTROENTEROLOGIA",
+            "IdServicio": 13,
+            "Servicio": "GASTROENTEROLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 7,
+            "Especialidad": "GASTROENTEROLOGIA",
+            "IdServicio": 13,
+            "Servicio": "GASTROENTEROLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 126,
+            "Especialidad": "TABAQUISMO",
+            "IdServicio": 10,
+            "Servicio": "NEUMONOLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 10,
+            "Especialidad": "NEUMONOLOGIA",
+            "IdServicio": 10,
+            "Servicio": "NEUMONOLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 159,
+            "Especialidad": "PSIQUIATRIA",
+            "IdServicio": 17,
+            "Servicio": "SALUD MENTAL",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 41,
+            "Especialidad": "NUTRICION",
+            "IdServicio": 82,
+            "Servicio": "NUTRICION",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 42,
+            "Especialidad": "OBESOLOGIA CLINICA",
+            "IdServicio": 84,
+            "Servicio": "OBESOLOGIA CLINICA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 33,
+            "Especialidad": "INFECTOLOGIA",
+            "IdServicio": 16,
+            "Servicio": "INFECTOLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 14,
+            "Especialidad": "NEUROLOGIA PEDIATRICA",
+            "IdServicio": 77,
+            "Servicio": "NEUROLOGIA PEDIATRICA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 31,
+            "Especialidad": "CABEZA Y CUELLO",
+            "IdServicio": 14,
+            "Servicio": "CABEZA Y CUELLO",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 37,
+            "Especialidad": "DIABETES",
+            "IdServicio": 48,
+            "Servicio": "DIABETES",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 92,
+            "Especialidad": "DIABETES PEDIATRICA",
+            "IdServicio": 48,
+            "Servicio": "DIABETES",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 11,
+            "Especialidad": "ENDOCRINOLOGIA",
+            "IdServicio": 19,
+            "Servicio": "ENDOCRINOLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 8,
+            "Especialidad": "HEPATOLOGIA",
+            "IdServicio": 205,
+            "Servicio": "HEPATOLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 52,
+            "Especialidad": "LESIONES DE PIEL",
+            "IdServicio": 98,
+            "Servicio": "CIRUGIA PLASTICA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 117,
+            "Especialidad": "CIRUGIA ESTETICA Y RECONSTRUCTIVA",
+            "IdServicio": 98,
+            "Servicio": "CIRUGIA PLASTICA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 36,
+            "Especialidad": "REUMATOLOGIA",
+            "IdServicio": 31,
+            "Servicio": "REUMATOLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 30,
+            "Especialidad": "ALERGIA",
+            "IdServicio": 9,
+            "Servicio": "ALERGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 30,
+            "Especialidad": "ALERGIA",
+            "IdServicio": 9,
+            "Servicio": "ALERGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 31,
+            "Especialidad": "CABEZA Y CUELLO",
+            "IdServicio": 14,
+            "Servicio": "CABEZA Y CUELLO",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 52,
+            "Especialidad": "LESIONES DE PIEL",
+            "IdServicio": 98,
+            "Servicio": "CIRUGIA PLASTICA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 117,
+            "Especialidad": "CIRUGIA ESTETICA Y RECONSTRUCTIVA",
+            "IdServicio": 98,
+            "Servicio": "CIRUGIA PLASTICA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 37,
+            "Especialidad": "DIABETES",
+            "IdServicio": 48,
+            "Servicio": "DIABETES",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 82,
+            "Especialidad": "EMBARAZO DE RIESGO",
+            "IdServicio": 19,
+            "Servicio": "ENDOCRINOLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 11,
+            "Especialidad": "ENDOCRINOLOGIA",
+            "IdServicio": 19,
+            "Servicio": "ENDOCRINOLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 8,
+            "Especialidad": "HEPATOLOGIA",
+            "IdServicio": 205,
+            "Servicio": "HEPATOLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 33,
+            "Especialidad": "INFECTOLOGIA",
+            "IdServicio": 16,
+            "Servicio": "INFECTOLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 41,
+            "Especialidad": "NUTRICION",
+            "IdServicio": 82,
+            "Servicio": "NUTRICION",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 42,
+            "Especialidad": "OBESOLOGIA CLINICA",
+            "IdServicio": 84,
+            "Servicio": "OBESOLOGIA CLINICA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 36,
+            "Especialidad": "REUMATOLOGIA",
+            "IdServicio": 31,
+            "Servicio": "REUMATOLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 5,
+            "Especialidad": "ORL",
+            "IdServicio": 6,
+            "Servicio": "ORL",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 86,
+            "Especialidad": "VERTIGO",
+            "IdServicio": 6,
+            "Servicio": "ORL",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 47,
+            "Especialidad": "HEMATOLOGIA",
+            "IdServicio": 2,
+            "Servicio": "HEMATOLOGIA Y ONCOLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 48,
+            "Especialidad": "ONCOLOGIA",
+            "IdServicio": 2,
+            "Servicio": "HEMATOLOGIA Y ONCOLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 132,
+            "Especialidad": "ONCO-HEMATOLOGIA PEDIATRICA",
+            "IdServicio": 2,
+            "Servicio": "HEMATOLOGIA Y ONCOLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 131,
+            "Especialidad": "PSICO-ONCOLOGIA",
+            "IdServicio": 2,
+            "Servicio": "HEMATOLOGIA Y ONCOLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 38,
+            "Especialidad": "NEUROCIRUGIA",
+            "IdServicio": 63,
+            "Servicio": "NEUROCIRUGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 38,
+            "Especialidad": "NEUROCIRUGIA",
+            "IdServicio": 63,
+            "Servicio": "NEUROCIRUGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 91,
+            "Especialidad": "CIRUGIA GENERAL",
+            "IdServicio": 104,
+            "Servicio": "CIRUGIA GENERAL",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 4,
+            "Especialidad": "PROCTOLOGÍA",
+            "IdServicio": 104,
+            "Servicio": "CIRUGIA GENERAL",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 28,
+            "Especialidad": "CIRUGIA DE LA OBESIDAD",
+            "IdServicio": 176,
+            "Servicio": "CIRUGIA DE LA OBESIDAD",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 28,
+            "Especialidad": "CIRUGIA DE LA OBESIDAD",
+            "IdServicio": 176,
+            "Servicio": "CIRUGIA DE LA OBESIDAD",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 91,
+            "Especialidad": "CIRUGIA GENERAL",
+            "IdServicio": 104,
+            "Servicio": "CIRUGIA GENERAL",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 4,
+            "Especialidad": "PROCTOLOGÍA",
+            "IdServicio": 104,
+            "Servicio": "CIRUGIA GENERAL",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 5,
+            "Especialidad": "ORL",
+            "IdServicio": 6,
+            "Servicio": "ORL",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 155,
+            "Especialidad": "ORL PEDIATRICO",
+            "IdServicio": 6,
+            "Servicio": "ORL",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 61,
+            "Especialidad": "Traumatología de COLUMNA",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 54,
+            "Especialidad": "Traumatología del HOMBRO",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 57,
+            "Especialidad": "Traumatología de RODILLA",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 59,
+            "Especialidad": "Traumatología del TOBILLO",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 118,
+            "Especialidad": "Traumatología del DEPORTE Y ARTROSCOPIA",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 124,
+            "Especialidad": "ORTOPEDIA Y TRAUMATOLOGIA INFANTIL",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 119,
+            "Especialidad": "Traumatología GENERAL",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 120,
+            "Especialidad": "CIRUGIA DEL TRAUMA",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 122,
+            "Especialidad": "Traumatología de MIEMBROS SUPERIORES",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 58,
+            "Especialidad": "Traumatología de CADERA",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 121,
+            "Especialidad": "Traumatología - ONCOLOGIA ORTOPEDICA",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 61,
+            "Especialidad": "Traumatología de COLUMNA",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 54,
+            "Especialidad": "Traumatología del HOMBRO",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 57,
+            "Especialidad": "Traumatología de RODILLA",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 118,
+            "Especialidad": "Traumatología del DEPORTE Y ARTROSCOPIA",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 119,
+            "Especialidad": "Traumatología GENERAL",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 120,
+            "Especialidad": "CIRUGIA DEL TRAUMA",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 58,
+            "Especialidad": "Traumatología de CADERA",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 121,
+            "Especialidad": "Traumatología - ONCOLOGIA ORTOPEDICA",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 59,
+            "Especialidad": "Traumatología del TOBILLO",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 60,
+            "Especialidad": "Traumatología del PIE",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 122,
+            "Especialidad": "Traumatología de MIEMBROS SUPERIORES",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 124,
+            "Especialidad": "ORTOPEDIA Y TRAUMATOLOGIA INFANTIL",
+            "IdServicio": 1,
+            "Servicio": "TRAUMATOLOGIA -",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 47,
+            "Especialidad": "HEMATOLOGIA",
+            "IdServicio": 2,
+            "Servicio": "HEMATOLOGIA Y ONCOLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 48,
+            "Especialidad": "ONCOLOGIA",
+            "IdServicio": 2,
+            "Servicio": "HEMATOLOGIA Y ONCOLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 32,
+            "Especialidad": "DERMATOLOGIA",
+            "IdServicio": 15,
+            "Servicio": "DERMATOLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 10,
+            "Especialidad": "NEUMONOLOGIA",
+            "IdServicio": 10,
+            "Servicio": "NEUMONOLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 32,
+            "Especialidad": "DERMATOLOGIA",
+            "IdServicio": 15,
+            "Servicio": "DERMATOLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 97,
+            "Especialidad": "GASTROENTEROLOGÍA PEDRIÁTRICA",
+            "IdServicio": 11,
+            "Servicio": "PEDIATRIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 6,
+            "Especialidad": "PEDIATRIA",
+            "IdServicio": 11,
+            "Servicio": "PEDIATRIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 127,
+            "Especialidad": "ANESTESIA",
+            "IdServicio": 69,
+            "Servicio": "ANESTESIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 128,
+            "Especialidad": "REHABILITACION CARDIACA",
+            "IdServicio": 18,
+            "Servicio": "CARDIOLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 67,
+            "Especialidad": "MEDICINA VASCULAR",
+            "IdServicio": 18,
+            "Servicio": "CARDIOLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 64,
+            "Especialidad": "CARDIOLOGIA",
+            "IdServicio": 18,
+            "Servicio": "CARDIOLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 68,
+            "Especialidad": "CARDIOLOGIA INFANTIL",
+            "IdServicio": 18,
+            "Servicio": "CARDIOLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 64,
+            "Especialidad": "CARDIOLOGIA",
+            "IdServicio": 18,
+            "Servicio": "CARDIOLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 67,
+            "Especialidad": "MEDICINA VASCULAR",
+            "IdServicio": 18,
+            "Servicio": "CARDIOLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 128,
+            "Especialidad": "REHABILITACION CARDIACA",
+            "IdServicio": 18,
+            "Servicio": "CARDIOLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 68,
+            "Especialidad": "CARDIOLOGIA INFANTIL",
+            "IdServicio": 18,
+            "Servicio": "CARDIOLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 84,
+            "Especialidad": "CIRUGIA CARDIACA",
+            "IdServicio": 131,
+            "Servicio": "CIRUGIA CARDIACA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 84,
+            "Especialidad": "CIRUGIA CARDIACA",
+            "IdServicio": 131,
+            "Servicio": "CIRUGIA CARDIACA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 152,
+            "Especialidad": "Unidad de Dolor",
+            "IdServicio": 157,
+            "Servicio": "UNIDAD DE DOLOR",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 14,
+            "Especialidad": "NEUROLOGIA PEDIATRICA",
+            "IdServicio": 77,
+            "Servicio": "NEUROLOGIA PEDIATRICA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 137,
+            "Especialidad": "ECOGRAFIA",
+            "IdServicio": 34,
+            "Servicio": "DIAGNOSTICO POR IMAGENES",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 134,
+            "Especialidad": "MAMOGRAFIA",
+            "IdServicio": 34,
+            "Servicio": "DIAGNOSTICO POR IMAGENES",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 138,
+            "Especialidad": "DENSITOMETRIA",
+            "IdServicio": 34,
+            "Servicio": "DIAGNOSTICO POR IMAGENES",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 134,
+            "Especialidad": "MAMOGRAFIA",
+            "IdServicio": 34,
+            "Servicio": "DIAGNOSTICO POR IMAGENES",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 137,
+            "Especialidad": "ECOGRAFIA",
+            "IdServicio": 34,
+            "Servicio": "DIAGNOSTICO POR IMAGENES",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 138,
+            "Especialidad": "DENSITOMETRIA",
+            "IdServicio": 34,
+            "Servicio": "DIAGNOSTICO POR IMAGENES",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 95,
+            "Especialidad": "ENDOCRINOLOGÍA PEDIÁTRICA",
+            "IdServicio": 11,
+            "Servicio": "PEDIATRIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 97,
+            "Especialidad": "GASTROENTEROLOGÍA PEDRIÁTRICA",
+            "IdServicio": 11,
+            "Servicio": "PEDIATRIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 18,
+            "Especialidad": "NEFROLOGIA PEDIATRICA",
+            "IdServicio": 11,
+            "Servicio": "PEDIATRIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 96,
+            "Especialidad": "NEUMONOLOGÍA PEDIÁTRICA",
+            "IdServicio": 11,
+            "Servicio": "PEDIATRIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 6,
+            "Especialidad": "PEDIATRIA",
+            "IdServicio": 11,
+            "Servicio": "PEDIATRIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 145,
+            "Especialidad": "Dermatología Pediátrica",
+            "IdServicio": 11,
+            "Servicio": "PEDIATRIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 95,
+            "Especialidad": "ENDOCRINOLOGÍA PEDIÁTRICA",
+            "IdServicio": 170,
+            "Servicio": "ENDOCRINOLOGIA INFANTIL",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 92,
+            "Especialidad": "DIABETES PEDIATRICA",
+            "IdServicio": 214,
+            "Servicio": "DIABETOLOGIA PEDIÁTRICA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 92,
+            "Especialidad": "DIABETES PEDIATRICA",
+            "IdServicio": 214,
+            "Servicio": "DIABETOLOGIA PEDIÁTRICA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 144,
+            "Especialidad": "Donación de Sangre",
+            "IdServicio": 330,
+            "Servicio": "MEDICINA TRANSFUSIONAL",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 152,
+            "Especialidad": "Unidad de Dolor",
+            "IdServicio": 157,
+            "Servicio": "UNIDAD DE DOLOR",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 97,
+            "Especialidad": "GASTROENTEROLOGÍA PEDRIÁTRICA",
+            "IdServicio": 197,
+            "Servicio": "GASTROENTEROLOGIA PEDIATRICA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 98,
+            "Especialidad": "ALERGIA PEDIÁTRICA",
+            "IdServicio": 182,
+            "Servicio": "ALERGIA PEDIATRICA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 98,
+            "Especialidad": "ALERGIA PEDIÁTRICA",
+            "IdServicio": 182,
+            "Servicio": "ALERGIA PEDIATRICA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 18,
+            "Especialidad": "NEFROLOGIA PEDIATRICA",
+            "IdServicio": 198,
+            "Servicio": "NEFROLOGIA PEDIATRICA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 167,
+            "Servicio": "UROLOGIA PEDIATRICA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 74,
+            "Servicio": "NEFROLOGIA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 74,
+            "Servicio": "NEFROLOGIA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 178,
+            "Servicio": "TRASPLANTE HEPATICO",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 78,
+            "Servicio": "CIRUGIA VASCULAR",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 67,
+            "Servicio": "CIRUGIA DE TORAX",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 67,
+            "Servicio": "CIRUGIA DE TORAX",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 138,
+            "Servicio": "CIRUGIA PEDIATRICA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 171,
+            "Servicio": "PSICOLOGIA PEDIATRICA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 610,
+            "Servicio": "REUMATOLOGIA INFANTIL",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 167,
+            "Servicio": "UROLOGIA PEDIATRICA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 215,
+            "Servicio": "INFECTOLOGIA PEDIÁTRICA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 181,
+            "Servicio": "NEUMONOLOGIA PEDIATRICA",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 183,
+            "Servicio": "DERMATOLOGIA INFANTIL",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 184,
+            "Servicio": "ORL PEDIATRICO",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 186,
+            "Servicio": "SALUD MENTAL INFANTIL",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 620,
+            "Servicio": "Practicas Ginecologicas Ambulatorias",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 184,
+            "Servicio": "ORL PEDIATRICO",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 25,
+            "Servicio": "LABORATORIO CENTRAL",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 25,
+            "Servicio": "LABORATORIO CENTRAL",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 138,
+            "Servicio": "CIRUGIA PEDIATRICA",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 610,
+            "Servicio": "REUMATOLOGIA INFANTIL",
+            "IdSucursal": 1,
+            "Sucursal": "NUEVA CBA"
+        },
+        {
+            "IdEspecialidad": 0,
+            "Especialidad": null,
+            "IdServicio": 78,
+            "Servicio": "CIRUGIA VASCULAR",
+            "IdSucursal": 2,
+            "Sucursal": "CERRO"
+        }
+    ],
+    "Profesionales": []
+}
