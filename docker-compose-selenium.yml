@@ -1,0 +1,26 @@
+version: '3.1'
+
+services:
+
+  chrome-x86:
+    image: selenium/standalone-chrome:124.0
+    hostname: chrome
+    ports:
+      - "5900:5900"
+      - "4444:4444"
+    privileged: true
+    shm_size: 2g
+
+  chrome-arm:
+    image: seleniarm/standalone-chromium:124.0
+    hostname: chrome
+    ports:
+      - "5900:5900"
+      - "4444:4444"
+    privileged: true
+    shm_size: 2g
+    healthcheck:
+      test: /opt/bin/check-grid.sh --host 0.0.0.0 --port 4444
+      interval: 5s
+      timeout: 10s
+      retries: 5
