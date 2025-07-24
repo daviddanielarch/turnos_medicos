@@ -11,10 +11,6 @@ interface BestAppointment {
     location: string;
     tipo_de_turno: string;
     best_datetime: string;
-    formatted_datetime: string;
-    doctor_id: number;
-    tipo_de_turno_id: number;
-    appointment_wanted_id: number;
 }
 
 export default function BestAppointments() {

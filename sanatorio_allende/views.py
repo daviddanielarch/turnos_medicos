@@ -87,7 +87,6 @@ def api_create_appointment(request):
         doctor = Doctor.objects.get(id=doctor_id)
         appointment_type = AppointmentType.objects.get(id=appointment_type_id)
 
-        # Check if appointment already exists
         existing_appointment = FindAppointment.objects.filter(
             doctor=doctor, tipo_de_turno=appointment_type
         ).first()
@@ -105,7 +104,7 @@ def api_create_appointment(request):
         appointment = FindAppointment.objects.create(
             doctor=doctor,
             tipo_de_turno=appointment_type,
-            active=True,  # Default to active
+            active=True,
         )
 
         return JsonResponse(
@@ -215,12 +214,6 @@ def api_best_appointments(request):
                     "location": appointment.doctor.especialidad.sucursal,
                     "tipo_de_turno": appointment.tipo_de_turno.name,
                     "best_datetime": best_appointment.datetime.isoformat(),
-                    "formatted_datetime": best_appointment.datetime.strftime(
-                        "%d/%m/%Y %H:%M"
-                    ),
-                    "doctor_id": appointment.doctor.id,
-                    "tipo_de_turno_id": appointment.tipo_de_turno.id,
-                    "appointment_wanted_id": appointment.id,
                 }
             )
 
