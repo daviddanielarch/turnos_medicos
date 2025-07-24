@@ -2,6 +2,36 @@
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
+## Configuration
+
+### API Host Configuration
+
+The app needs to know where your Django backend API is running. You can configure this in several ways:
+
+1. **Environment Variable (Recommended)**: Create a `.env` file in the root directory:
+   ```
+   EXPO_PUBLIC_API_HOST=http://localhost:8000
+   ```
+
+2. **App Configuration**: Update the `app.json` file in the `extra.apiHost` field:
+   ```json
+   {
+     "expo": {
+       "extra": {
+         "apiHost": "http://localhost:8000"
+       }
+     }
+   }
+   ```
+
+3. **Default Fallback**: If neither is configured, it defaults to `http://localhost:8000`
+
+### Environment Variables
+
+- `EXPO_PUBLIC_API_HOST`: The base URL for your Django API backend
+  - Development: `http://localhost:8000`
+  - Production: `https://your-api-domain.com`
+
 ## Get started
 
 1. Install dependencies
@@ -10,7 +40,9 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+2. Configure your API host (see Configuration section above)
+
+3. Start the app
 
    ```bash
    npx expo start

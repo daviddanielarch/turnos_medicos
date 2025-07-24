@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { API_ENDPOINTS } from "./config";
 import { COLORS } from "./constants";
 
 interface Item {
@@ -24,7 +25,7 @@ export default function Index() {
   const fetchAppointments = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/find-appointments/');
+      const response = await fetch(API_ENDPOINTS.FIND_APPOINTMENTS);
       const data = await response.json();
 
       if (data.success) {
@@ -49,7 +50,7 @@ export default function Index() {
 
   const updateAppointmentStatus = async (appointmentId: number, active: boolean) => {
     try {
-      const response = await fetch('http://localhost:8000/api/update-appointment-status/', {
+      const response = await fetch(API_ENDPOINTS.UPDATE_APPOINTMENT_STATUS, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

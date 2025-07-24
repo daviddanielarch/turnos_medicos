@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { API_ENDPOINTS } from "./config";
 import { COLORS } from "./constants";
 
 interface Item {
@@ -37,7 +38,7 @@ export default function Search() {
     const fetchDoctors = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8000/api/doctors/');
+            const response = await fetch(API_ENDPOINTS.DOCTORS);
             const data = await response.json();
 
             if (data.success) {
@@ -55,7 +56,7 @@ export default function Search() {
     const fetchAppointmentTypes = async (doctorId: number) => {
         setLoadingServices(true);
         try {
-            const response = await fetch(`http://localhost:8000/api/appointment-types/?doctor_id=${doctorId}`);
+            const response = await fetch(`${API_ENDPOINTS.APPOINTMENT_TYPES}?doctor_id=${doctorId}`);
             const data = await response.json();
 
             if (data.success) {
@@ -109,7 +110,7 @@ export default function Search() {
     const handleAdd = async () => {
         if (selectedItem && selectedService) {
             try {
-                const response = await fetch('http://localhost:8000/api/create-appointment/', {
+                const response = await fetch(API_ENDPOINTS.CREATE_APPOINTMENT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
