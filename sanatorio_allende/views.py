@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-from .models import AppointmentType, Doctor, FindAppointment
+from .models import AppointmentType, BestAppointmentFound, Doctor, FindAppointment
 
 
 @csrf_exempt
@@ -188,5 +188,42 @@ def api_update_appointment_status(request):
         return JsonResponse(
             {"success": False, "error": "Appointment not found"}, status=404
         )
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def api_best_appointments(request):
+    """API endpoint to get all BestAppointmentFound objects"""
+    try:
+        best_appointments = BestAppointmentFound.objects.select_related(
+            "appointment_wanted",
+            "appointment_wanted__doctor",
+            "appointment_wanted__doctor__especialidad",
+            "appointment_wanted__tipo_de_turno",
+        ).all()
+
+        appointments_data = []
+        for best_appointment in best_appointments:
+            appointment = best_appointment.appointment_wanted
+            appointments_data.append(
+                {
+                    "id": best_appointment.id,
+                    "doctor_name": appointment.doctor.name,
+                    "especialidad": appointment.doctor.especialidad.name,
+                    "location": appointment.doctor.especialidad.sucursal,
+                    "tipo_de_turno": appointment.tipo_de_turno.name,
+                    "best_datetime": best_appointment.datetime.isoformat(),
+                    "formatted_datetime": best_appointment.datetime.strftime(
+                        "%d/%m/%Y %H:%M"
+                    ),
+                    "doctor_id": appointment.doctor.id,
+                    "tipo_de_turno_id": appointment.tipo_de_turno.id,
+                    "appointment_wanted_id": appointment.id,
+                }
+            )
+
+        return JsonResponse({"success": True, "best_appointments": appointments_data})
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=500)

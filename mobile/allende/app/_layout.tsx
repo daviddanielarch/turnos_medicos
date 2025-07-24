@@ -29,6 +29,15 @@ export default function RootLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="best-appointments"
+        options={{
+          title: "Mejores turnos",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="calendar" size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
