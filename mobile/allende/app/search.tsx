@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { COLORS } from "./constants";
 
 interface Item {
@@ -14,6 +15,7 @@ interface ServiceOption {
     id: string;
     name: string;
     description: string;
+    id_tipo_turno: number;
 }
 
 export default function Search() {
@@ -23,23 +25,50 @@ export default function Search() {
     const [showDropdown, setShowDropdown] = useState(false);
     const [showServiceDropdown, setShowServiceDropdown] = useState(false);
     const [filteredItems, setFilteredItems] = useState<Item[]>([]);
+    const [allItems, setAllItems] = useState<Item[]>([]);
+    const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [loadingServices, setLoadingServices] = useState(false);
 
-    // Debug: Log when component mounts
     useEffect(() => {
-        console.log("Search component loaded!");
+        fetchDoctors();
     }, []);
 
-    const allItems: Item[] = [
-        { id: 1, name: "BARRERA ROSANA FABIANA", especialidad: "Alergia", location: "Cerro" },
-        { id: 2, name: "BARRERA ROSANA FABIANA", especialidad: "Alergia", location: "Nueva Cba" },
-    ];
+    const fetchDoctors = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch('http://localhost:8000/api/doctors/');
+            const data = await response.json();
 
-    const serviceOptions: ServiceOption[] = [
-        { id: "consulta", name: "Consulta", description: "Medical consultation appointment" },
-        { id: "tratamiento", name: "Tratamiento", description: "Treatment and therapy sessions" },
-        { id: "control", name: "Control", description: "Follow-up and monitoring" },
-        { id: "emergencia", name: "Emergencia", description: "Emergency care" },
-    ];
+            if (data.success) {
+                setAllItems(data.doctors);
+            } else {
+                console.error('Failed to fetch doctors:', data.error);
+            }
+        } catch (error) {
+            console.error('Error fetching doctors:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchAppointmentTypes = async (doctorId: number) => {
+        setLoadingServices(true);
+        try {
+            const response = await fetch(`http://localhost:8000/api/appointment-types/?doctor_id=${doctorId}`);
+            const data = await response.json();
+
+            if (data.success) {
+                setServiceOptions(data.appointment_types);
+            } else {
+                console.error('Failed to fetch appointment types:', data.error);
+            }
+        } catch (error) {
+            console.error('Error fetching appointment types:', error);
+        } finally {
+            setLoadingServices(false);
+        }
+    };
 
     const handleSearch = (text: string) => {
         setSearchText(text);
@@ -48,7 +77,8 @@ export default function Search() {
         } else {
             const filtered = allItems.filter(item =>
                 item.name.toLowerCase().includes(text.toLowerCase()) ||
-                item.location.toLowerCase().includes(text.toLowerCase())
+                item.location.toLowerCase().includes(text.toLowerCase()) ||
+                item.especialidad.toLowerCase().includes(text.toLowerCase())
             );
             setFilteredItems(filtered);
         }
@@ -59,7 +89,8 @@ export default function Search() {
         setSearchText(item.name);
         setFilteredItems([]);
         setShowDropdown(false);
-        setSelectedService(null); // Reset service selection when department changes
+        setSelectedService(null);
+        fetchAppointmentTypes(item.id);
     };
 
     const selectService = (service: ServiceOption) => {
@@ -72,13 +103,37 @@ export default function Search() {
         setSelectedService(null);
         setSearchText("");
         setFilteredItems([]);
+        setServiceOptions([]);
     };
 
-    const handleAdd = () => {
+    const handleAdd = async () => {
         if (selectedItem && selectedService) {
-            console.log('Adding department with service:', { department: selectedItem, service: selectedService });
-            // Here you can add logic to add the department with selected service
-            clearSelection();
+            try {
+                const response = await fetch('http://localhost:8000/api/create-appointment/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        doctor_id: selectedItem.id,
+                        appointment_type_id: selectedService.id
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('Appointment created successfully:', data.message);
+                    clearSelection();
+                    router.push("/");
+                } else {
+                    console.error('Failed to create appointment:', data.error);
+                    Alert.alert('Error', data.error || 'Failed to create appointment');
+                }
+            } catch (error) {
+                console.error('Error creating appointment:', error);
+                Alert.alert('Error', 'Network error while creating appointment');
+            }
         }
     };
 
@@ -125,8 +180,29 @@ export default function Search() {
                     )}
                 </View>
 
+                {/* Loading State */}
+                {loading && (
+                    <View style={{
+                        backgroundColor: 'white',
+                        borderRadius: 16,
+                        padding: 32,
+                        marginBottom: 24,
+                        alignItems: 'center',
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 8,
+                        elevation: 3,
+                    }}>
+                        <ActivityIndicator size="large" color={COLORS.PRIMARY} />
+                        <Text style={{ fontSize: 16, color: '#6b7280', marginTop: 16 }}>
+                            Cargando médicos...
+                        </Text>
+                    </View>
+                )}
+
                 {/* Search Results Dropdown */}
-                {showDropdown && filteredItems.length > 0 && (
+                {showDropdown && filteredItems.length > 0 && !loading && (
                     <View style={{
                         backgroundColor: 'white',
                         borderRadius: 16,
@@ -179,7 +255,7 @@ export default function Search() {
                 )}
 
                 {/* No Results Message */}
-                {showDropdown && filteredItems.length === 0 && searchText.trim() !== "" && (
+                {showDropdown && filteredItems.length === 0 && searchText.trim() !== "" && !loading && (
                     <View style={{
                         backgroundColor: 'white',
                         borderRadius: 16,
@@ -251,44 +327,63 @@ export default function Search() {
                             <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 12, color: '#111827' }}>
                                 Tipo de turno
                             </Text>
-                            <TouchableOpacity
-                                style={{
+
+                            {loadingServices ? (
+                                <View style={{
                                     backgroundColor: 'white',
                                     borderRadius: 12,
                                     paddingHorizontal: 16,
                                     paddingVertical: 14,
                                     borderWidth: 1,
-                                    borderColor: selectedService ? COLORS.PRIMARY : '#e5e7eb',
+                                    borderColor: '#e5e7eb',
                                     flexDirection: 'row',
-                                    justifyContent: 'space-between',
                                     alignItems: 'center',
-                                    shadowColor: '#000',
-                                    shadowOffset: { width: 0, height: 1 },
-                                    shadowOpacity: 0.05,
-                                    shadowRadius: 2,
-                                    elevation: 1,
-                                }}
-                                onPress={() => setShowServiceDropdown(!showServiceDropdown)}
-                            >
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Ionicons name="medical" size={18} color="#6b7280" style={{ marginRight: 10 }} />
-                                    <Text style={{
-                                        fontSize: 16,
-                                        color: selectedService ? '#111827' : '#6b7280',
-                                        fontWeight: selectedService ? '500' : '400'
-                                    }}>
-                                        {selectedService ? selectedService.name : 'Choose service type...'}
+                                }}>
+                                    <ActivityIndicator size="small" color={COLORS.PRIMARY} style={{ marginRight: 10 }} />
+                                    <Text style={{ fontSize: 16, color: '#6b7280' }}>
+                                        Cargando tipos de turno...
                                     </Text>
                                 </View>
-                                <Ionicons
-                                    name={showServiceDropdown ? "chevron-up" : "chevron-down"}
-                                    size={18}
-                                    color="#6b7280"
-                                />
-                            </TouchableOpacity>
+                            ) : (
+                                <TouchableOpacity
+                                    style={{
+                                        backgroundColor: 'white',
+                                        borderRadius: 12,
+                                        paddingHorizontal: 16,
+                                        paddingVertical: 14,
+                                        borderWidth: 1,
+                                        borderColor: selectedService ? COLORS.PRIMARY : '#e5e7eb',
+                                        flexDirection: 'row',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        shadowColor: '#000',
+                                        shadowOffset: { width: 0, height: 1 },
+                                        shadowOpacity: 0.05,
+                                        shadowRadius: 2,
+                                        elevation: 1,
+                                    }}
+                                    onPress={() => setShowServiceDropdown(!showServiceDropdown)}
+                                >
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <Ionicons name="medical" size={18} color="#6b7280" style={{ marginRight: 10 }} />
+                                        <Text style={{
+                                            fontSize: 16,
+                                            color: selectedService ? '#111827' : '#6b7280',
+                                            fontWeight: selectedService ? '500' : '400'
+                                        }}>
+                                            {selectedService ? selectedService.name : 'Choose service type...'}
+                                        </Text>
+                                    </View>
+                                    <Ionicons
+                                        name={showServiceDropdown ? "chevron-up" : "chevron-down"}
+                                        size={18}
+                                        color="#6b7280"
+                                    />
+                                </TouchableOpacity>
+                            )}
 
                             {/* Service Options Dropdown */}
-                            {showServiceDropdown && (
+                            {showServiceDropdown && serviceOptions.length > 0 && (
                                 <View style={{
                                     backgroundColor: 'white',
                                     borderRadius: 12,

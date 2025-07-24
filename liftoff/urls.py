@@ -9,20 +9,22 @@ Function views
     2. Add a URL to urlpatterns:  path('', views.home, name='home')
 Class-based views
     1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+    2. Add a URL to urlpatterns:  path('', views.Home.as_view(), name='home')
 Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path
+
 from django.conf import settings
+from django.contrib import admin
+from django.urls import include, path
 
 # Configure admin site
-admin.site.site_header = getattr(settings, 'ADMIN_SITE_HEADER', 'Fer App')
-admin.site.site_title = getattr(settings, 'ADMIN_SITE_TITLE', 'Fer App')
-admin.site.index_title = getattr(settings, 'ADMIN_INDEX_TITLE', 'Welcome to Fer App')
+admin.site.site_header = getattr(settings, "ADMIN_SITE_HEADER", "Fer App")
+admin.site.site_title = getattr(settings, "ADMIN_SITE_TITLE", "Fer App")
+admin.site.index_title = getattr(settings, "ADMIN_INDEX_TITLE", "Welcome to Fer App")
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
+    path("", include("sanatorio_allende.urls")),
 ]
