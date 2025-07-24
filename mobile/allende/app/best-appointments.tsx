@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import backgroundService from "../services/backgroundService";
 import { API_ENDPOINTS } from "./config";
 import { COLORS } from "./constants";
 
@@ -16,6 +17,7 @@ interface BestAppointment {
 export default function BestAppointments() {
     const [bestAppointments, setBestAppointments] = useState<BestAppointment[]>([]);
     const [loading, setLoading] = useState(false);
+    const [testingNotification, setTestingNotification] = useState(false);
 
     useEffect(() => {
         fetchBestAppointments();
@@ -31,13 +33,32 @@ export default function BestAppointments() {
                 setBestAppointments(data.best_appointments);
             } else {
                 console.error('Failed to fetch best appointments:', data.error);
+                console.error(API_ENDPOINTS.BEST_APPOINTMENTS);
                 Alert.alert('Error', 'Failed to load best appointments');
             }
         } catch (error) {
             console.error('Error fetching best appointments:', error);
+            console.error(API_ENDPOINTS.BEST_APPOINTMENTS);
             Alert.alert('Error', 'Network error while loading best appointments');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const testNotification = async () => {
+        setTestingNotification(true);
+        try {
+            const hasNewAppointments = await backgroundService.manualCheck();
+            if (hasNewAppointments) {
+                Alert.alert('Éxito', 'Se encontraron nuevos turnos y se envió la notificación');
+            } else {
+                Alert.alert('Info', 'No se encontraron nuevos turnos en los últimos 30 segundos');
+            }
+        } catch (error) {
+            console.error('Error testing notification:', error);
+            Alert.alert('Error', 'Ocurrió un error al probar la notificación');
+        } finally {
+            setTestingNotification(false);
         }
     };
 
@@ -81,10 +102,25 @@ export default function BestAppointments() {
     return (
         <View style={{ flex: 1, paddingTop: 50, backgroundColor: '#f8fafc' }}>
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Mejores Turnos Encontrados</Text>
-                <Text style={styles.headerSubtitle}>
-                    {bestAppointments.length} turno{bestAppointments.length !== 1 ? 's' : ''} encontrado{bestAppointments.length !== 1 ? 's' : ''}
-                </Text>
+                <View style={styles.headerContent}>
+                    <View>
+                        <Text style={styles.headerTitle}>Mejores Turnos Encontrados</Text>
+                        <Text style={styles.headerSubtitle}>
+                            {bestAppointments.length} turno{bestAppointments.length !== 1 ? 's' : ''} encontrado{bestAppointments.length !== 1 ? 's' : ''}
+                        </Text>
+                    </View>
+                    <TouchableOpacity
+                        style={[styles.notificationButton, testingNotification && styles.notificationButtonDisabled]}
+                        onPress={testNotification}
+                        disabled={testingNotification}
+                    >
+                        <Ionicons
+                            name={testingNotification ? "hourglass" : "notifications"}
+                            size={20}
+                            color={testingNotification ? "#9ca3af" : COLORS.PRIMARY}
+                        />
+                    </TouchableOpacity>
+                </View>
             </View>
 
             <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -126,6 +162,11 @@ const styles = {
         paddingHorizontal: 20,
         paddingBottom: 20,
     },
+    headerContent: {
+        flexDirection: 'row' as const,
+        justifyContent: 'space-between' as const,
+        alignItems: 'flex-start' as const,
+    },
     headerTitle: {
         fontSize: 28,
         fontWeight: 'bold' as const,
@@ -135,6 +176,17 @@ const styles = {
     headerSubtitle: {
         fontSize: 16,
         color: '#6b7280',
+    },
+    notificationButton: {
+        backgroundColor: '#f3f4f6',
+        padding: 8,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+    },
+    notificationButtonDisabled: {
+        backgroundColor: '#f9fafb',
+        borderColor: '#f3f4f6',
     },
     container: {
         flex: 1,
@@ -176,7 +228,7 @@ const styles = {
     },
     location: {
         fontSize: 14,
-        color: '#9ca3af',
+        color: '#6b7280',
     },
     appointmentType: {
         backgroundColor: COLORS.PRIMARY,
@@ -185,9 +237,9 @@ const styles = {
         borderRadius: 6,
     },
     appointmentTypeText: {
-        fontSize: 12,
-        fontWeight: '500' as const,
         color: 'white',
+        fontSize: 12,
+        fontWeight: '600' as const,
     },
     datetimeContainer: {
         flexDirection: 'row' as const,
@@ -195,18 +247,18 @@ const styles = {
         marginBottom: 12,
         paddingVertical: 8,
         paddingHorizontal: 12,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: '#f8fafc',
         borderRadius: 8,
     },
     datetimeText: {
-        fontSize: 16,
-        fontWeight: '500' as const,
-        color: '#374151',
         marginLeft: 8,
+        fontSize: 14,
+        color: '#374151',
+        fontWeight: '500' as const,
     },
     statusContainer: {
         flexDirection: 'row' as const,
-        justifyContent: 'flex-end' as const,
+        justifyContent: 'flex-start' as const,
     },
     statusBadge: {
         flexDirection: 'row' as const,
@@ -217,9 +269,9 @@ const styles = {
         borderRadius: 6,
     },
     statusText: {
-        fontSize: 12,
-        fontWeight: '500' as const,
-        color: '#065f46',
         marginLeft: 4,
+        fontSize: 12,
+        color: '#065f46',
+        fontWeight: '500' as const,
     },
 }; 

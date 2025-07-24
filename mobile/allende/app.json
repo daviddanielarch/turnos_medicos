@@ -9,7 +9,13 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "background-fetch",
+          "background-processing"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +23,12 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.daviddanielarch.turnos_medicos"
+      "package": "com.daviddanielarch.turnos_medicos",
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "WAKE_LOCK",
+        "VIBRATE"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -34,7 +45,15 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#ffffff"
+        }
+      ],
+      "expo-background-fetch"
     ],
     "experiments": {
       "typedRoutes": true
@@ -44,7 +63,7 @@
       "eas": {
         "projectId": "92a909fc-8725-4e6c-a922-3f53e42399e0"
       },
-      "apiHost": "http://localhost:8000"
+      "apiHost": "http://10.0.2.2:8000"
     },
     "owner": "daviddanielarch"
   }

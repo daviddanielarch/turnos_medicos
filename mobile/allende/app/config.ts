@@ -5,7 +5,9 @@ import Constants from 'expo-constants';
 // For production, this can be set in your deployment environment
 export const API_HOST = Constants.expoConfig?.extra?.apiHost ||
     process.env.EXPO_PUBLIC_API_HOST ||
-    'http://localhost:8000';
+    'http://10.0.2.2:8000'
+//'http://localhost:8000';
+
 
 // API endpoints
 export const API_ENDPOINTS = {

@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timedelta
 
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -127,13 +128,40 @@ def api_create_appointment(request):
 @csrf_exempt
 @require_http_methods(["GET"])
 def api_find_appointments(request):
-    """API endpoint to get all FindAppointment objects"""
+    """API endpoint to get all FindAppointment objects with optional time filtering"""
     try:
+        # Get optional seconds parameter for filtering recent appointments
+        seconds_filter = request.GET.get("seconds")
+
         find_appointments = FindAppointment.objects.select_related(
             "doctor",
             "doctor__especialidad",
             "tipo_de_turno",
-        ).all()
+        )
+
+        # If seconds parameter is provided, filter by recent appointments
+        if seconds_filter:
+            try:
+                seconds = int(seconds_filter)
+                time_threshold = datetime.now() - timedelta(seconds=seconds)
+
+                # Get recent best appointments found within the time window
+                recent_best_appointments = BestAppointmentFound.objects.filter(
+                    datetime__gte=time_threshold
+                ).values_list("appointment_wanted_id", flat=True)
+
+                # Filter find appointments that have recent best appointments
+                find_appointments = find_appointments.filter(
+                    id__in=recent_best_appointments
+                )
+            except ValueError:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "Invalid seconds parameter. Must be a number.",
+                    },
+                    status=400,
+                )
 
         appointments_data = []
         for appointment in find_appointments:
