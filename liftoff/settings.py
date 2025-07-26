@@ -140,7 +140,7 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CSRF_TRUSTED_ORIGINS = ["https://app-service-production-ccd5.up.railway.app/*"]
+CSRF_TRUSTED_ORIGINS = ["https://turnos-medicos.up.railway.app/*"]
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = (
