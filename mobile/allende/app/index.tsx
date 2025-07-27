@@ -1,8 +1,9 @@
+import { API_ENDPOINTS } from "@/src/config/config";
+import { COLORS } from "@/src/constants/constants";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { API_ENDPOINTS } from "./config";
-import { COLORS } from "./constants";
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 interface Item {
   id: number;
@@ -17,10 +18,19 @@ export default function Index() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
+  // Fetch appointments when component mounts
   useEffect(() => {
     fetchAppointments();
   }, []);
+
+  // Refresh appointments when tab comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchAppointments();
+    }, [])
+  );
 
   const fetchAppointments = async () => {
     setLoading(true);
@@ -40,6 +50,12 @@ export default function Index() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchAppointments();
+    setRefreshing(false);
   };
 
   const toggleItem = (id: number) => {
@@ -121,7 +137,13 @@ export default function Index() {
       </View>
 
       {/* Items List */}
-      <ScrollView style={{ flex: 1, paddingHorizontal: 16 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={{ flex: 1, paddingHorizontal: 16 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {items.length === 0 ? (
           <View style={{
             backgroundColor: 'white',

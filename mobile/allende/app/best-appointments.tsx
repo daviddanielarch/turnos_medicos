@@ -1,9 +1,10 @@
+import { API_ENDPOINTS } from "@/src/config/config";
+import { COLORS } from "@/src/constants/constants";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import backgroundService from "../services/backgroundService";
-import { API_ENDPOINTS } from "./config";
-import { COLORS } from "./constants";
 
 interface BestAppointment {
     id: number;
@@ -18,10 +19,19 @@ export default function BestAppointments() {
     const [bestAppointments, setBestAppointments] = useState<BestAppointment[]>([]);
     const [loading, setLoading] = useState(false);
     const [testingNotification, setTestingNotification] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
+    // Fetch best appointments when component mounts
     useEffect(() => {
         fetchBestAppointments();
     }, []);
+
+    // Refresh best appointments when tab comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            fetchBestAppointments();
+        }, [])
+    );
 
     const fetchBestAppointments = async () => {
         setLoading(true);
@@ -43,6 +53,12 @@ export default function BestAppointments() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await fetchBestAppointments();
+        setRefreshing(false);
     };
 
     const testNotification = async () => {
@@ -123,7 +139,13 @@ export default function BestAppointments() {
                 </View>
             </View>
 
-            <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+            <ScrollView
+                style={styles.container}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.PRIMARY]} />
+                }
+            >
                 {bestAppointments.map((appointment) => (
                     <View key={appointment.id} style={styles.card}>
                         <View style={styles.cardHeader}>

@@ -1,8 +1,8 @@
+import { COLORS } from "@/src/constants/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { useEffect } from "react";
 import backgroundService from "../services/backgroundService";
-import { COLORS } from "./constants";
 
 export default function RootLayout() {
   useEffect(() => {

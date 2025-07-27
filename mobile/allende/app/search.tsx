@@ -1,9 +1,9 @@
+import { API_ENDPOINTS } from "@/src/config/config";
+import { COLORS } from "@/src/constants/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { API_ENDPOINTS } from "./config";
-import { COLORS } from "./constants";
 
 interface Item {
     id: number;

@@ -1,7 +1,7 @@
+import { API_ENDPOINTS } from "@/src/config/config";
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as Notifications from 'expo-notifications';
 import * as TaskManager from 'expo-task-manager';
-import { API_ENDPOINTS } from '../app/config';
 
 const BACKGROUND_FETCH_TASK = 'background-fetch-appointments';
 
