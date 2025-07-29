@@ -12,6 +12,7 @@ from sanatorio_allende.models import (
     PacienteAllende,
 )
 from sanatorio_allende.services.auth import AllendeAuthService
+from sanatorio_allende.services.push_notifications import PushNotificationService
 from sanatorio_allende.telegram import send_message
 
 
@@ -59,6 +60,75 @@ class Command(BaseCommand):
                     return False
 
         return False
+
+    def send_notifications(
+        self, appointment, new_best_appointment_datetime, message_type="new"
+    ):
+        """
+        Send both Telegram and push notifications
+        """
+        doctor_name = appointment.doctor.name
+        especialidad = appointment.doctor.especialidad.name
+        tipo_de_turno = appointment.tipo_de_turno.name
+        datetime_str = new_best_appointment_datetime.strftime("%d/%m/%Y %H:%M")
+
+        # Prepare message
+        if message_type == "new":
+            message = f"New best appointment found for {doctor_name} - {tipo_de_turno}: {datetime_str}"
+            push_title = "¡Nuevo turno disponible! 🎉"
+        else:  # lost appointment
+            message = f"Lost best appointment for {doctor_name} - {tipo_de_turno}: new date is {datetime_str}"
+            push_title = "Turno perdido ⚠️"
+
+        # Send Telegram notification
+        try:
+            send_message(
+                message,
+                settings.TELEGRAM_TOKEN,
+                settings.TELEGRAM_CHAT_ID,
+            )
+            self.stdout.write(f"Telegram notification sent: {message}")
+        except Exception as e:
+            self.stdout.write(
+                self.style.ERROR(f"Failed to send Telegram notification: {str(e)}")
+            )
+
+        # Send push notification
+        try:
+            appointment_data = {
+                "name": doctor_name,
+                "especialidad": especialidad,
+                "tipo_de_turno": tipo_de_turno,
+                "datetime": datetime_str,
+                "message_type": message_type,
+            }
+
+            # Use the generic send_notification method to customize title
+            push_result = PushNotificationService.send_notification(
+                title=push_title,
+                body=f"{doctor_name} - {especialidad} ({tipo_de_turno})",
+                data={"type": "appointment_update", "appointment": appointment_data},
+                sound="default",
+                priority="high",
+            )
+
+            if push_result["success"]:
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"Push notification sent to {push_result['sent_count']}/{push_result['total_devices']} devices"
+                    )
+                )
+            else:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"Push notification failed: {push_result.get('error', 'Unknown error')}"
+                    )
+                )
+
+        except Exception as e:
+            self.stdout.write(
+                self.style.ERROR(f"Failed to send push notification: {str(e)}")
+            )
 
     def handle(self, *args, **options):
         # Check database connectivity first
@@ -135,10 +205,8 @@ class Command(BaseCommand):
                         f"New best appointment found for {appointment.doctor.name} - {appointment.tipo_de_turno.name}: {new_best_appointment_datetime}"
                     )
                 )
-                send_message(
-                    f"New best appointment found for {appointment.doctor.name} - {appointment.tipo_de_turno.name}: {new_best_appointment_datetime}",
-                    settings.TELEGRAM_TOKEN,
-                    settings.TELEGRAM_CHAT_ID,
+                self.send_notifications(
+                    appointment, new_best_appointment_datetime, "new"
                 )
 
             elif new_best_appointment_datetime == best_appointment_so_far.datetime:
@@ -152,10 +220,8 @@ class Command(BaseCommand):
                         f"New best appointment found for {appointment.doctor.name} - {appointment.tipo_de_turno.name}: {new_best_appointment_datetime}"
                     )
                 )
-                send_message(
-                    f"New best appointment found for {appointment.doctor.name} - {appointment.tipo_de_turno.name}: {new_best_appointment_datetime}",
-                    settings.TELEGRAM_TOKEN,
-                    settings.TELEGRAM_CHAT_ID,
+                self.send_notifications(
+                    appointment, new_best_appointment_datetime, "new"
                 )
 
             else:
@@ -166,10 +232,8 @@ class Command(BaseCommand):
                 )
                 best_appointment_so_far.datetime = new_best_appointment_datetime
                 best_appointment_so_far.save()
-                send_message(
-                    f"Lost best appointment for {appointment.doctor.name} - {appointment.tipo_de_turno.name}: new date is {new_best_appointment_datetime}",
-                    settings.TELEGRAM_TOKEN,
-                    settings.TELEGRAM_CHAT_ID,
+                self.send_notifications(
+                    appointment, new_best_appointment_datetime, "lost"
                 )
 
         self.stdout.write(
