@@ -1,6 +1,7 @@
 import json
 import time
 
+import urllib3
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.options import Options
@@ -38,7 +39,7 @@ def get_browser(hostname: str, port: int) -> webdriver.Chrome:
             return webdriver.Remote(
                 command_executor=f"http://{hostname}:{port}", options=options
             )
-        except WebDriverException as e:
+        except urllib3.exceptions.MaxRetryError as e:
             last_exception = e
             if attempts < MAX_BROWSER_RETRY_ATTEMPTS:
                 time.sleep(1)  # Wait 1 second before retrying
