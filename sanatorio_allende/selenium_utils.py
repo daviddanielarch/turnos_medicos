@@ -2,9 +2,11 @@ import json
 import time
 
 from selenium import webdriver
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.options import Options
 
 MAX_BROWSER_REQUEST_UPDATE_ATTEMPS = 10
+MAX_BROWSER_RETRY_ATTEMPTS = 10
 
 
 class SeleniumSettings:
@@ -28,8 +30,23 @@ def get_browser(hostname: str, port: int) -> webdriver.Chrome:
         "user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
     )
 
-    return webdriver.Remote(
-        command_executor=f"http://{hostname}:{port}", options=options
+    attempts = 1
+    last_exception = None
+
+    while attempts <= MAX_BROWSER_RETRY_ATTEMPTS:
+        try:
+            return webdriver.Remote(
+                command_executor=f"http://{hostname}:{port}", options=options
+            )
+        except WebDriverException as e:
+            last_exception = e
+            if attempts < MAX_BROWSER_RETRY_ATTEMPTS:
+                time.sleep(1)  # Wait 1 second before retrying
+            attempts += 1
+
+    # If we get here, all retries failed
+    raise last_exception or WebDriverException(
+        "Failed to connect to browser after all retry attempts"
     )
 
 

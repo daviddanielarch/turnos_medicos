@@ -9,6 +9,7 @@ from sanatorio_allende.services.data_loader import DataLoader
 from .models import (
     AppointmentType,
     BestAppointmentFound,
+    DeviceRegistration,
     Doctor,
     Especialidad,
     FindAppointment,
@@ -136,3 +137,19 @@ class EspecialidadAdmin(admin.ModelAdmin):
     load_data_for_especialidad.short_description = (
         "Load appointment types and doctors data"
     )
+
+
+@admin.register(DeviceRegistration)
+class DeviceRegistrationAdmin(admin.ModelAdmin):
+    list_display = ["platform", "push_token_short", "is_active", "created_at"]
+    list_filter = ["platform", "is_active", "created_at"]
+    search_fields = ["push_token"]
+    readonly_fields = ["created_at", "updated_at"]
+    list_editable = ["is_active"]
+
+    def push_token_short(self, obj):
+        return (
+            obj.push_token[:30] + "..." if len(obj.push_token) > 30 else obj.push_token
+        )
+
+    push_token_short.short_description = "Push Token"

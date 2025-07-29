@@ -6,7 +6,13 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-from .models import AppointmentType, BestAppointmentFound, Doctor, FindAppointment
+from .models import (
+    AppointmentType,
+    BestAppointmentFound,
+    DeviceRegistration,
+    Doctor,
+    FindAppointment,
+)
 
 
 @csrf_exempt
@@ -246,5 +252,76 @@ def api_best_appointments(request):
             )
 
         return JsonResponse({"success": True, "best_appointments": appointments_data})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_register_device(request):
+    """API endpoint to register a device for push notifications"""
+    try:
+        data = json.loads(request.body)
+        push_token = data.get("push_token")
+        platform = data.get("platform", "expo")
+
+        if not push_token:
+            return JsonResponse(
+                {"success": False, "error": "push_token is required"},
+                status=400,
+            )
+
+        # Check if device is already registered
+        device, created = DeviceRegistration.objects.get_or_create(
+            push_token=push_token,
+            defaults={
+                "platform": platform,
+                "is_active": True,
+            },
+        )
+
+        if not created:
+            # Update existing device
+            device.platform = platform
+            device.is_active = True
+            device.save()
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Device registered successfully",
+                "created": created,
+            }
+        )
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_unregister_device(request):
+    """API endpoint to unregister a device from push notifications"""
+    try:
+        data = json.loads(request.body)
+        push_token = data.get("push_token")
+
+        if not push_token:
+            return JsonResponse(
+                {"success": False, "error": "push_token is required"},
+                status=400,
+            )
+
+        try:
+            device = DeviceRegistration.objects.get(push_token=push_token)
+            device.is_active = False
+            device.save()
+
+            return JsonResponse(
+                {"success": True, "message": "Device unregistered successfully"}
+            )
+        except DeviceRegistration.DoesNotExist:
+            return JsonResponse(
+                {"success": True, "message": "Device was not registered"}
+            )
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=500)

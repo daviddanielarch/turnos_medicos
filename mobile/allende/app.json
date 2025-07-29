@@ -12,10 +12,10 @@
       "supportsTablet": true,
       "infoPlist": {
         "UIBackgroundModes": [
-          "background-fetch",
           "background-processing"
         ]
-      }
+      },
+      "bundleIdentifier": "com.daviddanielarch.turnos-medicos"
     },
     "android": {
       "adaptiveIcon": {
@@ -24,10 +24,13 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.daviddanielarch.turnos_medicos",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "WAKE_LOCK",
-        "VIBRATE"
+        "VIBRATE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.WAKE_LOCK"
       ]
     },
     "web": {
@@ -52,8 +55,7 @@
           "icon": "./assets/images/notification-icon.png",
           "color": "#ffffff"
         }
-      ],
-      "expo-background-fetch"
+      ]
     ],
     "experiments": {
       "typedRoutes": true

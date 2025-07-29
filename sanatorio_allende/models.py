@@ -103,3 +103,23 @@ class PacienteAllende(models.Model):
         verbose_name = "Paciente Allende"
         verbose_name_plural = "Pacientes Allende"
         ordering = ["id_paciente"]
+
+
+class DeviceRegistration(models.Model):
+    """
+    Model to store device registration for push notifications
+    """
+
+    push_token = models.CharField(max_length=255, unique=True)
+    platform = models.CharField(max_length=50, default="expo")  # expo, ios, android
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.platform} - {self.push_token[:20]}..."
+
+    class Meta:
+        verbose_name = "Device Registration"
+        verbose_name_plural = "Device Registrations"
+        ordering = ["-created_at"]

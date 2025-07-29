@@ -2,9 +2,9 @@ import { API_ENDPOINTS } from "@/src/config/config";
 import { COLORS } from "@/src/constants/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
+import * as Notifications from 'expo-notifications';
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import backgroundService from "../services/backgroundService";
 
 interface BestAppointment {
     id: number;
@@ -64,12 +64,17 @@ export default function BestAppointments() {
     const testNotification = async () => {
         setTestingNotification(true);
         try {
-            const hasNewAppointments = await backgroundService.manualCheck();
-            if (hasNewAppointments) {
-                Alert.alert('Éxito', 'Se encontraron nuevos turnos y se envió la notificación');
-            } else {
-                Alert.alert('Info', 'No se encontraron nuevos turnos en los últimos 30 segundos');
-            }
+            // Test local notification
+            await Notifications.scheduleNotificationAsync({
+                content: {
+                    title: '¡Nuevo turno disponible! 🎉',
+                    body: 'Se encontró un nuevo turno médico disponible',
+                    data: { test: true },
+                },
+                trigger: null, // Show immediately
+            });
+
+            Alert.alert('Éxito', 'Notificación de prueba enviada');
         } catch (error) {
             console.error('Error testing notification:', error);
             Alert.alert('Error', 'Ocurrió un error al probar la notificación');

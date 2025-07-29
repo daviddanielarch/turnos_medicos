@@ -31,4 +31,14 @@ urlpatterns = [
         views.api_best_appointments,
         name="api_best_appointments",
     ),
+    path(
+        "api/register-device/",
+        views.api_register_device,
+        name="api_register_device",
+    ),
+    path(
+        "api/unregister-device/",
+        views.api_unregister_device,
+        name="api_unregister_device",
+    ),
 ]
