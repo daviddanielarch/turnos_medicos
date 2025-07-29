@@ -12,6 +12,16 @@ if (process.env.GOOGLE_SERVICES_JSON && !fs.existsSync(path.join(__dirname, 'goo
     }
 }
 
+// Create service account key file from environment variable if it doesn't exist
+if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY && !fs.existsSync(path.join(__dirname, 'allende-mobile-app-57c0658681aa.json'))) {
+    try {
+        fs.writeFileSync(path.join(__dirname, 'allende-mobile-app-57c0658681aa.json'), process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+        console.log('Created allende-mobile-app-57c0658681aa.json from environment variable');
+    } catch (error) {
+        console.error('Failed to create service account key file:', error);
+    }
+}
+
 const config = getDefaultConfig(__dirname);
 
 module.exports = config; 
