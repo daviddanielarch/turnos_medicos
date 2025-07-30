@@ -20,4 +20,4 @@ expo-start:
 	cd mobile/allende && npx expo start
 
 expo-deploy:
-	cd mobile/allende && eas workflow:run .eas/workflows/submit-android.yml
+	cd mobile/allende && eas build --platform android --auto-submit
