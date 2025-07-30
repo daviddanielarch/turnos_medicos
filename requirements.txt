@@ -31,3 +31,5 @@ whitenoise==6.7.0
 selenium==4.8.2
 python-telegram-bot==20.7
 requests
+pytest==8.0.0
+pytest-django==4.8.0

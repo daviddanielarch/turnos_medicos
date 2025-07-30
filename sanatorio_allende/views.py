@@ -2,9 +2,11 @@ import json
 from datetime import datetime, timedelta
 
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
 
 from .models import (
     AppointmentType,
@@ -15,11 +17,12 @@ from .models import (
 )
 
 
-@csrf_exempt
-@require_http_methods(["GET"])
-def api_doctors(request):
-    """API endpoint to get all doctors with their specialties and locations"""
-    try:
+@method_decorator(csrf_exempt, name="dispatch")
+class DoctorListView(View):
+    """Class-based view for listing doctors"""
+
+    def get(self, request):
+        """Get all doctors with their specialties and locations"""
         doctors = Doctor.objects.select_related("especialidad").all()
 
         doctors_data = []
@@ -34,15 +37,14 @@ def api_doctors(request):
             )
 
         return JsonResponse({"success": True, "doctors": doctors_data})
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
-@csrf_exempt
-@require_http_methods(["GET"])
-def api_appointment_types(request):
-    """API endpoint to get appointment types for a specific doctor"""
-    try:
+@method_decorator(csrf_exempt, name="dispatch")
+class AppointmentTypeListView(View):
+    """Class-based view for listing appointment types for a specific doctor"""
+
+    def get(self, request):
+        """Get appointment types for a specific doctor"""
         doctor_id = request.GET.get("doctor_id")
         if not doctor_id:
             return JsonResponse(
@@ -50,7 +52,7 @@ def api_appointment_types(request):
                 status=400,
             )
 
-        doctor = Doctor.objects.get(id=doctor_id)
+        doctor = get_object_or_404(Doctor, id=doctor_id)
         appointment_types = AppointmentType.objects.filter(
             especialidad=doctor.especialidad
         )
@@ -67,75 +69,14 @@ def api_appointment_types(request):
             )
 
         return JsonResponse({"success": True, "appointment_types": types_data})
-    except Doctor.DoesNotExist:
-        return JsonResponse({"success": False, "error": "Doctor not found"}, status=404)
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
-@csrf_exempt
-@require_http_methods(["POST"])
-def api_create_appointment(request):
-    """API endpoint to create a new FindAppointment"""
-    try:
-        data = json.loads(request.body)
-        doctor_id = data.get("doctor_id")
-        appointment_type_id = data.get("appointment_type_id")
+@method_decorator(csrf_exempt, name="dispatch")
+class FindAppointmentView(View):
+    """Class-based view for FindAppointment CRUD operations"""
 
-        if not doctor_id or not appointment_type_id:
-            return JsonResponse(
-                {
-                    "success": False,
-                    "error": "doctor_id and appointment_type_id are required",
-                },
-                status=400,
-            )
-
-        doctor = Doctor.objects.get(id=doctor_id)
-        appointment_type = AppointmentType.objects.get(id=appointment_type_id)
-
-        existing_appointment = FindAppointment.objects.filter(
-            doctor=doctor, tipo_de_turno=appointment_type
-        ).first()
-
-        if existing_appointment:
-            return JsonResponse(
-                {
-                    "success": False,
-                    "error": "Appointment already exists for this doctor and service type",
-                },
-                status=400,
-            )
-
-        # Create new appointment
-        appointment = FindAppointment.objects.create(
-            doctor=doctor,
-            tipo_de_turno=appointment_type,
-            active=True,
-        )
-
-        return JsonResponse(
-            {
-                "success": True,
-                "message": "Appointment created successfully",
-                "appointment_id": appointment.id,
-            }
-        )
-    except Doctor.DoesNotExist:
-        return JsonResponse({"success": False, "error": "Doctor not found"}, status=404)
-    except AppointmentType.DoesNotExist:
-        return JsonResponse(
-            {"success": False, "error": "Appointment type not found"}, status=404
-        )
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)}, status=500)
-
-
-@csrf_exempt
-@require_http_methods(["GET"])
-def api_find_appointments(request):
-    """API endpoint to get all FindAppointment objects with optional time filtering"""
-    try:
+    def get(self, request):
+        """Get all FindAppointment objects with optional time filtering"""
         # Get optional seconds parameter for filtering recent appointments
         seconds_filter = request.GET.get("seconds")
 
@@ -149,7 +90,7 @@ def api_find_appointments(request):
         if seconds_filter:
             try:
                 seconds = int(seconds_filter)
-                time_threshold = datetime.now() - timedelta(seconds=seconds)
+                time_threshold = timezone.now() - timedelta(seconds=seconds)
 
                 # Get recent best appointments found within the time window
                 recent_best_appointments = BestAppointmentFound.objects.filter(
@@ -185,15 +126,55 @@ def api_find_appointments(request):
             )
 
         return JsonResponse({"success": True, "appointments": appointments_data})
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)}, status=500)
 
+    def post(self, request):
+        """Create a new FindAppointment"""
+        data = json.loads(request.body)
+        doctor_id = data.get("doctor_id")
+        appointment_type_id = data.get("appointment_type_id")
 
-@csrf_exempt
-@require_http_methods(["POST"])
-def api_update_appointment_status(request):
-    """API endpoint to update the active status of a FindAppointment"""
-    try:
+        if not doctor_id or not appointment_type_id:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "doctor_id and appointment_type_id are required",
+                },
+                status=400,
+            )
+
+        doctor = get_object_or_404(Doctor, id=doctor_id)
+        appointment_type = get_object_or_404(AppointmentType, id=appointment_type_id)
+
+        existing_appointment = FindAppointment.objects.filter(
+            doctor=doctor, tipo_de_turno=appointment_type
+        ).first()
+
+        if existing_appointment:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Appointment already exists for this doctor and service type",
+                },
+                status=400,
+            )
+
+        # Create new appointment
+        appointment = FindAppointment.objects.create(
+            doctor=doctor,
+            tipo_de_turno=appointment_type,
+            active=True,
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Appointment created successfully",
+                "appointment_id": appointment.id,
+            }
+        )
+
+    def patch(self, request):
+        """Update the active status of a FindAppointment"""
         data = json.loads(request.body)
         appointment_id = data.get("appointment_id")
         active = data.get("active")
@@ -207,7 +188,7 @@ def api_update_appointment_status(request):
                 status=400,
             )
 
-        appointment = FindAppointment.objects.get(id=appointment_id)
+        appointment = get_object_or_404(FindAppointment, id=appointment_id)
         appointment.active = active
         appointment.save()
 
@@ -217,19 +198,14 @@ def api_update_appointment_status(request):
                 "message": f'Appointment status updated to {"active" if active else "inactive"}',
             }
         )
-    except FindAppointment.DoesNotExist:
-        return JsonResponse(
-            {"success": False, "error": "Appointment not found"}, status=404
-        )
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
-@csrf_exempt
-@require_http_methods(["GET"])
-def api_best_appointments(request):
-    """API endpoint to get all BestAppointmentFound objects"""
-    try:
+@method_decorator(csrf_exempt, name="dispatch")
+class BestAppointmentListView(View):
+    """Class-based view for listing BestAppointmentFound objects"""
+
+    def get(self, request):
+        """Get all BestAppointmentFound objects"""
         best_appointments = BestAppointmentFound.objects.select_related(
             "appointment_wanted",
             "appointment_wanted__doctor",
@@ -252,15 +228,14 @@ def api_best_appointments(request):
             )
 
         return JsonResponse({"success": True, "best_appointments": appointments_data})
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
-@csrf_exempt
-@require_http_methods(["POST"])
-def api_register_device(request):
-    """API endpoint to register a device for push notifications"""
-    try:
+@method_decorator(csrf_exempt, name="dispatch")
+class DeviceRegistrationView(View):
+    """Class-based view for DeviceRegistration operations"""
+
+    def post(self, request):
+        """Register or update a device for push notifications"""
         data = json.loads(request.body)
         push_token = data.get("push_token")
         platform = data.get("platform", "expo")
@@ -293,35 +268,3 @@ def api_register_device(request):
                 "created": created,
             }
         )
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)}, status=500)
-
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def api_unregister_device(request):
-    """API endpoint to unregister a device from push notifications"""
-    try:
-        data = json.loads(request.body)
-        push_token = data.get("push_token")
-
-        if not push_token:
-            return JsonResponse(
-                {"success": False, "error": "push_token is required"},
-                status=400,
-            )
-
-        try:
-            device = DeviceRegistration.objects.get(push_token=push_token)
-            device.is_active = False
-            device.save()
-
-            return JsonResponse(
-                {"success": True, "message": "Device unregistered successfully"}
-            )
-        except DeviceRegistration.DoesNotExist:
-            return JsonResponse(
-                {"success": True, "message": "Device was not registered"}
-            )
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)}, status=500)

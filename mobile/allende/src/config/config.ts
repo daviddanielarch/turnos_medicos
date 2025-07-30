@@ -12,10 +12,9 @@ export const API_HOST = Constants.expoConfig?.extra?.apiHost ||
 export const API_ENDPOINTS = {
     DOCTORS: `${API_HOST}/api/doctors/`,
     APPOINTMENT_TYPES: `${API_HOST}/api/appointment-types/`,
-    CREATE_APPOINTMENT: `${API_HOST}/api/create-appointment/`,
     FIND_APPOINTMENTS: `${API_HOST}/api/find-appointments/`,
-    UPDATE_APPOINTMENT_STATUS: `${API_HOST}/api/update-appointment-status/`,
     BEST_APPOINTMENTS: `${API_HOST}/api/best-appointments/`,
+    DEVICE_REGISTRATIONS: `${API_HOST}/api/device-registrations/`,
 } as const;
 
 // Configuration object

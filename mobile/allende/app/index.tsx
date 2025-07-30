@@ -66,8 +66,8 @@ export default function Index() {
 
   const updateAppointmentStatus = async (appointmentId: number, active: boolean) => {
     try {
-      const response = await fetch(API_ENDPOINTS.UPDATE_APPOINTMENT_STATUS, {
-        method: 'POST',
+      const response = await fetch(API_ENDPOINTS.FIND_APPOINTMENTS, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },

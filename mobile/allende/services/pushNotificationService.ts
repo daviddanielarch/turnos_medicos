@@ -53,7 +53,7 @@ export class PushNotificationService {
                 return false;
             }
 
-            const response = await fetch(`${config.API_HOST}/api/register-device/`, {
+            const response = await fetch(config.API_ENDPOINTS.DEVICE_REGISTRATIONS, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -80,36 +80,11 @@ export class PushNotificationService {
     }
 
     async unregisterDeviceFromBackend(): Promise<boolean> {
-        try {
-            const token = await this.getPushToken();
-            if (!token) {
-                return true;
-            }
-
-            const response = await fetch(`${config.API_HOST}/api/unregister-device/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    push_token: token,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                console.log('[Push] Device unregistered successfully from backend');
-                this.pushToken = null;
-                return true;
-            } else {
-                console.error('[Push] Failed to unregister device:', data.error);
-                return false;
-            }
-        } catch (error) {
-            console.error('[Push] Error unregistering device from backend:', error);
-            return false;
-        }
+        // Note: Django backend doesn't support unregistering devices
+        // The device will remain registered but can be deactivated on the backend
+        console.log('[Push] Unregister not supported by backend, clearing local token');
+        this.pushToken = null;
+        return true;
     }
 
     setNotificationHandler() {

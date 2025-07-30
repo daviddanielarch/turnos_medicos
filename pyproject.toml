@@ -15,4 +15,33 @@ extend-exclude = '''
   | dist
   | migrations
 )/
-''' 
+'''
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "turnos_medicos"
+version = "0.1.0"
+description = "Medical appointments system"
+requires-python = ">=3.8"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "liftoff.settings"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+    "--tb=short",
+]
+testpaths = ["sanatorio_allende"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "django_db: marks tests that require database access"
+]

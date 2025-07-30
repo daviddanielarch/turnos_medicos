@@ -110,7 +110,7 @@ export default function Search() {
     const handleAdd = async () => {
         if (selectedItem && selectedService) {
             try {
-                const response = await fetch(API_ENDPOINTS.CREATE_APPOINTMENT, {
+                const response = await fetch(API_ENDPOINTS.FIND_APPOINTMENTS, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

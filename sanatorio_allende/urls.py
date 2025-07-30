@@ -5,40 +5,25 @@ from . import views
 app_name = "sanatorio_allende"
 
 urlpatterns = [
-    path("api/doctors/", views.api_doctors, name="api_doctors"),
+    path("api/doctors/", views.DoctorListView.as_view(), name="api_doctors"),
     path(
         "api/appointment-types/",
-        views.api_appointment_types,
+        views.AppointmentTypeListView.as_view(),
         name="api_appointment_types",
     ),
     path(
-        "api/create-appointment/",
-        views.api_create_appointment,
-        name="api_create_appointment",
-    ),
-    path(
         "api/find-appointments/",
-        views.api_find_appointments,
+        views.FindAppointmentView.as_view(),
         name="api_find_appointments",
     ),
     path(
-        "api/update-appointment-status/",
-        views.api_update_appointment_status,
-        name="api_update_appointment_status",
-    ),
-    path(
         "api/best-appointments/",
-        views.api_best_appointments,
+        views.BestAppointmentListView.as_view(),
         name="api_best_appointments",
     ),
     path(
-        "api/register-device/",
-        views.api_register_device,
+        "api/device-registrations/",
+        views.DeviceRegistrationView.as_view(),
         name="api_register_device",
-    ),
-    path(
-        "api/unregister-device/",
-        views.api_unregister_device,
-        name="api_unregister_device",
     ),
 ]
