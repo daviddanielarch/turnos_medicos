@@ -17,8 +17,8 @@ interface Item {
 export default function Index() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
 
   // Fetch appointments when component mounts
   useEffect(() => {
@@ -58,12 +58,6 @@ export default function Index() {
     setRefreshing(false);
   };
 
-  const toggleItem = (id: number) => {
-    setItems(items.map(item =>
-      item.id === id ? { ...item, enabled: !item.enabled } : item
-    ));
-  };
-
   const updateAppointmentStatus = async (appointmentId: number, active: boolean) => {
     try {
       const response = await fetch(API_ENDPOINTS.FIND_APPOINTMENTS, {
@@ -81,34 +75,48 @@ export default function Index() {
 
       if (data.success) {
         console.log('Appointment status updated successfully');
+        return true;
       } else {
         console.error('Failed to update appointment status:', data.error);
         Alert.alert('Error', 'Failed to update appointment status');
+        return false;
       }
     } catch (error) {
       console.error('Error updating appointment status:', error);
       Alert.alert('Error', 'Network error while updating appointment status');
+      return false;
     }
   };
 
-  const handleSave = async () => {
-    setSaving(true);
+  const toggleItem = async (id: number) => {
+    const item = items.find(item => item.id === id);
+    if (!item) return;
 
-    // Update all changed items
-    const updatePromises = items.map(item =>
-      updateAppointmentStatus(item.id, item.enabled)
-    );
+    const newEnabled = !item.enabled;
 
-    try {
-      await Promise.all(updatePromises);
-      Alert.alert('Success', 'Appointments updated successfully');
-      // Refresh the data
-      fetchAppointments();
-    } catch (error) {
-      console.error('Error saving appointments:', error);
-      Alert.alert('Error', 'Failed to save appointments');
-    } finally {
-      setSaving(false);
+    // Add item to updating set
+    setUpdatingItems(prev => new Set(prev).add(id));
+
+    // Optimistically update the UI
+    setItems(items.map(item =>
+      item.id === id ? { ...item, enabled: newEnabled } : item
+    ));
+
+    // Call the backend API
+    const success = await updateAppointmentStatus(id, newEnabled);
+
+    // Remove item from updating set
+    setUpdatingItems(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(id);
+      return newSet;
+    });
+
+    // If the API call failed, revert the UI change
+    if (!success) {
+      setItems(items.map(item =>
+        item.id === id ? { ...item, enabled: !newEnabled } : item
+      ));
     }
   };
 
@@ -166,113 +174,77 @@ export default function Index() {
             </Text>
           </View>
         ) : (
-          items.map((item, index) => (
-            <View key={item.id} style={{
-              flexDirection: 'row',
-              backgroundColor: 'white',
-              paddingVertical: 20,
-              paddingHorizontal: 20,
-              marginTop: 8,
-              borderRadius: 12,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.05,
-              shadowRadius: 4,
-              elevation: 2,
-              borderLeftWidth: 4,
-              borderLeftColor: item.enabled ? COLORS.PRIMARY : '#e5e7eb',
-            }}>
-              <View style={{ flex: 2, justifyContent: 'center' }}>
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 4 }}>
-                  {item.name}
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
-                  <Ionicons name="star-outline" size={14} color="#6b7280" style={{ marginRight: 4 }} />
-                  <Text style={{ fontSize: 14, color: '#6b7280' }}>
-                    {item.especialidad} ({item.tipo_de_turno})
+          items.map((item, index) => {
+            const isUpdating = updatingItems.has(item.id);
+
+            return (
+              <View key={item.id} style={{
+                flexDirection: 'row',
+                backgroundColor: 'white',
+                paddingVertical: 20,
+                paddingHorizontal: 20,
+                marginTop: 8,
+                borderRadius: 12,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+                elevation: 2,
+                borderLeftWidth: 4,
+                borderLeftColor: item.enabled ? COLORS.PRIMARY : '#e5e7eb',
+                opacity: isUpdating ? 0.7 : 1,
+              }}>
+                <View style={{ flex: 2, justifyContent: 'center' }}>
+                  <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 4 }}>
+                    {item.name}
                   </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                    <Ionicons name="star-outline" size={14} color="#6b7280" style={{ marginRight: 4 }} />
+                    <Text style={{ fontSize: 14, color: '#6b7280' }}>
+                      {item.especialidad} ({item.tipo_de_turno})
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                    <Ionicons name="location" size={14} color="#6b7280" style={{ marginRight: 4 }} />
+                    <Text style={{ fontSize: 14, color: '#6b7280' }}>
+                      {item.location}
+                    </Text>
+                  </View>
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
-                  <Ionicons name="location" size={14} color="#6b7280" style={{ marginRight: 4 }} />
-                  <Text style={{ fontSize: 14, color: '#6b7280' }}>
-                    {item.location}
-                  </Text>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
-                onPress={() => toggleItem(item.id)}
-              >
-                <View style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 14,
-                  borderWidth: 2,
-                  borderColor: item.enabled ? COLORS.PRIMARY : '#d1d5db',
-                  backgroundColor: item.enabled ? COLORS.PRIMARY : 'transparent',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  shadowColor: item.enabled ? COLORS.PRIMARY : 'transparent',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 4,
-                  elevation: item.enabled ? 3 : 0,
-                }}>
-                  {item.enabled && (
-                    <Ionicons name="checkmark" size={16} color="white" />
+                <TouchableOpacity
+                  style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+                  onPress={() => toggleItem(item.id)}
+                  disabled={isUpdating}
+                >
+                  {isUpdating ? (
+                    <ActivityIndicator size="small" color={COLORS.PRIMARY} />
+                  ) : (
+                    <View style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 14,
+                      borderWidth: 2,
+                      borderColor: item.enabled ? COLORS.PRIMARY : '#d1d5db',
+                      backgroundColor: item.enabled ? COLORS.PRIMARY : 'transparent',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      shadowColor: item.enabled ? COLORS.PRIMARY : 'transparent',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 4,
+                      elevation: item.enabled ? 3 : 0,
+                    }}>
+                      {item.enabled && (
+                        <Ionicons name="checkmark" size={16} color="white" />
+                      )}
+                    </View>
                   )}
-                </View>
-              </TouchableOpacity>
-            </View>
-          ))
+                </TouchableOpacity>
+              </View>
+            );
+          })
         )}
       </ScrollView>
-
-      {/* Save Button */}
-      {items.length > 0 && (
-        <View style={{
-          backgroundColor: 'white',
-          paddingHorizontal: 20,
-          paddingVertical: 20,
-          paddingBottom: 30,
-          borderTopWidth: 1,
-          borderTopColor: '#e5e7eb',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 5,
-        }}>
-          <TouchableOpacity
-            style={{
-              backgroundColor: saving ? '#d1d5db' : COLORS.PRIMARY,
-              paddingVertical: 16,
-              borderRadius: 12,
-              alignItems: 'center',
-              shadowColor: saving ? 'transparent' : '#667eea',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: saving ? 0 : 0.3,
-              shadowRadius: 8,
-              elevation: saving ? 0 : 4,
-            }}
-            onPress={handleSave}
-            disabled={saving}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {saving && (
-                <ActivityIndicator size="small" color="white" style={{ marginRight: 8 }} />
-              )}
-              <Text style={{
-                color: 'white',
-                fontSize: 18,
-                fontWeight: '600',
-              }}>
-                {saving ? 'Actualizando...' : 'Actualizar'}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-      )}
     </View>
   );
 }

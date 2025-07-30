@@ -2,9 +2,8 @@ import { API_ENDPOINTS } from "@/src/config/config";
 import { COLORS } from "@/src/constants/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
-import * as Notifications from 'expo-notifications';
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, View } from "react-native";
 
 interface BestAppointment {
     id: number;
@@ -18,7 +17,6 @@ interface BestAppointment {
 export default function BestAppointments() {
     const [bestAppointments, setBestAppointments] = useState<BestAppointment[]>([]);
     const [loading, setLoading] = useState(false);
-    const [testingNotification, setTestingNotification] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
     // Fetch best appointments when component mounts
@@ -59,28 +57,6 @@ export default function BestAppointments() {
         setRefreshing(true);
         await fetchBestAppointments();
         setRefreshing(false);
-    };
-
-    const testNotification = async () => {
-        setTestingNotification(true);
-        try {
-            // Test local notification
-            await Notifications.scheduleNotificationAsync({
-                content: {
-                    title: '¡Nuevo turno disponible! 🎉',
-                    body: 'Se encontró un nuevo turno médico disponible',
-                    data: { test: true },
-                },
-                trigger: null, // Show immediately
-            });
-
-            Alert.alert('Éxito', 'Notificación de prueba enviada');
-        } catch (error) {
-            console.error('Error testing notification:', error);
-            Alert.alert('Error', 'Ocurrió un error al probar la notificación');
-        } finally {
-            setTestingNotification(false);
-        }
     };
 
     const formatDate = (dateString: string) => {
@@ -130,17 +106,6 @@ export default function BestAppointments() {
                             {bestAppointments.length} turno{bestAppointments.length !== 1 ? 's' : ''} encontrado{bestAppointments.length !== 1 ? 's' : ''}
                         </Text>
                     </View>
-                    <TouchableOpacity
-                        style={[styles.notificationButton, testingNotification && styles.notificationButtonDisabled]}
-                        onPress={testNotification}
-                        disabled={testingNotification}
-                    >
-                        <Ionicons
-                            name={testingNotification ? "hourglass" : "notifications"}
-                            size={20}
-                            color={testingNotification ? "#9ca3af" : COLORS.PRIMARY}
-                        />
-                    </TouchableOpacity>
                 </View>
             </View>
 
@@ -203,17 +168,6 @@ const styles = {
     headerSubtitle: {
         fontSize: 16,
         color: '#6b7280',
-    },
-    notificationButton: {
-        backgroundColor: '#f3f4f6',
-        padding: 8,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#e5e7eb',
-    },
-    notificationButtonDisabled: {
-        backgroundColor: '#f9fafb',
-        borderColor: '#f3f4f6',
     },
     container: {
         flex: 1,
