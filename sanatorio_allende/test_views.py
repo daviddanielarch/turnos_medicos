@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 
 import pytest
+from django.contrib.auth.models import User
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
@@ -17,9 +18,19 @@ from .models import (
 
 
 @pytest.fixture
-def client():
-    """Django test client fixture"""
-    return Client()
+def user():
+    """Create a test user"""
+    return User.objects.create_user(
+        username="testuser", email="test@example.com", password="testpass123"
+    )
+
+
+@pytest.fixture
+def client(user):
+    """Django test client fixture with authenticated user"""
+    client = Client()
+    client.force_login(user)
+    return client
 
 
 @pytest.fixture
