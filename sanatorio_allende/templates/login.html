@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth0 Login - Token Generator</title>
+    <script src="https://cdn.auth0.com/js/auth0/9.18/auth0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .login-btn:hover {
+            background: #0056b3;
+        }
+
+        .login-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .token-section {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+
+        .token-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .token-textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .copy-btn:hover {
+            background: #218838;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-left: 10px;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        .user-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e7f3ff;
+            border-radius: 4px;
+            border: 1px solid #b3d9ff;
+        }
+
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔐 Auth0 Login</h1>
+
+        <button id="loginBtn" class="login-btn" onclick="login()">Login with Auth0</button>
+
+        <div id="loading" class="loading" style="display: none;">
+            Loading...
+        </div>
+
+        <div id="error" class="error"></div>
+
+        <div id="userInfo" class="user-info" style="display: none;">
+            <h3>✅ Logged In</h3>
+            <p><strong>Name:</strong> <span id="userName"></span></p>
+            <p><strong>Email:</strong> <span id="userEmail"></span></p>
+        </div>
+
+        <div id="tokenSection" class="token-section">
+            <h3>🔑 Your JWT Token</h3>
+            <textarea id="tokenTextarea" class="token-textarea" readonly></textarea>
+            <button id="copyBtn" class="copy-btn" onclick="copyToken()">Copy Token</button>
+            <button id="logoutBtn" class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Auth0 WebAuth
+        var webAuth = new auth0.WebAuth({
+            domain: '{{ auth0_domain }}',
+            clientID: '{{ auth0_client_id }}',
+            redirectUri: window.location.origin + '/auth/callback/',
+            audience: '{{ auth0_audience }}',
+            responseType: 'token id_token',
+            scope: 'openid profile email'
+        });
+
+        // Check if user is already authenticated on page load
+        window.onload = function () {
+            // Check if we're returning from Auth0 callback
+            if (window.location.hash) {
+                webAuth.parseHash(function (err, authResult) {
+                    if (err) {
+                        showError('Error parsing hash: ' + err.message);
+                        return;
+                    }
+
+                    if (authResult && authResult.accessToken) {
+                        showUserInfo(authResult);
+                    }
+                });
+            } else {
+                // Check if user has an existing session
+                webAuth.checkSession({}, function (err, authResult) {
+                    if (err) {
+                        console.log('No existing session found');
+                        return;
+                    }
+
+                    if (authResult && authResult.accessToken) {
+                        showUserInfo(authResult);
+                    }
+                });
+            }
+        };
+
+        // Login function
+        function login() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loginBtn').disabled = true;
+
+            webAuth.authorize({
+                audience: '{{ auth0_audience }}',
+                scope: 'openid profile email'
+            });
+        }
+
+        // Logout function
+        function logout() {
+            webAuth.logout({
+                returnTo: window.location.origin,
+                clientID: '{{ auth0_client_id }}'
+            });
+        }
+
+        // Show user info and token
+        function showUserInfo(authResult) {
+            // Get user profile
+            webAuth.client.userInfo(authResult.accessToken, function (err, user) {
+                if (err) {
+                    showError('Error getting user info: ' + err.message);
+                    return;
+                }
+
+                // Display user info
+                document.getElementById('userName').textContent = user.name || 'N/A';
+                document.getElementById('userEmail').textContent = user.email || 'N/A';
+                document.getElementById('userInfo').style.display = 'block';
+
+                // Display token
+                document.getElementById('tokenTextarea').value = authResult.accessToken;
+                document.getElementById('tokenSection').style.display = 'block';
+
+                // Hide login button and loading
+                document.getElementById('loginBtn').style.display = 'none';
+                document.getElementById('loading').style.display = 'none';
+            });
+        }
+
+        // Copy token to clipboard
+        function copyToken() {
+            const textarea = document.getElementById('tokenTextarea');
+            textarea.select();
+            document.execCommand('copy');
+
+            const btn = document.getElementById('copyBtn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+            }, 2000);
+        }
+
+        // Show error
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('loginBtn').disabled = false;
+        }
+    </script>
+</body>
+
+</html>

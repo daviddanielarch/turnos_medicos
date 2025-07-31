@@ -37,6 +37,28 @@ If neither is configured, it defaults to `http://localhost:8000`.
 
 The Django backend has several configurable settings via environment variables.
 
+### Auth0 Configuration
+
+Configure Auth0 authentication settings:
+
+```bash
+# Auth0 Domain (e.g., your-tenant.auth0.com)
+AUTH0_DOMAIN=your-tenant.auth0.com
+
+# Auth0 Client ID (for the login page)
+AUTH0_CLIENT_ID=your-auth0-client-id
+
+# Auth0 API Audience (your API identifier)
+AUTH0_AUDIENCE=https://your-api-identifier
+
+# Auth0 Issuer (optional, defaults to https://{AUTH0_DOMAIN}/)
+AUTH0_ISSUER=https://your-tenant.auth0.com/
+
+# Auth0 Management API (optional - for enhanced user data)
+AUTH0_MANAGEMENT_CLIENT_ID=your-management-client-id
+AUTH0_MANAGEMENT_CLIENT_SECRET=your-management-client-secret
+```
+
 ### CORS Configuration
 
 Configure which origins are allowed to access the API:
@@ -78,12 +100,42 @@ TELEGRAM_CHAT_ID=your_chat_id
 
 The Django backend provides the following API endpoints:
 
+### Public Endpoints (No Authentication Required)
+- `GET /api/health/` - Health check endpoint
 - `GET /api/doctors/` - Get all doctors with their specialties and locations
 - `GET /api/appointment-types/?doctor_id=<id>` - Get appointment types for a specific doctor
-- `POST /api/create-appointment/` - Create a new appointment search
 - `GET /api/find-appointments/` - Get all active appointment searches
-- `POST /api/update-appointment-status/` - Update the active status of an appointment search
 - `GET /api/best-appointments/` - Get the best appointments found for each doctor
+
+### Protected Endpoints (Auth0 Authentication Required)
+- `POST /api/find-appointments/` - Create a new appointment search
+- `PATCH /api/find-appointments/` - Update the active status of an appointment search
+- `POST /api/device-registrations/` - Register a device for push notifications
+
+## Authentication Flow
+
+1. **Frontend (React Native/Expo)**: Uses Auth0 SDK to authenticate users
+2. **Token Exchange**: Frontend sends Auth0 JWT token in Authorization header
+3. **Backend Validation**: Django middleware validates the JWT token using Auth0's public keys
+4. **User Creation**: If valid, creates or retrieves Django user based on Auth0 user info
+5. **Request Processing**: Protected endpoints can access `request.user` and `request.auth0_user`
+
+## Example API Request
+
+```javascript
+// Frontend example
+const response = await fetch('http://localhost:8000/api/find-appointments/', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${auth0Token}` // Auth0 JWT token
+  },
+  body: JSON.stringify({
+    doctor_id: 1,
+    tipo_de_turno_id: 2
+  })
+});
+```
 
 ## Environment Variables Reference
 

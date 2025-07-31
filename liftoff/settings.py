@@ -51,6 +51,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "sanatorio_allende.auth0_middleware.Auth0Middleware",
 ]
 
 ROOT_URLCONF = "liftoff.urls"
@@ -58,7 +59,7 @@ ROOT_URLCONF = "liftoff.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, "sanatorio_allende", "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -164,6 +165,16 @@ SELENIUM_IMPLICIT_WAIT = os.environ.get("SELENIUM_IMPLICIT_WAIT", 10)
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
+# Auth0 Configuration
+AUTH0_DOMAIN = os.environ.get("AUTH0_DOMAIN", "daviddanielarch.auth0.com")
+AUTH0_AUDIENCE = os.environ.get(
+    "AUTH0_AUDIENCE", "https://daviddanielarch.auth0.com/api/v2/"
+)
+AUTH0_ISSUER = os.environ.get("AUTH0_ISSUER", "https://daviddanielarch.auth0.com/")
+AUTH0_CLIENT_ID = os.environ.get("AUTH0_CLIENT_ID")
+
+AUTH0_MANAGEMENT_CLIENT_ID = os.environ.get("AUTH0_MANAGEMENT_CLIENT_ID")
+AUTH0_MANAGEMENT_CLIENT_SECRET = os.environ.get("AUTH0_MANAGEMENT_CLIENT_SECRET")
 
 try:
     from .local import *

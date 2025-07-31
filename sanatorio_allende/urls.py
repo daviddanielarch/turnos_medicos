@@ -5,6 +5,9 @@ from . import views
 app_name = "sanatorio_allende"
 
 urlpatterns = [
+    path("login/", views.LoginView.as_view(), name="login"),
+    path("auth/callback/", views.AuthCallbackView.as_view(), name="auth_callback"),
+    path("api/health/", views.HealthCheckView.as_view(), name="api_health"),
     path("api/doctors/", views.DoctorListView.as_view(), name="api_doctors"),
     path(
         "api/appointment-types/",

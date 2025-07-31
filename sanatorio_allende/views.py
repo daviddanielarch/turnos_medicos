@@ -1,8 +1,10 @@
 import json
-from datetime import datetime, timedelta
+from datetime import timedelta
 
+from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -17,8 +19,38 @@ from .models import (
 )
 
 
+class LoginView(View):
+    """View to serve the Auth0 login template"""
+
+    def get(self, request):
+        """Render the login template with Auth0 configuration"""
+        context = {
+            "auth0_domain": settings.AUTH0_DOMAIN,
+            "auth0_client_id": getattr(settings, "AUTH0_CLIENT_ID", ""),
+            "auth0_audience": settings.AUTH0_AUDIENCE,
+        }
+        return render(request, "login.html", context)
+
+
 @method_decorator(csrf_exempt, name="dispatch")
-class DoctorListView(View):
+class AuthCallbackView(View):
+    """Handle Auth0 callback (redirects back to login page)"""
+
+    def get(self, request):
+        """Redirect to login page after Auth0 callback"""
+        return render(
+            request,
+            "login.html",
+            {
+                "auth0_domain": settings.AUTH0_DOMAIN,
+                "auth0_client_id": getattr(settings, "AUTH0_CLIENT_ID", ""),
+                "auth0_audience": settings.AUTH0_AUDIENCE,
+            },
+        )
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class DoctorListView(LoginRequiredMixin, View):
     """Class-based view for listing doctors"""
 
     def get(self, request):
@@ -40,7 +72,7 @@ class DoctorListView(View):
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class AppointmentTypeListView(View):
+class AppointmentTypeListView(LoginRequiredMixin, View):
     """Class-based view for listing appointment types for a specific doctor"""
 
     def get(self, request):
@@ -72,7 +104,7 @@ class AppointmentTypeListView(View):
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class FindAppointmentView(View):
+class FindAppointmentView(LoginRequiredMixin, View):
     """Class-based view for FindAppointment CRUD operations"""
 
     def get(self, request):
@@ -115,13 +147,19 @@ class FindAppointmentView(View):
             appointments_data.append(
                 {
                     "id": appointment.id,
-                    "name": appointment.doctor.name,
-                    "especialidad": appointment.doctor.especialidad.name,
-                    "location": appointment.doctor.especialidad.sucursal,
-                    "enabled": appointment.active,
-                    "tipo_de_turno": appointment.tipo_de_turno.name,
-                    "doctor_id": appointment.doctor.id,
-                    "tipo_de_turno_id": appointment.tipo_de_turno.id,
+                    "doctor": {
+                        "id": appointment.doctor.id,
+                        "name": appointment.doctor.name,
+                        "especialidad": appointment.doctor.especialidad.name,
+                        "location": appointment.doctor.especialidad.sucursal,
+                    },
+                    "tipo_de_turno": {
+                        "id": appointment.tipo_de_turno.id,
+                        "name": appointment.tipo_de_turno.name,
+                    },
+                    "is_active": appointment.is_active,
+                    "created_at": appointment.created_at.isoformat(),
+                    "updated_at": appointment.updated_at.isoformat(),
                 }
             )
 
@@ -131,99 +169,115 @@ class FindAppointmentView(View):
         """Create a new FindAppointment"""
         data = json.loads(request.body)
         doctor_id = data.get("doctor_id")
-        appointment_type_id = data.get("appointment_type_id")
+        tipo_de_turno_id = data.get("tipo_de_turno_id")
 
-        if not doctor_id or not appointment_type_id:
+        if not doctor_id or not tipo_de_turno_id:
             return JsonResponse(
                 {
                     "success": False,
-                    "error": "doctor_id and appointment_type_id are required",
+                    "error": "doctor_id and tipo_de_turno_id are required",
                 },
                 status=400,
             )
 
-        doctor = get_object_or_404(Doctor, id=doctor_id)
-        appointment_type = get_object_or_404(AppointmentType, id=appointment_type_id)
+        try:
+            doctor = Doctor.objects.get(id=doctor_id)
+            tipo_de_turno = AppointmentType.objects.get(id=tipo_de_turno_id)
 
-        existing_appointment = FindAppointment.objects.filter(
-            doctor=doctor, tipo_de_turno=appointment_type
-        ).first()
-
-        if existing_appointment:
-            return JsonResponse(
-                {
-                    "success": False,
-                    "error": "Appointment already exists for this doctor and service type",
-                },
-                status=400,
+            appointment = FindAppointment.objects.create(
+                doctor=doctor,
+                tipo_de_turno=tipo_de_turno,
+                is_active=True,
             )
 
-        # Create new appointment
-        appointment = FindAppointment.objects.create(
-            doctor=doctor,
-            tipo_de_turno=appointment_type,
-            active=True,
-        )
-
-        return JsonResponse(
-            {
-                "success": True,
-                "message": "Appointment created successfully",
-                "appointment_id": appointment.id,
-            }
-        )
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": "Appointment search created successfully",
+                    "appointment": {
+                        "id": appointment.id,
+                        "doctor": {
+                            "id": appointment.doctor.id,
+                            "name": appointment.doctor.name,
+                            "especialidad": appointment.doctor.especialidad.name,
+                            "location": appointment.doctor.especialidad.sucursal,
+                        },
+                        "tipo_de_turno": {
+                            "id": appointment.tipo_de_turno.id,
+                            "name": appointment.tipo_de_turno.name,
+                        },
+                        "is_active": appointment.is_active,
+                        "created_at": appointment.created_at.isoformat(),
+                        "updated_at": appointment.updated_at.isoformat(),
+                    },
+                },
+                status=201,
+            )
+        except (Doctor.DoesNotExist, AppointmentType.DoesNotExist):
+            return JsonResponse(
+                {"success": False, "error": "Invalid doctor_id or tipo_de_turno_id"},
+                status=400,
+            )
 
     def patch(self, request):
         """Update the active status of a FindAppointment"""
         data = json.loads(request.body)
         appointment_id = data.get("appointment_id")
-        active = data.get("active")
+        is_active = data.get("is_active")
 
-        if appointment_id is None or active is None:
+        if appointment_id is None or is_active is None:
             return JsonResponse(
                 {
                     "success": False,
-                    "error": "appointment_id and active parameters are required",
+                    "error": "appointment_id and is_active are required",
                 },
                 status=400,
             )
 
-        appointment = get_object_or_404(FindAppointment, id=appointment_id)
-        appointment.active = active
-        appointment.save()
+        try:
+            appointment = FindAppointment.objects.get(id=appointment_id)
+            appointment.is_active = is_active
+            appointment.save()
 
-        return JsonResponse(
-            {
-                "success": True,
-                "message": f'Appointment status updated to {"active" if active else "inactive"}',
-            }
-        )
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": "Appointment status updated successfully",
+                    "appointment": {
+                        "id": appointment.id,
+                        "is_active": appointment.is_active,
+                        "updated_at": appointment.updated_at.isoformat(),
+                    },
+                }
+            )
+        except FindAppointment.DoesNotExist:
+            return JsonResponse(
+                {"success": False, "error": "Appointment not found"}, status=404
+            )
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class BestAppointmentListView(View):
-    """Class-based view for listing BestAppointmentFound objects"""
+class BestAppointmentListView(LoginRequiredMixin, View):
+    """Class-based view for listing best appointments found"""
 
     def get(self, request):
-        """Get all BestAppointmentFound objects"""
+        """Get all best appointments found"""
         best_appointments = BestAppointmentFound.objects.select_related(
-            "appointment_wanted",
             "appointment_wanted__doctor",
             "appointment_wanted__doctor__especialidad",
             "appointment_wanted__tipo_de_turno",
-        ).all()
+        ).order_by("-datetime")
 
         appointments_data = []
-        for best_appointment in best_appointments:
-            appointment = best_appointment.appointment_wanted
+        for appointment in best_appointments:
             appointments_data.append(
                 {
-                    "id": best_appointment.id,
-                    "doctor_name": appointment.doctor.name,
-                    "especialidad": appointment.doctor.especialidad.name,
-                    "location": appointment.doctor.especialidad.sucursal,
-                    "tipo_de_turno": appointment.tipo_de_turno.name,
-                    "best_datetime": best_appointment.datetime.isoformat(),
+                    "id": appointment.id,
+                    "doctor_name": appointment.appointment_wanted.doctor.name,
+                    "especialidad": appointment.appointment_wanted.doctor.especialidad.name,
+                    "location": appointment.appointment_wanted.doctor.especialidad.sucursal,
+                    "tipo_de_turno": appointment.appointment_wanted.tipo_de_turno.name,
+                    "best_datetime": appointment.datetime.isoformat(),
                 }
             )
 
@@ -231,7 +285,7 @@ class BestAppointmentListView(View):
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class DeviceRegistrationView(View):
+class DeviceRegistrationView(LoginRequiredMixin, View):
     """Class-based view for DeviceRegistration operations"""
 
     def post(self, request):
@@ -266,5 +320,21 @@ class DeviceRegistrationView(View):
                 "success": True,
                 "message": "Device registered successfully",
                 "created": created,
+            }
+        )
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class HealthCheckView(LoginRequiredMixin, View):
+    """Health check endpoint that doesn't require authentication"""
+
+    def get(self, request):
+        """Simple health check endpoint"""
+        return JsonResponse(
+            {
+                "success": True,
+                "status": "healthy",
+                "timestamp": timezone.now().isoformat(),
+                "message": "API is running",
             }
         )
