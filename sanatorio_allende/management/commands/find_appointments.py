@@ -103,6 +103,8 @@ class Command(BaseCommand):
                 "message_type": message_type,
             }
 
+            self.stdout.write(f"Sending push notification: {push_title}")
+
             # Use the generic send_notification method to customize title
             push_result = PushNotificationService.send_notification(
                 title=push_title,
@@ -118,6 +120,22 @@ class Command(BaseCommand):
                         f"Push notification sent to {push_result['sent_count']}/{push_result['total_devices']} devices"
                     )
                 )
+
+                # Log receipt IDs if available
+                if push_result.get("receipt_ids"):
+                    self.stdout.write(
+                        f"Receipt IDs generated: {len(push_result['receipt_ids'])}"
+                    )
+
+                # Log any errors that occurred
+                if push_result.get("errors"):
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"Some push notification errors: {len(push_result['errors'])} errors"
+                        )
+                    )
+                    for error in push_result["errors"]:
+                        self.stdout.write(f"  - {error}")
             else:
                 self.stdout.write(
                     self.style.WARNING(
