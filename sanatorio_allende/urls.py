@@ -14,6 +14,11 @@ urlpatterns = [
         name="api_appointment_types",
     ),
     path(
+        "api/patients/",
+        views.PatientListView.as_view(),
+        name="api_patients",
+    ),
+    path(
         "api/find-appointments/",
         views.FindAppointmentView.as_view(),
         name="api_find_appointments",

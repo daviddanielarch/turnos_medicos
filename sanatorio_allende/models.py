@@ -1,4 +1,23 @@
+from django.contrib.auth.models import User
 from django.db import models
+
+
+class PacienteAllende(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    name = models.CharField(max_length=255)
+    id_paciente = models.CharField(max_length=255, null=True, blank=True)
+    docid = models.CharField(max_length=255)
+    password = models.CharField(max_length=255)
+    token = models.CharField(max_length=2048, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.id_paciente}"
+
+    class Meta:
+        verbose_name = "Paciente Allende"
+        verbose_name_plural = "Pacientes Allende"
+        ordering = ["id_paciente"]
 
 
 class Especialidad(models.Model):
@@ -70,6 +89,9 @@ class Doctor(models.Model):
 
 
 class FindAppointment(models.Model):
+    patient = models.ForeignKey(
+        PacienteAllende, on_delete=models.CASCADE, null=True, blank=True
+    )
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     tipo_de_turno = models.ForeignKey(AppointmentType, on_delete=models.CASCADE)
     active = models.BooleanField(default=False)
@@ -84,25 +106,11 @@ class FindAppointment(models.Model):
 
 
 class BestAppointmentFound(models.Model):
+    patient = models.ForeignKey(
+        PacienteAllende, on_delete=models.CASCADE, null=True, blank=True
+    )
     appointment_wanted = models.OneToOneField(FindAppointment, on_delete=models.CASCADE)
     datetime = models.DateTimeField()
-
-
-class PacienteAllende(models.Model):
-    name = models.CharField(max_length=255)
-    id_paciente = models.CharField(max_length=255, null=True, blank=True)
-    docid = models.CharField(max_length=255)
-    password = models.CharField(max_length=255)
-    token = models.CharField(max_length=2048, null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.name} - {self.id_paciente}"
-
-    class Meta:
-        verbose_name = "Paciente Allende"
-        verbose_name_plural = "Pacientes Allende"
-        ordering = ["id_paciente"]
 
 
 class DeviceRegistration(models.Model):
@@ -110,6 +118,7 @@ class DeviceRegistration(models.Model):
     Model to store device registration for push notifications
     """
 
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     push_token = models.CharField(max_length=255, unique=True)
     platform = models.CharField(max_length=50, default="expo")  # expo, ios, android
     created_at = models.DateTimeField(auto_now_add=True)

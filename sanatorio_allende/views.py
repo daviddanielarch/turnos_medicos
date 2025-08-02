@@ -16,6 +16,7 @@ from .models import (
     DeviceRegistration,
     Doctor,
     FindAppointment,
+    PacienteAllende,
 )
 
 
@@ -113,6 +114,7 @@ class FindAppointmentView(LoginRequiredMixin, View):
         seconds_filter = request.GET.get("seconds")
 
         find_appointments = FindAppointment.objects.select_related(
+            "patient",
             "doctor",
             "doctor__especialidad",
             "tipo_de_turno",
@@ -164,28 +166,30 @@ class FindAppointmentView(LoginRequiredMixin, View):
         data = json.loads(request.body)
         doctor_id = data.get("doctor_id")
         appointment_type_id = data.get("appointment_type_id")
+        patient_id = data.get("patient_id")
 
-        if not doctor_id or not appointment_type_id:
+        if not doctor_id or not appointment_type_id or not patient_id:
             return JsonResponse(
                 {
                     "success": False,
-                    "error": "doctor_id and appointment_type_id are required",
+                    "error": "doctor_id, appointment_type_id, and patient_id are required",
                 },
                 status=400,
             )
 
         doctor = get_object_or_404(Doctor, id=doctor_id)
         appointment_type = get_object_or_404(AppointmentType, id=appointment_type_id)
+        patient = get_object_or_404(PacienteAllende, id=patient_id)
 
         existing_appointment = FindAppointment.objects.filter(
-            doctor=doctor, tipo_de_turno=appointment_type
+            doctor=doctor, tipo_de_turno=appointment_type, patient=patient
         ).first()
 
         if existing_appointment:
             return JsonResponse(
                 {
                     "success": False,
-                    "error": "Appointment already exists for this doctor and service type",
+                    "error": "Appointment already exists for this doctor, service type, and patient",
                 },
                 status=400,
             )
@@ -194,6 +198,7 @@ class FindAppointmentView(LoginRequiredMixin, View):
         appointment = FindAppointment.objects.create(
             doctor=doctor,
             tipo_de_turno=appointment_type,
+            patient=patient,
             active=True,
         )
 
@@ -239,6 +244,7 @@ class BestAppointmentListView(LoginRequiredMixin, View):
     def get(self, request):
         """Get all BestAppointmentFound objects"""
         best_appointments = BestAppointmentFound.objects.select_related(
+            "patient",
             "appointment_wanted",
             "appointment_wanted__doctor",
             "appointment_wanted__doctor__especialidad",
@@ -260,6 +266,76 @@ class BestAppointmentListView(LoginRequiredMixin, View):
             )
 
         return JsonResponse({"success": True, "best_appointments": appointments_data})
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class PatientListView(LoginRequiredMixin, View):
+    """Class-based view for listing patients"""
+
+    def get(self, request):
+        """Get all patients"""
+        patients = PacienteAllende.objects.filter(user=request.user)
+
+        patients_data = []
+        for patient in patients:
+            patients_data.append(
+                {
+                    "id": patient.id,
+                    "name": patient.name,
+                    "id_paciente": patient.id_paciente,
+                    "docid": patient.docid,
+                    "updated_at": (
+                        patient.updated_at.isoformat() if patient.updated_at else None
+                    ),
+                }
+            )
+
+        return JsonResponse({"success": True, "patients": patients_data})
+
+    def post(self, request):
+        """Create a new patient"""
+        data = json.loads(request.body)
+        name = data.get("name")
+        id_paciente = data.get("id_paciente")
+        docid = data.get("docid")
+        password = data.get("password")
+
+        if not name or not docid or not password:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "name, docid, and password are required",
+                },
+                status=400,
+            )
+
+        # Check if patient already exists with the same docid
+        existing_patient = PacienteAllende.objects.filter(docid=docid).first()
+        if existing_patient:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Patient already exists with this document ID",
+                },
+                status=400,
+            )
+
+        # Create new patient
+        patient = PacienteAllende.objects.create(
+            user=request.user,
+            name=name,
+            id_paciente=id_paciente,
+            docid=docid,
+            password=password,
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Patient created successfully",
+                "patient_id": patient.id,
+            }
+        )
 
 
 @method_decorator(csrf_exempt, name="dispatch")
