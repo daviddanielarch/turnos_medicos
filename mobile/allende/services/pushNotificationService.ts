@@ -1,6 +1,6 @@
-import { config } from "@/src/config/config";
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
+import apiService from './apiService';
 
 export class PushNotificationService {
     private static instance: PushNotificationService;
@@ -53,24 +53,16 @@ export class PushNotificationService {
                 return false;
             }
 
-            const response = await fetch(config.API_ENDPOINTS.DEVICE_REGISTRATIONS, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    push_token: token,
-                    platform: 'expo',
-                }),
+            const response = await apiService.registerDevice({
+                push_token: token,
+                platform: 'expo',
             });
 
-            const data = await response.json();
-
-            if (data.success) {
+            if (response.success) {
                 console.log('[Push] Device registered successfully with backend');
                 return true;
             } else {
-                console.error('[Push] Failed to register device:', data.error);
+                console.error('[Push] Failed to register device:', response.error);
                 return false;
             }
         } catch (error) {

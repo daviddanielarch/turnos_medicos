@@ -10,22 +10,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     scheme: "allende",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
-    ios: {
-        supportsTablet: true,
-        infoPlist: {
-            UIBackgroundModes: [
-                "background-processing"
-            ]
-        },
-        bundleIdentifier: "com.daviddanielarch.turnos-medicos"
-    },
     android: {
         adaptiveIcon: {
             foregroundImage: "./assets/images/adaptive-icon.png",
             backgroundColor: "#ffffff"
         },
         edgeToEdgeEnabled: true,
-        package: "com.daviddanielarch.turnos_medicos",
+        package: "com.daviddanielarch.turnosmedicos",
         googleServicesFile: process.env.GOOGLE_SERVICES_JSON ? "./google-services.json" : "./google-services.json",
         permissions: [
             "RECEIVE_BOOT_COMPLETED",
@@ -57,6 +48,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
                 "icon": "./assets/images/notification-icon.png",
                 "color": "#ffffff"
             }
+        ],
+        [
+            "react-native-auth0",
+            {
+                "domain": "daviddanielarch.auth0.com",
+                "scheme": "com.daviddanielarch.turnosmedicos"
+            }
         ]
     ],
     experiments: {
@@ -67,7 +65,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         eas: {
             projectId: "92a909fc-8725-4e6c-a922-3f53e42399e0"
         },
-        apiHost: "https://turnos-medicos.up.railway.app"
+        apiHost: process.env.EXPO_PUBLIC_API_HOST || "https://turnos-medicos.up.railway.app"
     },
     owner: "daviddanielarch"
 }); 

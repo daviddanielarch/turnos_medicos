@@ -114,11 +114,10 @@ class FindAppointmentView(LoginRequiredMixin, View):
         seconds_filter = request.GET.get("seconds")
 
         find_appointments = FindAppointment.objects.select_related(
-            "patient",
             "doctor",
             "doctor__especialidad",
             "tipo_de_turno",
-        )
+        ).filter(patient=request.user.pacienteallende_set.first())
 
         # If seconds parameter is provided, filter by recent appointments
         if seconds_filter:
@@ -226,6 +225,14 @@ class FindAppointmentView(LoginRequiredMixin, View):
             )
 
         appointment = get_object_or_404(FindAppointment, id=appointment_id)
+        if appointment.patient != request.user.pacienteallende_set.first():
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Appointment does not belong to the current user",
+                },
+                status=401,
+            )
         appointment.active = active
         appointment.save()
 
@@ -243,13 +250,13 @@ class BestAppointmentListView(LoginRequiredMixin, View):
 
     def get(self, request):
         """Get all BestAppointmentFound objects"""
+        patient = request.user.pacienteallende_set.first()
         best_appointments = BestAppointmentFound.objects.select_related(
-            "patient",
             "appointment_wanted",
             "appointment_wanted__doctor",
             "appointment_wanted__doctor__especialidad",
             "appointment_wanted__tipo_de_turno",
-        ).all()
+        ).filter(patient=patient)
 
         appointments_data = []
         for best_appointment in best_appointments:
@@ -360,6 +367,7 @@ class DeviceRegistrationView(LoginRequiredMixin, View):
             defaults={
                 "platform": platform,
                 "is_active": True,
+                "user": request.user,
             },
         )
 

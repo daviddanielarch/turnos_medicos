@@ -46,7 +46,6 @@ class Auth0Middleware(MiddlewareMixin):
         # Skip authentication for certain paths (optional)
         if self._should_skip_auth(request.path):
             return None
-
         # Get the Authorization header
         auth_header = request.headers.get("Authorization")
         if not auth_header:

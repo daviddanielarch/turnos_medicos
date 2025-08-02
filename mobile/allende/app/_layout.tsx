@@ -1,11 +1,17 @@
 import { COLORS } from "@/src/constants/constants";
+import { Auth0AppProvider, Auth0ContextProvider, useAuth0Context } from "@/src/contexts/Auth0Context";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { useEffect } from "react";
+import { StyleSheet } from "react-native";
 import pushNotificationService from "../services/pushNotificationService";
+import LoginScreen from "./login";
 
-export default function RootLayout() {
+function AppContent() {
+  const { isAuthenticated, user, error, getCredentials } = useAuth0Context();
+
   useEffect(() => {
+
     // Set up push notifications for backend notifications
     const setupPushNotifications = async () => {
       try {
@@ -34,8 +40,15 @@ export default function RootLayout() {
     };
 
     setupPushNotifications();
-  }, []);
+  }, [isAuthenticated, user, error, getCredentials]);
 
+
+  // Show login screen if not authenticated
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
+
+  // Show main app with tabs if authenticated
   return (
     <Tabs
       screenOptions={{
@@ -74,3 +87,22 @@ export default function RootLayout() {
     </Tabs>
   );
 }
+
+export default function RootLayout() {
+  return (
+    <Auth0AppProvider>
+      <Auth0ContextProvider>
+        <AppContent />
+      </Auth0ContextProvider>
+    </Auth0AppProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+  },
+});

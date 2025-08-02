@@ -5,25 +5,16 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "allende",
+    "scheme": "com.daviddanielarch.turnosmedicos",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "UIBackgroundModes": [
-          "background-processing"
-        ]
-      },
-      "bundleIdentifier": "com.daviddanielarch.turnos-medicos"
-    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.daviddanielarch.turnos_medicos",
+      "package": "com.daviddanielarch.turnosmedicos",
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
@@ -40,6 +31,12 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "react-native-auth0",
+        {
+          "domain": "daviddanielarch.auth0.com"
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -67,6 +64,9 @@
       },
       "apiHost": "https://turnos-medicos.up.railway.app"
     },
-    "owner": "daviddanielarch"
+    "owner": "daviddanielarch",
+    "ios": {
+      "bundleIdentifier": "com.daviddanielarch.turnosmedicos"
+    }
   }
 }

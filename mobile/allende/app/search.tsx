@@ -1,9 +1,9 @@
-import { API_ENDPOINTS } from "@/src/config/config";
 import { COLORS } from "@/src/constants/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import apiService from "../services/apiService";
 
 interface Item {
     id: number;
@@ -38,13 +38,12 @@ export default function Search() {
     const fetchDoctors = async () => {
         setLoading(true);
         try {
-            const response = await fetch(API_ENDPOINTS.DOCTORS);
-            const data = await response.json();
+            const response = await apiService.getDoctors();
 
-            if (data.success) {
-                setAllItems(data.doctors);
+            if (response.success && response.data) {
+                setAllItems((response.data as any).doctors);
             } else {
-                console.error('Failed to fetch doctors:', data.error);
+                console.error('Failed to fetch doctors:', response.error);
             }
         } catch (error) {
             console.error('Error fetching doctors:', error);
@@ -56,13 +55,12 @@ export default function Search() {
     const fetchAppointmentTypes = async (doctorId: number) => {
         setLoadingServices(true);
         try {
-            const response = await fetch(`${API_ENDPOINTS.APPOINTMENT_TYPES}?doctor_id=${doctorId}`);
-            const data = await response.json();
+            const response = await apiService.getAppointmentTypes(doctorId);
 
-            if (data.success) {
-                setServiceOptions(data.appointment_types);
+            if (response.success && response.data) {
+                setServiceOptions((response.data as any).appointment_types);
             } else {
-                console.error('Failed to fetch appointment types:', data.error);
+                console.error('Failed to fetch appointment types:', response.error);
             }
         } catch (error) {
             console.error('Error fetching appointment types:', error);
@@ -110,26 +108,19 @@ export default function Search() {
     const handleAdd = async () => {
         if (selectedItem && selectedService) {
             try {
-                const response = await fetch(API_ENDPOINTS.FIND_APPOINTMENTS, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        doctor_id: selectedItem.id,
-                        appointment_type_id: selectedService.id
-                    }),
+                const response = await apiService.createFindAppointment({
+                    doctor_id: selectedItem.id,
+                    appointment_type_id: parseInt(selectedService.id),
+                    patient_id: 1 // TODO: Get actual patient ID from user context
                 });
 
-                const data = await response.json();
-
-                if (data.success) {
-                    console.log('Appointment created successfully:', data.message);
+                if (response.success) {
+                    console.log('Appointment created successfully:', response.message);
                     clearSelection();
                     router.push("/");
                 } else {
-                    console.error('Failed to create appointment:', data.error);
-                    Alert.alert('Error', data.error || 'Failed to create appointment');
+                    console.error('Failed to create appointment:', response.error);
+                    Alert.alert('Error', response.error || 'Failed to create appointment');
                 }
             } catch (error) {
                 console.error('Error creating appointment:', error);

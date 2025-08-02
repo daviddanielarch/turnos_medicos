@@ -1,9 +1,9 @@
-import { API_ENDPOINTS } from "@/src/config/config";
 import { COLORS } from "@/src/constants/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, View } from "react-native";
+import apiService from "../services/apiService";
 
 interface BestAppointment {
     id: number;
@@ -34,19 +34,16 @@ export default function BestAppointments() {
     const fetchBestAppointments = async () => {
         setLoading(true);
         try {
-            const response = await fetch(API_ENDPOINTS.BEST_APPOINTMENTS);
-            const data = await response.json();
+            const response = await apiService.getBestAppointments();
 
-            if (data.success) {
-                setBestAppointments(data.best_appointments);
+            if (response.success && response.data) {
+                setBestAppointments((response.data as any).best_appointments);
             } else {
-                console.error('Failed to fetch best appointments:', data.error);
-                console.error(API_ENDPOINTS.BEST_APPOINTMENTS);
+                console.error('Failed to fetch best appointments:', response.error);
                 Alert.alert('Error', 'Failed to load best appointments');
             }
         } catch (error) {
             console.error('Error fetching best appointments:', error);
-            console.error(API_ENDPOINTS.BEST_APPOINTMENTS);
             Alert.alert('Error', 'Network error while loading best appointments');
         } finally {
             setLoading(false);

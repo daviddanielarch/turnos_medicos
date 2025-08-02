@@ -1,9 +1,9 @@
-import { API_ENDPOINTS } from "@/src/config/config";
 import { COLORS } from "@/src/constants/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import apiService from "../services/apiService";
 
 interface Item {
   id: number;
@@ -35,14 +35,13 @@ export default function Index() {
   const fetchAppointments = async () => {
     setLoading(true);
     try {
-      const response = await fetch(API_ENDPOINTS.FIND_APPOINTMENTS);
-      const data = await response.json();
+      const response = await apiService.getFindAppointments();
 
-      if (data.success) {
-        setItems(data.appointments);
+      if (response.success && response.data) {
+        setItems(response.data.appointments);
       } else {
-        console.error('Failed to fetch appointments:', data.error);
-        Alert.alert('Error', 'Failed to load appointments');
+        console.error('Failed to fetch appointments:', response.error);
+        Alert.alert('Error', response.error || 'Failed to load appointments');
       }
     } catch (error) {
       console.error('Error fetching appointments:', error);
@@ -60,25 +59,14 @@ export default function Index() {
 
   const updateAppointmentStatus = async (appointmentId: number, active: boolean) => {
     try {
-      const response = await fetch(API_ENDPOINTS.FIND_APPOINTMENTS, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          appointment_id: appointmentId,
-          active: active
-        }),
-      });
+      const response = await apiService.updateFindAppointmentStatus(appointmentId, active);
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (response.success) {
         console.log('Appointment status updated successfully');
         return true;
       } else {
-        console.error('Failed to update appointment status:', data.error);
-        Alert.alert('Error', 'Failed to update appointment status');
+        console.error('Failed to update appointment status:', response.error);
+        Alert.alert('Error', response.error || 'Failed to update appointment status');
         return false;
       }
     } catch (error) {
