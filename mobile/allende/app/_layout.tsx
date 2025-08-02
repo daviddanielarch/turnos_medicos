@@ -5,17 +5,22 @@ import { Tabs } from "expo-router";
 import { useEffect } from "react";
 import { StyleSheet } from "react-native";
 import pushNotificationService from "../services/pushNotificationService";
-import LoginScreen from "./login";
+import LoginScreen from "./auth/login";
 
 function AppContent() {
   const { isAuthenticated, user, error, getCredentials } = useAuth0Context();
 
   useEffect(() => {
+    // Only set up push notifications if user is authenticated
+    if (!isAuthenticated) {
+      console.log('[App] User not authenticated, skipping push notification setup');
+      return;
+    }
 
     // Set up push notifications for backend notifications
     const setupPushNotifications = async () => {
       try {
-        console.log('[App] Setting up push notifications...');
+        console.log('[App] Setting up push notifications for authenticated user...');
 
         // Set up notification handler
         pushNotificationService.setNotificationHandler();
