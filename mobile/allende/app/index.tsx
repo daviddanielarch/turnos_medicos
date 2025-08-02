@@ -21,18 +21,22 @@ export default function Index() {
   const [refreshing, setRefreshing] = useState(false);
   const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const { clearSession, user } = useAuth0Context();
+  const { clearSession, user, isAuthenticated } = useAuth0Context();
 
-  // Fetch appointments when component mounts
+  // Fetch appointments when component mounts and user is authenticated
   useEffect(() => {
-    fetchAppointments();
-  }, []);
+    if (isAuthenticated) {
+      fetchAppointments();
+    }
+  }, [isAuthenticated]);
 
-  // Refresh appointments when tab comes into focus
+  // Refresh appointments when tab comes into focus and user is authenticated
   useFocusEffect(
     useCallback(() => {
-      fetchAppointments();
-    }, [])
+      if (isAuthenticated) {
+        fetchAppointments();
+      }
+    }, [isAuthenticated])
   );
 
   const handleLogout = async () => {
@@ -76,7 +80,9 @@ export default function Index() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchAppointments();
+    if (isAuthenticated) {
+      await fetchAppointments();
+    }
     setRefreshing(false);
   };
 

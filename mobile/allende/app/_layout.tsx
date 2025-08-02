@@ -4,8 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { useEffect } from "react";
 import { StyleSheet } from "react-native";
+import LoginScreen from "../auth/login";
 import pushNotificationService from "../services/pushNotificationService";
-import LoginScreen from "./auth/login";
 
 function AppContent() {
   const { isAuthenticated, user, error, getCredentials } = useAuth0Context();

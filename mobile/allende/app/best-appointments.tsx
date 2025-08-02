@@ -1,4 +1,5 @@
 import { COLORS } from "@/src/constants/constants";
+import { useAuth0Context } from "@/src/contexts/Auth0Context";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
@@ -18,17 +19,22 @@ export default function BestAppointments() {
     const [bestAppointments, setBestAppointments] = useState<BestAppointment[]>([]);
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+    const { isAuthenticated } = useAuth0Context();
 
-    // Fetch best appointments when component mounts
+    // Fetch best appointments when component mounts and user is authenticated
     useEffect(() => {
-        fetchBestAppointments();
-    }, []);
+        if (isAuthenticated) {
+            fetchBestAppointments();
+        }
+    }, [isAuthenticated]);
 
-    // Refresh best appointments when tab comes into focus
+    // Refresh best appointments when tab comes into focus and user is authenticated
     useFocusEffect(
         useCallback(() => {
-            fetchBestAppointments();
-        }, [])
+            if (isAuthenticated) {
+                fetchBestAppointments();
+            }
+        }, [isAuthenticated])
     );
 
     const fetchBestAppointments = async () => {
@@ -67,6 +73,21 @@ export default function BestAppointments() {
             minute: '2-digit',
         });
     };
+
+    // Show authentication required message if not authenticated
+    if (!isAuthenticated) {
+        return (
+            <View style={{ flex: 1, paddingTop: 50, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="lock-closed-outline" size={64} color="#9ca3af" />
+                <Text style={{ fontSize: 18, color: '#6b7280', marginTop: 16, textAlign: 'center', fontWeight: '500' }}>
+                    Inicia sesión para ver mejores turnos
+                </Text>
+                <Text style={{ fontSize: 14, color: '#9ca3af', marginTop: 8, textAlign: 'center', paddingHorizontal: 32 }}>
+                    Necesitas estar autenticado para ver los mejores turnos encontrados
+                </Text>
+            </View>
+        );
+    }
 
     if (loading) {
         return (

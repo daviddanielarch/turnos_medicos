@@ -1,4 +1,5 @@
 import { COLORS } from "@/src/constants/constants";
+import { useAuth0Context } from "@/src/contexts/Auth0Context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -30,10 +31,13 @@ export default function Search() {
     const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([]);
     const [loading, setLoading] = useState(false);
     const [loadingServices, setLoadingServices] = useState(false);
+    const { isAuthenticated } = useAuth0Context();
 
     useEffect(() => {
-        fetchDoctors();
-    }, []);
+        if (isAuthenticated) {
+            fetchDoctors();
+        }
+    }, [isAuthenticated]);
 
     const fetchDoctors = async () => {
         setLoading(true);
