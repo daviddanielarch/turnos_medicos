@@ -18,6 +18,18 @@ interface FindAppointmentsResponse {
     }>;
 }
 
+export interface Patient {
+    id: number;
+    name: string;
+    id_paciente: string | null;
+    docid: string;
+    updated_at: string | null;
+}
+
+interface PatientsResponse {
+    patients: Patient[];
+}
+
 class ApiService {
     private baseUrl: string;
     private getCredentials: (() => Promise<any>) | null = null;
@@ -129,9 +141,10 @@ class ApiService {
     /**
      * DELETE request
      */
-    async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
+    async delete<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
         return this.makeRequest<T>(endpoint, {
             method: 'DELETE',
+            body: data ? JSON.stringify(data) : undefined,
         });
     }
 
@@ -191,7 +204,7 @@ class ApiService {
      * Get patients
      */
     async getPatients() {
-        return this.get('/api/patients/');
+        return this.get<PatientsResponse>('/api/patients/');
     }
 
     /**
@@ -204,6 +217,13 @@ class ApiService {
         password: string;
     }) {
         return this.post('/api/patients/', data);
+    }
+
+    /**
+     * Delete a patient
+     */
+    async deletePatient(patientId: number) {
+        return this.delete('/api/patients/', { patient_id: patientId });
     }
 
     /**

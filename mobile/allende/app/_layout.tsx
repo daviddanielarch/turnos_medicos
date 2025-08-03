@@ -89,6 +89,15 @@ function AppContent() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="patients"
+        options={{
+          title: "Pacientes",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="people" size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

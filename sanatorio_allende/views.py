@@ -113,6 +113,7 @@ class FindAppointmentView(LoginRequiredMixin, View):
         # Get optional seconds parameter for filtering recent appointments
         seconds_filter = request.GET.get("seconds")
 
+        print(request.user.pacienteallende_set.first())
         find_appointments = FindAppointment.objects.select_related(
             "doctor",
             "doctor__especialidad",
@@ -343,6 +344,38 @@ class PatientListView(LoginRequiredMixin, View):
                 "patient_id": patient.id,
             }
         )
+
+    def delete(self, request):
+        """Delete a patient"""
+        data = json.loads(request.body)
+        patient_id = data.get("patient_id")
+
+        if not patient_id:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "patient_id is required",
+                },
+                status=400,
+            )
+
+        try:
+            patient = PacienteAllende.objects.get(id=patient_id, user=request.user)
+            patient.delete()
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": "Patient deleted successfully",
+                }
+            )
+        except PacienteAllende.DoesNotExist:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Patient not found",
+                },
+                status=404,
+            )
 
 
 @method_decorator(csrf_exempt, name="dispatch")
