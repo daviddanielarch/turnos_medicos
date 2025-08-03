@@ -1,3 +1,4 @@
+import CustomHeader from "@/src/components/CustomHeader";
 import { COLORS } from "@/src/constants/constants";
 import { useAuth0Context } from "@/src/contexts/Auth0Context";
 import { Ionicons } from "@expo/vector-icons";
@@ -77,7 +78,7 @@ export default function BestAppointments() {
     // Show authentication required message if not authenticated
     if (!isAuthenticated) {
         return (
-            <View style={{ flex: 1, paddingTop: 50, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ flex: 1, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' }}>
                 <Ionicons name="lock-closed-outline" size={64} color="#9ca3af" />
                 <Text style={{ fontSize: 18, color: '#6b7280', marginTop: 16, textAlign: 'center', fontWeight: '500' }}>
                     Inicia sesión para ver mejores turnos
@@ -91,41 +92,38 @@ export default function BestAppointments() {
 
     if (loading) {
         return (
-            <View style={{ flex: 1, paddingTop: 50, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color={COLORS.PRIMARY} />
-                <Text style={{ fontSize: 16, color: '#6b7280', marginTop: 16 }}>
-                    Cargando mejores turnos...
-                </Text>
+            <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+                <CustomHeader title="Mejores turnos" />
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color={COLORS.PRIMARY} />
+                    <Text style={{ fontSize: 16, color: '#6b7280', marginTop: 16 }}>
+                        Cargando mejores turnos...
+                    </Text>
+                </View>
             </View>
         );
     }
 
     if (bestAppointments.length === 0) {
         return (
-            <View style={{ flex: 1, paddingTop: 50, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' }}>
-                <Ionicons name="calendar-outline" size={64} color="#9ca3af" />
-                <Text style={{ fontSize: 18, color: '#6b7280', marginTop: 16, textAlign: 'center' }}>
-                    No se encontraron mejores turnos
-                </Text>
-                <Text style={{ fontSize: 14, color: '#9ca3af', marginTop: 8, textAlign: 'center', paddingHorizontal: 32 }}>
-                    Los mejores turnos encontrados aparecerán aquí cuando estén disponibles
-                </Text>
+            <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+                <CustomHeader title="Mejores turnos" />
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <Ionicons name="calendar-outline" size={64} color="#9ca3af" />
+                    <Text style={{ fontSize: 18, color: '#6b7280', marginTop: 16, textAlign: 'center' }}>
+                        No se encontraron mejores turnos
+                    </Text>
+                    <Text style={{ fontSize: 14, color: '#9ca3af', marginTop: 8, textAlign: 'center', paddingHorizontal: 32 }}>
+                        Los mejores turnos encontrados aparecerán aquí cuando estén disponibles
+                    </Text>
+                </View>
             </View>
         );
     }
 
     return (
-        <View style={{ flex: 1, paddingTop: 50, backgroundColor: '#f8fafc' }}>
-            <View style={styles.header}>
-                <View style={styles.headerContent}>
-                    <View>
-                        <Text style={styles.headerTitle}>Mejores Turnos Encontrados</Text>
-                        <Text style={styles.headerSubtitle}>
-                            {bestAppointments.length} turno{bestAppointments.length !== 1 ? 's' : ''} encontrado{bestAppointments.length !== 1 ? 's' : ''}
-                        </Text>
-                    </View>
-                </View>
-            </View>
+        <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+            <CustomHeader title="Mejores turnos" />
 
             <ScrollView
                 style={styles.container}

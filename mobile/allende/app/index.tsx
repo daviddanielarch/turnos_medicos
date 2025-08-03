@@ -1,3 +1,4 @@
+import CustomHeader from "@/src/components/CustomHeader";
 import { COLORS } from "@/src/constants/constants";
 import { useAuth0Context } from "@/src/contexts/Auth0Context";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,8 +21,7 @@ export default function Index() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const { clearSession, user, isAuthenticated } = useAuth0Context();
+  const { isAuthenticated } = useAuth0Context();
 
   // Fetch appointments when component mounts and user is authenticated
   useEffect(() => {
@@ -38,26 +38,6 @@ export default function Index() {
       }
     }, [isAuthenticated])
   );
-
-  const handleLogout = async () => {
-    console.log('[Index] Starting logout process...');
-    setIsLoggingOut(true);
-    try {
-      console.log('[Index] Calling clearSession()...');
-      await clearSession();
-      console.log('[Index] Logout successful');
-    } catch (error) {
-      console.error('[Index] Logout error:', error);
-      Alert.alert(
-        'Error de Cierre de Sesión',
-        'Ocurrió un error durante el cierre de sesión. Por favor, inténtalo de nuevo.',
-        [{ text: 'OK' }]
-      );
-    } finally {
-      console.log('[Index] Logout process completed');
-      setIsLoggingOut(false);
-    }
-  };
 
   const fetchAppointments = async () => {
     setLoading(true);
@@ -111,18 +91,18 @@ export default function Index() {
 
     const newEnabled = !item.enabled;
 
-    // Add item to updating set
-    setUpdatingItems(prev => new Set(prev).add(id));
-
     // Optimistically update the UI
     setItems(items.map(item =>
       item.id === id ? { ...item, enabled: newEnabled } : item
     ));
 
-    // Call the backend API
+    // Add to updating set
+    setUpdatingItems(prev => new Set(prev).add(id));
+
+    // Make API call
     const success = await updateAppointmentStatus(id, newEnabled);
 
-    // Remove item from updating set
+    // Remove from updating set
     setUpdatingItems(prev => {
       const newSet = new Set(prev);
       newSet.delete(id);
@@ -139,58 +119,21 @@ export default function Index() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, paddingTop: 50, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color={COLORS.PRIMARY} />
-        <Text style={{ fontSize: 16, color: '#6b7280', marginTop: 16 }}>
-          Cargando turnos...
-        </Text>
+      <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+        <CustomHeader title="Turnos activados" />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={COLORS.PRIMARY} />
+          <Text style={{ fontSize: 16, color: '#6b7280', marginTop: 16 }}>
+            Cargando turnos...
+          </Text>
+        </View>
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, paddingTop: 50, backgroundColor: '#f8fafc' }}>
-
-      {/* Header */}
-      <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-          <Text style={{ fontSize: 24, fontWeight: '700', color: '#111827' }}>
-            Turnos activados
-          </Text>
-          <TouchableOpacity
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: '#dc3545',
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-              borderRadius: 8,
-              opacity: isLoggingOut ? 0.7 : 1,
-            }}
-            onPress={handleLogout}
-            disabled={isLoggingOut}
-          >
-            {isLoggingOut ? (
-              <ActivityIndicator color="white" size="small" />
-            ) : (
-              <>
-                <Ionicons name="log-out-outline" size={16} color="white" />
-                <Text style={{ color: 'white', fontSize: 14, fontWeight: '600', marginLeft: 4 }}>
-                  Salir
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-        <Text style={{ fontSize: 16, color: '#6b7280' }}>
-          {items.length} turno{items.length !== 1 ? 's' : ''} configurado{items.length !== 1 ? 's' : ''}
-        </Text>
-        {user?.name && (
-          <Text style={{ fontSize: 14, color: '#9ca3af', marginTop: 4 }}>
-            Hola, {user.name}
-          </Text>
-        )}
-      </View>
+    <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+      <CustomHeader title="Turnos activados" />
 
       {/* Items List */}
       <ScrollView

@@ -1,3 +1,4 @@
+import CustomHeader from "@/src/components/CustomHeader";
 import { COLORS } from "@/src/constants/constants";
 import { useAuth0Context } from "@/src/contexts/Auth0Context";
 import { Ionicons } from "@expo/vector-icons";
@@ -134,7 +135,9 @@ export default function Search() {
     };
 
     return (
-        <View style={{ flex: 1, paddingTop: 50, backgroundColor: '#f8fafc' }}>
+        <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+            <CustomHeader title="Buscar" />
+
             {/* Search Section */}
             <View style={{ padding: 20 }}>
                 {/* Search Input */}
