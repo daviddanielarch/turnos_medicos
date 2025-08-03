@@ -133,13 +133,9 @@ export default function PatientsScreen() {
 
     const handleSelectPatient = (patient: Patient) => {
         if (selectedPatient?.id === patient.id) {
-            // If already selected, deselect it
             setSelectedPatient(null);
-            Alert.alert('Paciente deseleccionado', `${patient.name} ya no está seleccionado`);
         } else {
-            // Select the new patient
             setSelectedPatient(patient);
-            Alert.alert('Paciente seleccionado', `${patient.name} (DNI: ${patient.docid}) está ahora seleccionado`);
         }
     };
 
@@ -166,14 +162,9 @@ export default function PatientsScreen() {
                 <View style={styles.patientInfo}>
                     <View style={styles.patientHeader}>
                         <Text style={styles.patientName}>{item.name}</Text>
-                        {isSelected && (
-                            <View style={styles.selectedIndicator}>
-                                <Ionicons name="checkmark-circle" size={20} color={COLORS.PRIMARY} />
-                            </View>
-                        )}
                     </View>
                     <Text style={styles.patientDetails}>
-                        ID: {item.id_paciente || 'N/A'} • DNI: {item.docid}
+                        DNI: {item.docid}
                     </Text>
                     <Text style={styles.patientDate}>
                         Actualizado: {item.updated_at ? new Date(item.updated_at).toLocaleDateString('es-AR') : 'N/A'}
@@ -217,24 +208,6 @@ export default function PatientsScreen() {
             />
 
             <View style={styles.content}>
-                <View style={styles.header}>
-                    <Text style={styles.sectionTitle}>Mis Pacientes</Text>
-                    <TouchableOpacity
-                        style={styles.addButton}
-                        onPress={() => setShowAddModal(true)}
-                    >
-                        <Ionicons name="add" size={24} color="white" />
-                    </TouchableOpacity>
-                </View>
-
-                {selectedPatient && (
-                    <View style={styles.selectedPatientBanner}>
-                        <Ionicons name="checkmark-circle" size={16} color="white" />
-                        <Text style={styles.selectedPatientText}>
-                            Paciente seleccionado: {selectedPatient.name} (DNI: {selectedPatient.docid})
-                        </Text>
-                    </View>
-                )}
 
                 {loading ? (
                     <View style={styles.loadingContainer}>
@@ -258,6 +231,14 @@ export default function PatientsScreen() {
                     />
                 )}
             </View>
+
+            {/* Floating Action Button */}
+            <TouchableOpacity
+                style={styles.floatingAddButton}
+                onPress={() => setShowAddModal(true)}
+            >
+                <Ionicons name="add" size={24} color="white" />
+            </TouchableOpacity>
 
             {/* Add Patient Modal */}
             <Modal
@@ -287,17 +268,6 @@ export default function PatientsScreen() {
                                 onChangeText={(text) => setFormData({ ...formData, name: text })}
                                 placeholder="Nombre completo del paciente"
                                 autoCapitalize="words"
-                            />
-                        </View>
-
-                        <View style={styles.formGroup}>
-                            <Text style={styles.label}>ID Paciente</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={formData.id_paciente}
-                                onChangeText={(text) => setFormData({ ...formData, id_paciente: text })}
-                                placeholder="ID del paciente (opcional)"
-                                keyboardType="numeric"
                             />
                         </View>
 
@@ -364,11 +334,29 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 16,
     },
+    floatingAddButton: {
+        position: 'absolute',
+        bottom: 20,
+        right: 20,
+        backgroundColor: COLORS.PRIMARY,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+    },
     header: {
         flexDirection: 'row',
+        marginLeft: 160,
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 20,
+
     },
     sectionTitle: {
         fontSize: 24,
