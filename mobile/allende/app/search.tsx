@@ -1,6 +1,7 @@
 import CustomHeader from "@/src/components/CustomHeader";
 import { COLORS } from "@/src/constants/constants";
 import { useAuth0Context } from "@/src/contexts/Auth0Context";
+import { usePatientContext } from "@/src/contexts/PatientContext";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -33,6 +34,7 @@ export default function Search() {
     const [loading, setLoading] = useState(false);
     const [loadingServices, setLoadingServices] = useState(false);
     const { isAuthenticated } = useAuth0Context();
+    const { selectedPatient } = usePatientContext();
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -112,11 +114,21 @@ export default function Search() {
 
     const handleAdd = async () => {
         if (selectedItem && selectedService) {
+            if (!selectedPatient) {
+                Alert.alert('Error', 'No patient selected. Please select a patient first.');
+                return;
+            }
+
+            if (!selectedPatient.id) {
+                Alert.alert('Error', 'Selected patient has no valid ID.');
+                return;
+            }
+
             try {
                 const response = await apiService.createFindAppointment({
                     doctor_id: selectedItem.id,
                     appointment_type_id: parseInt(selectedService.id),
-                    patient_id: 1 // TODO: Get actual patient ID from user context
+                    patient_id: selectedPatient.id
                 });
 
                 if (response.success) {

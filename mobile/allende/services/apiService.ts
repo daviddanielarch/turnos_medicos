@@ -113,6 +113,8 @@ class ApiService {
             url += `?${searchParams.toString()}`;
         }
 
+        console.log('Making GET request to:', `${this.baseUrl}${url}`);
+
         return this.makeRequest<T>(url, {
             method: 'GET',
         });
@@ -167,9 +169,14 @@ class ApiService {
     /**
      * Get find appointments
      */
-    async getFindAppointments(seconds?: number) {
-        const params = seconds ? { seconds: seconds.toString() } : undefined;
-        return this.get<FindAppointmentsResponse>('/api/find-appointments/', params);
+    async getFindAppointments(patient_id?: number) {
+        console.log('getFindAppointments called with patient_id:', patient_id);
+        const params: Record<string, string> = {};
+        if (patient_id) {
+            params.patient_id = patient_id.toString();
+        }
+        console.log('API params:', params);
+        return this.get<FindAppointmentsResponse>('/api/find-appointments/', Object.keys(params).length > 0 ? params : undefined);
     }
 
     /**
@@ -196,8 +203,12 @@ class ApiService {
     /**
      * Get best appointments
      */
-    async getBestAppointments() {
-        return this.get('/api/best-appointments/');
+    async getBestAppointments(patient_id?: number) {
+        const params: Record<string, string> = {};
+        if (patient_id) {
+            params.patient_id = patient_id.toString();
+        }
+        return this.get('/api/best-appointments/', Object.keys(params).length > 0 ? params : undefined);
     }
 
     /**

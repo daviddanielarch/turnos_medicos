@@ -1,5 +1,6 @@
 import { COLORS } from "@/src/constants/constants";
 import { Auth0AppProvider, Auth0ContextProvider, useAuth0Context } from "@/src/contexts/Auth0Context";
+import { PatientProvider } from "@/src/contexts/PatientContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { useEffect } from "react";
@@ -106,7 +107,9 @@ export default function RootLayout() {
   return (
     <Auth0AppProvider>
       <Auth0ContextProvider>
-        <AppContent />
+        <PatientProvider>
+          <AppContent />
+        </PatientProvider>
       </Auth0ContextProvider>
     </Auth0AppProvider>
   );

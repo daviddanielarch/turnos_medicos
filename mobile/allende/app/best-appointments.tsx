@@ -1,6 +1,7 @@
 import CustomHeader from "@/src/components/CustomHeader";
 import { COLORS } from "@/src/constants/constants";
 import { useAuth0Context } from "@/src/contexts/Auth0Context";
+import { usePatientContext } from "@/src/contexts/PatientContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
@@ -21,27 +22,33 @@ export default function BestAppointments() {
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const { isAuthenticated } = useAuth0Context();
+    const { selectedPatient } = usePatientContext();
 
     // Fetch best appointments when component mounts and user is authenticated
     useEffect(() => {
-        if (isAuthenticated) {
+        if (isAuthenticated && selectedPatient) {
             fetchBestAppointments();
         }
-    }, [isAuthenticated]);
+    }, [isAuthenticated, selectedPatient]);
 
     // Refresh best appointments when tab comes into focus and user is authenticated
     useFocusEffect(
         useCallback(() => {
-            if (isAuthenticated) {
+            if (isAuthenticated && selectedPatient) {
                 fetchBestAppointments();
             }
-        }, [isAuthenticated])
+        }, [isAuthenticated, selectedPatient])
     );
 
     const fetchBestAppointments = async () => {
+        if (!selectedPatient) {
+            console.log('No patient selected');
+            return;
+        }
+
         setLoading(true);
         try {
-            const response = await apiService.getBestAppointments();
+            const response = await apiService.getBestAppointments(selectedPatient.id);
 
             if (response.success && response.data) {
                 setBestAppointments((response.data as any).best_appointments);
@@ -85,6 +92,21 @@ export default function BestAppointments() {
                 </Text>
                 <Text style={{ fontSize: 14, color: '#9ca3af', marginTop: 8, textAlign: 'center', paddingHorizontal: 32 }}>
                     Necesitas estar autenticado para ver los mejores turnos encontrados
+                </Text>
+            </View>
+        );
+    }
+
+    // Show patient selection required message if no patient is selected
+    if (!selectedPatient) {
+        return (
+            <View style={{ flex: 1, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="person-outline" size={64} color="#9ca3af" />
+                <Text style={{ fontSize: 18, color: '#6b7280', marginTop: 16, textAlign: 'center', fontWeight: '500' }}>
+                    Selecciona un paciente
+                </Text>
+                <Text style={{ fontSize: 14, color: '#9ca3af', marginTop: 8, textAlign: 'center', paddingHorizontal: 32 }}>
+                    Necesitas seleccionar un paciente para ver sus mejores turnos
                 </Text>
             </View>
         );

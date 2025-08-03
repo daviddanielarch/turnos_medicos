@@ -111,38 +111,15 @@ class FindAppointmentView(LoginRequiredMixin, View):
     def get(self, request):
         """Get all FindAppointment objects with optional time filtering"""
         # Get optional seconds parameter for filtering recent appointments
-        seconds_filter = request.GET.get("seconds")
+        patient_id = request.GET.get("patient_id")
+        patient = get_object_or_404(PacienteAllende, id=patient_id)
+        print(f"Received patient_id: {patient_id} (type: {type(patient_id)})")
 
-        print(request.user.pacienteallende_set.first())
         find_appointments = FindAppointment.objects.select_related(
             "doctor",
             "doctor__especialidad",
             "tipo_de_turno",
-        ).filter(patient=request.user.pacienteallende_set.first())
-
-        # If seconds parameter is provided, filter by recent appointments
-        if seconds_filter:
-            try:
-                seconds = int(seconds_filter)
-                time_threshold = timezone.now() - timedelta(seconds=seconds)
-
-                # Get recent best appointments found within the time window
-                recent_best_appointments = BestAppointmentFound.objects.filter(
-                    datetime__gte=time_threshold
-                ).values_list("appointment_wanted_id", flat=True)
-
-                # Filter find appointments that have recent best appointments
-                find_appointments = find_appointments.filter(
-                    id__in=recent_best_appointments
-                )
-            except ValueError:
-                return JsonResponse(
-                    {
-                        "success": False,
-                        "error": "Invalid seconds parameter. Must be a number.",
-                    },
-                    status=400,
-                )
+        ).filter(patient=patient)
 
         appointments_data = []
         for appointment in find_appointments:
@@ -251,7 +228,9 @@ class BestAppointmentListView(LoginRequiredMixin, View):
 
     def get(self, request):
         """Get all BestAppointmentFound objects"""
-        patient = request.user.pacienteallende_set.first()
+        patient_id = request.GET.get("patient_id")
+        patient = get_object_or_404(PacienteAllende, id=patient_id)
+
         best_appointments = BestAppointmentFound.objects.select_related(
             "appointment_wanted",
             "appointment_wanted__doctor",

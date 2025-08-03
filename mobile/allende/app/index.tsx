@@ -1,6 +1,7 @@
 import CustomHeader from "@/src/components/CustomHeader";
 import { COLORS } from "@/src/constants/constants";
 import { useAuth0Context } from "@/src/contexts/Auth0Context";
+import { usePatientContext } from "@/src/contexts/PatientContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
@@ -22,27 +23,42 @@ export default function Index() {
   const [refreshing, setRefreshing] = useState(false);
   const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
   const { isAuthenticated } = useAuth0Context();
+  const { selectedPatient } = usePatientContext();
 
   // Fetch appointments when component mounts and user is authenticated
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && selectedPatient) {
       fetchAppointments();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, selectedPatient]);
 
   // Refresh appointments when tab comes into focus and user is authenticated
   useFocusEffect(
     useCallback(() => {
-      if (isAuthenticated) {
+      if (isAuthenticated && selectedPatient) {
         fetchAppointments();
       }
-    }, [isAuthenticated])
+    }, [isAuthenticated, selectedPatient])
   );
 
   const fetchAppointments = async () => {
+    if (!selectedPatient) {
+      console.log('No patient selected');
+      return;
+    }
+
+    if (!selectedPatient.id) {
+      console.log('Selected patient has no ID:', selectedPatient);
+      Alert.alert('Error', 'El paciente seleccionado no tiene un ID válido');
+      return;
+    }
+
+    console.log('Selected patient:', selectedPatient);
+    console.log('Selected patient ID:', selectedPatient.id);
+
     setLoading(true);
     try {
-      const response = await apiService.getFindAppointments();
+      const response = await apiService.getFindAppointments(selectedPatient.id);
 
       if (response.success && response.data) {
         setItems(response.data.appointments);
@@ -60,7 +76,7 @@ export default function Index() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    if (isAuthenticated) {
+    if (isAuthenticated && selectedPatient) {
       await fetchAppointments();
     }
     setRefreshing(false);
@@ -125,6 +141,35 @@ export default function Index() {
           <ActivityIndicator size="large" color={COLORS.PRIMARY} />
           <Text style={{ fontSize: 16, color: '#6b7280', marginTop: 16 }}>
             Cargando turnos...
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (!selectedPatient) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+        <CustomHeader title="Turnos activados" />
+        <View style={{
+          backgroundColor: 'white',
+          padding: 32,
+          marginTop: 8,
+          marginHorizontal: 16,
+          borderRadius: 12,
+          alignItems: 'center',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.05,
+          shadowRadius: 4,
+          elevation: 2,
+        }}>
+          <Ionicons name="person-outline" size={48} color="#d1d5db" />
+          <Text style={{ fontSize: 18, color: '#6b7280', marginTop: 16, fontWeight: '500' }}>
+            No hay paciente seleccionado
+          </Text>
+          <Text style={{ fontSize: 14, color: '#9ca3af', marginTop: 4, textAlign: 'center' }}>
+            Ve a la pestaña "Pacientes" para seleccionar un paciente
           </Text>
         </View>
       </View>

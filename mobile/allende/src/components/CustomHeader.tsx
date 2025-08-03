@@ -1,5 +1,6 @@
 import { COLORS } from '@/src/constants/constants';
 import { useAuth0Context } from '@/src/contexts/Auth0Context';
+import { usePatientContext } from '@/src/contexts/PatientContext';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -10,6 +11,7 @@ interface CustomHeaderProps {
     onBackPress?: () => void;
     showUserInfo?: boolean;
     showLogoutButton?: boolean;
+    showPatientInfo?: boolean;
 }
 
 export default function CustomHeader({
@@ -17,9 +19,11 @@ export default function CustomHeader({
     showBackButton = false,
     onBackPress,
     showUserInfo = true,
-    showLogoutButton = true
+    showLogoutButton = true,
+    showPatientInfo = true
 }: CustomHeaderProps) {
     const { user, clearSession } = useAuth0Context();
+    const { selectedPatient } = usePatientContext();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const getUserDisplayName = () => {
@@ -77,6 +81,12 @@ export default function CustomHeader({
                     {showUserInfo && (
                         <Text style={styles.userName}>{getUserDisplayName()}</Text>
                     )}
+                    {showPatientInfo && selectedPatient && (
+                        <View style={styles.patientInfo}>
+                            <Ionicons name="person" size={12} color={COLORS.PRIMARY} />
+                            <Text style={styles.patientDni}>DNI: {selectedPatient.docid}</Text>
+                        </View>
+                    )}
                 </View>
 
                 {showLogoutButton && (
@@ -126,6 +136,17 @@ const styles = StyleSheet.create({
     userName: {
         fontSize: 14,
         color: '#666',
+        fontWeight: '500',
+        marginBottom: 2,
+    },
+    patientInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    patientDni: {
+        fontSize: 12,
+        color: COLORS.PRIMARY,
         fontWeight: '500',
     },
     logoutButton: {
