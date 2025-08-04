@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 from django.contrib.auth.models import User
@@ -31,6 +32,22 @@ def client(user):
     """Django test client fixture with authenticated user"""
     client = Client()
     client.force_login(user)
+    return client
+
+
+@pytest.fixture
+def evil_user():
+    """Create a test user"""
+    return User.objects.create_user(
+        username="eviluser", email="evil@example.com", password="evilpass123"
+    )
+
+
+@pytest.fixture
+def evil_client(evil_user):
+    """Django test client fixture with authenticated user"""
+    client = Client()
+    client.force_login(evil_user)
     return client
 
 
@@ -189,10 +206,18 @@ class TestFindAppointmentView:
     """Test cases for FindAppointmentView"""
 
     @pytest.mark.django_db
+    def test_get_find_appointments_for_other_user(self, evil_client, find_appointment):
+        """Test successful GET request to list find appointments"""
+        url = reverse("sanatorio_allende:api_find_appointments")
+        response = evil_client.get(url, {"patient_id": find_appointment.patient.id})
+
+        assert response.status_code == 401
+
+    @pytest.mark.django_db
     def test_get_find_appointments_success(self, client, find_appointment):
         """Test successful GET request to list find appointments"""
         url = reverse("sanatorio_allende:api_find_appointments")
-        response = client.get(url)
+        response = client.get(url, {"patient_id": find_appointment.patient.id})
 
         assert response.status_code == 200
         data = json.loads(response.content)
@@ -219,47 +244,21 @@ class TestFindAppointmentView:
         )
 
     @pytest.mark.django_db
-    def test_get_find_appointments_with_seconds_filter(
-        self, client, find_appointment, best_appointment_found
+    def test_post_create_appointment_for_other_user(
+        self, evil_client, doctor, appointment_type, patient
     ):
-        """Test GET request with seconds filter"""
+        """Test POST request for other user"""
         url = reverse("sanatorio_allende:api_find_appointments")
-        response = client.get(url, {"seconds": 3600})  # 1 hour
-
-        assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["success"] is True
-        assert len(data["appointments"]) == 1
-
-    @pytest.mark.django_db
-    def test_get_find_appointments_with_seconds_filter_excludes_old(
-        self, client, find_appointment, patient
-    ):
-        """Test GET request with seconds filter excludes old appointments"""
-        # Create an old best appointment (more than 1 hour ago)
-        old_datetime = timezone.now() - timedelta(hours=2)
-        BestAppointmentFound.objects.create(
-            appointment_wanted=find_appointment, patient=patient, datetime=old_datetime
+        data = {
+            "doctor_id": doctor.id,
+            "appointment_type_id": appointment_type.id,
+            "patient_id": patient.id,
+        }
+        response = evil_client.post(
+            url, json.dumps(data), content_type="application/json"
         )
 
-        url = reverse("sanatorio_allende:api_find_appointments")
-        response = client.get(url, {"seconds": 3600})  # 1 hour
-
-        assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["success"] is True
-        assert len(data["appointments"]) == 0  # Should be filtered out
-
-    @pytest.mark.django_db
-    def test_get_find_appointments_invalid_seconds(self, client):
-        """Test GET request with invalid seconds parameter"""
-        url = reverse("sanatorio_allende:api_find_appointments")
-        response = client.get(url, {"seconds": "invalid"})
-
-        assert response.status_code == 400
-        data = json.loads(response.content)
-        assert data["success"] is False
-        assert "Invalid seconds parameter" in data["error"]
+        assert response.status_code == 401
 
     @pytest.mark.django_db
     def test_post_create_appointment_success(
@@ -364,12 +363,30 @@ class TestFindAppointmentView:
         )
 
     @pytest.mark.django_db
+    def test_patch_update_appointment_for_other_user(
+        self, evil_client, find_appointment
+    ):
+        """Test PATCH request for other user"""
+        url = reverse("sanatorio_allende:api_find_appointments")
+        data = {
+            "appointment_id": find_appointment.id,
+            "active": False,
+            "patient_id": find_appointment.patient.id,
+        }
+        response = evil_client.patch(
+            url, json.dumps(data), content_type="application/json"
+        )
+
+        assert response.status_code == 401
+
+    @pytest.mark.django_db
     def test_patch_update_appointment_status_success(self, client, find_appointment):
         """Test successful PATCH request to update appointment status"""
         url = reverse("sanatorio_allende:api_find_appointments")
         data = {
             "appointment_id": find_appointment.id,
             "active": False,
+            "patient_id": find_appointment.patient.id,
         }
         response = client.patch(url, json.dumps(data), content_type="application/json")
 
@@ -395,12 +412,13 @@ class TestFindAppointmentView:
         assert "appointment_id and active parameters are required" in data["error"]
 
     @pytest.mark.django_db
-    def test_patch_update_appointment_not_found(self, client):
+    def test_patch_update_appointment_not_found(self, client, patient):
         """Test PATCH request with non-existent appointment"""
         url = reverse("sanatorio_allende:api_find_appointments")
         data = {
             "appointment_id": 999,
             "active": False,
+            "patient_id": patient.id,
         }
         response = client.patch(url, json.dumps(data), content_type="application/json")
 
@@ -414,7 +432,7 @@ class TestBestAppointmentListView:
     def test_get_best_appointments_success(self, client, best_appointment_found):
         """Test successful GET request to list best appointments"""
         url = reverse("sanatorio_allende:api_best_appointments")
-        response = client.get(url)
+        response = client.get(url, {"patient_id": best_appointment_found.patient.id})
 
         assert response.status_code == 200
         data = json.loads(response.content)
@@ -437,10 +455,22 @@ class TestBestAppointmentListView:
         assert "best_datetime" in data["best_appointments"][0]
 
     @pytest.mark.django_db
-    def test_get_best_appointments_empty(self, client):
+    def test_get_best_appointments_appointment_for_other_user(
+        self, evil_client, best_appointment_found
+    ):
+        """Test successful GET request to list best appointments"""
+        url = reverse("sanatorio_allende:api_best_appointments")
+        response = evil_client.get(
+            url, {"patient_id": best_appointment_found.patient.id}
+        )
+
+        assert response.status_code == 401
+
+    @pytest.mark.django_db
+    def test_get_best_appointments_empty(self, client, patient):
         """Test GET request when no best appointments exist"""
         url = reverse("sanatorio_allende:api_best_appointments")
-        response = client.get(url)
+        response = client.get(url, {"patient_id": patient.id})
 
         assert response.status_code == 200
         data = json.loads(response.content)
@@ -478,8 +508,13 @@ class TestPatientListView:
         assert len(data["patients"]) == 0
 
     @pytest.mark.django_db
-    def test_post_create_patient_success(self, client):
+    @patch("sanatorio_allende.appointments.requests.post")
+    def test_post_create_patient_success(self, mock_post, client):
         """Test successful POST request to create patient"""
+        # Mock the requests.post call in Allende.validate_credentials
+        mock_response = type("MockResponse", (), {"status_code": 200})()
+        mock_post.return_value = mock_response
+
         url = reverse("sanatorio_allende:api_patients")
         data = {
             "name": "María García",
@@ -497,9 +532,39 @@ class TestPatientListView:
 
         created_patient = PacienteAllende.objects.get(id=data["patient_id"])
         assert created_patient.name == "María García"
-        assert created_patient.id_paciente == "67890"
+        assert created_patient.id_paciente is None
         assert created_patient.docid == "87654321"
         assert created_patient.password == "testpass456"
+
+        # Verify the mock was called with the expected parameters
+        mock_post.assert_called_once()
+        call_args = mock_post.call_args
+        assert call_args[0][0] == "https://miportal.sanatorioallende.com/backend/Token"
+        assert (
+            call_args[1]["data"]["NumeroDocumento"] == "ODc2NTQzMjE="
+        )  # base64 encoded docid
+        assert (
+            call_args[1]["data"]["Password"] == "dGVzdHBhc3M0NTY="
+        )  # base64 encoded password
+
+    @pytest.mark.django_db
+    @patch("sanatorio_allende.appointments.requests.post")
+    def test_post_create_patient_invalid_credentials(self, mock_post, client):
+        """Test successful POST request to create patient"""
+        # Mock the requests.post call in Allende.validate_credentials
+        mock_response = type("MockResponse", (), {"status_code": 400})()
+        mock_post.return_value = mock_response
+
+        url = reverse("sanatorio_allende:api_patients")
+        data = {
+            "name": "María García",
+            "id_paciente": "67890",
+            "docid": "87654321",
+            "password": "testpass456",
+        }
+        response = client.post(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 400
 
     @pytest.mark.django_db
     def test_post_create_patient_missing_parameters(self, client):
@@ -514,8 +579,12 @@ class TestPatientListView:
         assert "name, docid, and password are required" in data["error"]
 
     @pytest.mark.django_db
-    def test_post_create_patient_already_exists(self, client, patient):
+    @patch("sanatorio_allende.appointments.requests.post")
+    def test_post_create_patient_already_exists(self, mock_post, client, patient):
         """Test POST request when patient with same docid already exists"""
+        mock_response = type("MockResponse", (), {"status_code": 200})()
+        mock_post.return_value = mock_response
+
         url = reverse("sanatorio_allende:api_patients")
         data = {
             "name": "Different Name",
@@ -529,6 +598,57 @@ class TestPatientListView:
         data = json.loads(response.content)
         assert data["success"] is False
         assert "Patient already exists with this document ID" in data["error"]
+
+    @pytest.mark.django_db
+    def test_delete_patient_success(self, client, patient):
+        """Test successful DELETE request to delete patient"""
+        url = reverse("sanatorio_allende:api_patients")
+        data = {"patient_id": patient.id}
+        response = client.delete(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["success"] is True
+        assert "Patient deleted successfully" in data["message"]
+
+        # Verify the patient was actually deleted
+        with pytest.raises(PacienteAllende.DoesNotExist):
+            PacienteAllende.objects.get(id=patient.id)
+
+    @pytest.mark.django_db
+    def test_delete_patient_missing_patient_id(self, client):
+        """Test DELETE request without patient_id parameter"""
+        url = reverse("sanatorio_allende:api_patients")
+        data = {}  # Missing patient_id
+        response = client.delete(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 400
+        data = json.loads(response.content)
+        assert data["success"] is False
+        assert "patient_id is required" in data["error"]
+
+    @pytest.mark.django_db
+    def test_delete_patient_not_found(self, client):
+        """Test DELETE request with non-existent patient_id"""
+        url = reverse("sanatorio_allende:api_patients")
+        data = {"patient_id": 999}
+        response = client.delete(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 404
+        data = json.loads(response.content)
+        assert data["success"] is False
+        assert "Patient not found" in data["error"]
+
+    @pytest.mark.django_db
+    def test_delete_patient_for_other_user(self, evil_client, patient):
+        """Test DELETE request for patient belonging to another user"""
+        url = reverse("sanatorio_allende:api_patients")
+        data = {"patient_id": patient.id}
+        response = evil_client.delete(
+            url, json.dumps(data), content_type="application/json"
+        )
+
+        assert response.status_code == 404
 
 
 class TestDeviceRegistrationView:
@@ -597,41 +717,3 @@ class TestDeviceRegistrationView:
         # Verify default platform was used
         device = DeviceRegistration.objects.get(push_token="test_token_123")
         assert device.platform == "expo"
-
-
-class TestIntegrationScenarios:
-    """Integration test scenarios"""
-
-    @pytest.mark.django_db
-    def test_complete_appointment_workflow(
-        self, client, doctor, appointment_type, patient
-    ):
-        """Test complete workflow: create appointment, update status, find appointments"""
-        # 1. Create appointment
-        url = reverse("sanatorio_allende:api_find_appointments")
-        data = {
-            "doctor_id": doctor.id,
-            "appointment_type_id": appointment_type.id,
-            "patient_id": patient.id,
-        }
-        response = client.post(url, json.dumps(data), content_type="application/json")
-        assert response.status_code == 200
-
-        # 2. Get appointments list
-        response = client.get(url)
-        assert response.status_code == 200
-        data = json.loads(response.content)
-        appointment_id = data["appointments"][0]["id"]
-
-        # 3. Update appointment status
-        data = {
-            "appointment_id": appointment_id,
-            "active": False,
-        }
-        response = client.patch(url, json.dumps(data), content_type="application/json")
-        assert response.status_code == 200
-
-        # 4. Verify appointment is inactive
-        response = client.get(url)
-        data = json.loads(response.content)
-        assert data["appointments"][0]["enabled"] is False

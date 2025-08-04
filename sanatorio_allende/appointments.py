@@ -35,7 +35,7 @@ class Allende:
         return self.auth_header
 
     @classmethod
-    def validate_credentials(cls, user: str, password: str):
+    def validate_credentials(cls, dni: str, password: str):
         data = requests.post(
             "https://miportal.sanatorioallende.com/backend/Token",
             data={

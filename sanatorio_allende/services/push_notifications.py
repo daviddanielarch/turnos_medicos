@@ -4,11 +4,10 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 import requests
-from django.conf import settings
+from django.contrib.auth.models import User
 
-from ..models import DeviceRegistration
+from sanatorio_allende.models import DeviceRegistration
 
-# Set up logger
 logger = logging.getLogger(__name__)
 
 

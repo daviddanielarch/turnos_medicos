@@ -115,7 +115,14 @@ class FindAppointmentView(LoginRequiredMixin, View):
         # Get optional seconds parameter for filtering recent appointments
         patient_id = request.GET.get("patient_id")
         patient = get_object_or_404(PacienteAllende, id=patient_id)
-        print(f"Received patient_id: {patient_id} (type: {type(patient_id)})")
+        if patient.user != request.user:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Patient does not belong to the current user",
+                },
+                status=401,
+            )
 
         find_appointments = FindAppointment.objects.select_related(
             "doctor",
@@ -159,6 +166,14 @@ class FindAppointmentView(LoginRequiredMixin, View):
         doctor = get_object_or_404(Doctor, id=doctor_id)
         appointment_type = get_object_or_404(AppointmentType, id=appointment_type_id)
         patient = get_object_or_404(PacienteAllende, id=patient_id)
+        if patient.user != request.user:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Patient does not belong to the current user",
+                },
+                status=401,
+            )
 
         existing_appointment = FindAppointment.objects.filter(
             doctor=doctor, tipo_de_turno=appointment_type, patient=patient
@@ -205,7 +220,10 @@ class FindAppointmentView(LoginRequiredMixin, View):
             )
 
         appointment = get_object_or_404(FindAppointment, id=appointment_id)
-        if appointment.patient != request.user.pacienteallende_set.first():
+        user_patients = request.user.pacienteallende_set.all().values_list(
+            "id", flat=True
+        )
+        if appointment.patient.id not in user_patients:
             return JsonResponse(
                 {
                     "success": False,
@@ -232,6 +250,14 @@ class BestAppointmentListView(LoginRequiredMixin, View):
         """Get all BestAppointmentFound objects"""
         patient_id = request.GET.get("patient_id")
         patient = get_object_or_404(PacienteAllende, id=patient_id)
+        if patient.user != request.user:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Patient does not belong to the current user",
+                },
+                status=401,
+            )
 
         best_appointments = BestAppointmentFound.objects.select_related(
             "appointment_wanted",

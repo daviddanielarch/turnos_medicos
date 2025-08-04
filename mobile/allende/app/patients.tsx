@@ -85,7 +85,12 @@ export default function PatientsScreen() {
                 resetForm();
                 loadPatients();
             } else {
-                Alert.alert('Error', response.error || 'Error al agregar paciente');
+                // Check for specific "Invalid credentials" error
+                if (response.error === 'Invalid credentials') {
+                    Alert.alert('Credenciales invalidas', 'Revisa la contraseña y el DNI');
+                } else {
+                    Alert.alert('Error', response.error || 'Error al agregar paciente');
+                }
             }
         } catch (error) {
             console.error('Error adding patient:', error);
