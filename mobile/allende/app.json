@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "allende",
-    "slug": "allende",
+    "name": "Turnos",
+    "slug": "turnos",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

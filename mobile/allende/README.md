@@ -1,16 +1,33 @@
-# Welcome to your Expo app 👋
+# Turnos Medicos - Sanatorio Allende Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native mobile application for booking medical appointments at Sanatorio Allende. Built with Expo and integrated with a Django backend API.
+
+## Features
+
+- **Patient Management**: View and manage patient information
+- **Appointment Search**: Search for available medical appointments
+- **Best Appointments**: Find optimal appointment slots based on preferences
+- **Push Notifications**: Receive notifications for appointment updates
+- **Authentication**: Secure login with Auth0 integration
+- **Offline Support**: Background task management for appointment monitoring
+
+## Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn
+- Expo CLI (`npm install -g @expo/cli`)
+- iOS Simulator (for iOS development) or Android Studio (for Android development)
+- Auth0 account (for authentication)
 
 ## Configuration
 
 ### API Host Configuration
 
-The app needs to know where your Django backend API is running. You can configure this in several ways:
+The app connects to the Django backend API. Configure the API host in one of these ways:
 
 1. **Environment Variable (Recommended)**: Create a `.env` file in the root directory:
    ```
-   EXPO_PUBLIC_API_HOST=http://localhost:8000
+   EXPO_PUBLIC_API_HOST=https://turnos-medicos.up.railway.app
    ```
 
 2. **App Configuration**: Update the `app.json` file in the `extra.apiHost` field:
@@ -18,65 +35,126 @@ The app needs to know where your Django backend API is running. You can configur
    {
      "expo": {
        "extra": {
-         "apiHost": "http://localhost:8000"
+         "apiHost": "https://turnos-medicos.up.railway.app"
        }
      }
    }
    ```
 
-3. **Default Fallback**: If neither is configured, it defaults to `http://localhost:8000`
+3. **Default Fallback**: If neither is configured, it defaults to the production API
 
-### Environment Variables
+### Auth0 Authentication Setup
 
-- `EXPO_PUBLIC_API_HOST`: The base URL for your Django API backend
-  - Development: `http://localhost:8000`
-  - Production: `https://your-api-domain.com`
+This app uses Auth0 for authentication. Follow the detailed setup guide in [AUTH_SETUP.md](./AUTH_SETUP.md) to configure:
 
-## Get started
+- Auth0 tenant and application
+- Mobile app configuration
+- Redirect URIs and callback URLs
+- Token storage and security
 
-1. Install dependencies
+## Installation & Setup
 
+1. **Install dependencies**:
    ```bash
    npm install
    ```
 
-2. Configure your API host (see Configuration section above)
+2. **Configure API host** (see Configuration section above)
 
-3. Start the app
+3. **Set up Auth0 authentication** (see AUTH_SETUP.md)
 
+4. **Start the development server**:
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+## Development
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Available Scripts
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- `npm start` - Start the Expo development server
+- `npm run android` - Run on Android device/emulator
+- `npm run ios` - Run on iOS simulator
+- `npm run web` - Run in web browser
+- `npm run lint` - Run ESLint
 
-## Get a fresh project
+### Project Structure
 
-When you're ready, run:
+```
+app/
+├── _layout.tsx          # Root layout and navigation
+├── index.tsx            # Home screen
+├── patients.tsx         # Patient management
+├── search.tsx           # Appointment search
+└── best-appointments.tsx # Best appointments finder
 
-```bash
-npm run reset-project
+src/
+├── components/          # Reusable UI components
+├── config/             # Configuration files
+├── constants/          # App constants
+├── contexts/           # React contexts
+└── hooks/              # Custom React hooks
+
+services/
+├── apiService.ts       # API communication
+├── pushNotificationService.ts # Push notifications
+└── secureStorage.ts    # Secure token storage
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Key Technologies
 
-## Learn more
+- **Expo SDK 53** - React Native development platform
+- **Expo Router** - File-based routing
+- **React Native Auth0** - Authentication
+- **Expo Notifications** - Push notifications
+- **Expo Secure Store** - Secure token storage
+- **TypeScript** - Type safety
 
-To learn more about developing your project with Expo, look at the following resources:
+## Building for Production
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Android
 
-## Join the community
+1. **Configure EAS Build**:
+   ```bash
+   npx eas build:configure
+   ```
 
-Join our community of developers creating universal apps.
+2. **Build APK/AAB**:
+   ```bash
+   npx eas build --platform android
+   ```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### iOS
+
+1. **Configure EAS Build**:
+   ```bash
+   npx eas build:configure
+   ```
+
+2. **Build IPA**:
+   ```bash
+   npx eas build --platform ios
+   ```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Authentication errors**: Check Auth0 configuration in `AUTH_SETUP.md`
+2. **API connection issues**: Verify API host configuration
+3. **Push notification problems**: Ensure proper notification setup
+4. **Build failures**: Check EAS configuration and credentials
+
+### Debug Mode
+
+Enable debug logging by adding console.log statements in the relevant service files.
+
+## Contributing
+
+1. Follow the existing code style and TypeScript conventions
+2. Test on both iOS and Android before submitting changes
+3. Update documentation for any new features or configuration changes
+
+## License
+
+This project is part of the Turnos Medicos system for Sanatorio Allende.

@@ -13,7 +13,6 @@ from sanatorio_allende.models import (
 )
 from sanatorio_allende.services.auth import AllendeAuthService
 from sanatorio_allende.services.push_notifications import PushNotificationService
-from sanatorio_allende.telegram import send_message
 
 
 class Command(BaseCommand):
@@ -65,35 +64,23 @@ class Command(BaseCommand):
         self, appointment, new_best_appointment_datetime, message_type="new"
     ):
         """
-        Send both Telegram and push notifications
+        Send push notifications to Android devices
         """
         doctor_name = appointment.doctor.name
         especialidad = appointment.doctor.especialidad.name
         tipo_de_turno = appointment.tipo_de_turno.name
         datetime_str = new_best_appointment_datetime.strftime("%d/%m/%Y %H:%M")
+        patient_dni = appointment.patient.dni
 
-        # Prepare message
         if message_type == "new":
-            message = f"New best appointment found for {doctor_name} - {tipo_de_turno}: {datetime_str}"
-            push_title = "¡Nuevo turno disponible! 🎉"
-        else:  # lost appointment
-            message = f"Lost best appointment for {doctor_name} - {tipo_de_turno}: new date is {datetime_str}"
-            push_title = "Turno perdido ⚠️"
-
-        # Send Telegram notification
-        try:
-            send_message(
-                message,
-                settings.TELEGRAM_TOKEN,
-                settings.TELEGRAM_CHAT_ID,
+            push_title = (
+                f"¡Nuevo turno! - {patient_dni} - {doctor_name} - {datetime_str}"
             )
-            self.stdout.write(f"Telegram notification sent: {message}")
-        except Exception as e:
-            self.stdout.write(
-                self.style.ERROR(f"Failed to send Telegram notification: {str(e)}")
+        else:
+            push_title = (
+                f"Turno perdido - {patient_dni} - {doctor_name} - {datetime_str}"
             )
 
-        # Send push notification
         try:
             appointment_data = {
                 "name": doctor_name,
@@ -150,7 +137,6 @@ class Command(BaseCommand):
             )
 
     def handle(self, *args, **options):
-        # Check database connectivity first
         if not self.check_database_connectivity():
             self.stdout.write(
                 self.style.ERROR("Cannot proceed without database connectivity")

@@ -154,16 +154,14 @@ CORS_ALLOWED_ORIGINS = os.environ.get(
 ).split(",")
 
 # Admin site configuration
-ADMIN_SITE_HEADER = "Sanatorio Allende"
-ADMIN_SITE_TITLE = "Sanatorio Allende"
-ADMIN_INDEX_TITLE = "Welcome to Sanatorio Allende"
+ADMIN_SITE_HEADER = "Turnos"
+ADMIN_SITE_TITLE = "Turnos"
+ADMIN_INDEX_TITLE = "Welcome to Turnos Admin"
 
 SELENIUM_HOSTNAME = os.environ.get("SELENIUM_HOSTNAME", "localhost")
 SELENIUM_PORT = os.environ.get("SELENIUM_PORT", 4444)
 SELENIUM_IMPLICIT_WAIT = os.environ.get("SELENIUM_IMPLICIT_WAIT", 10)
 
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
-TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
 # Auth0 Configuration
 AUTH0_DOMAIN = os.environ.get("AUTH0_DOMAIN", "daviddanielarch.auth0.com")
