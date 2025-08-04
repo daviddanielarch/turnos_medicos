@@ -36,7 +36,7 @@ export default function PatientsScreen() {
     const [submitting, setSubmitting] = useState(false);
 
     const { getCredentials } = useAuth0Context();
-    const { selectedPatient, setSelectedPatient } = usePatientContext();
+    const { selectedPatient, setSelectedPatient, isLoading: patientContextLoading } = usePatientContext();
 
     useEffect(() => {
         // Set up API service with credentials
@@ -113,7 +113,7 @@ export default function PatientsScreen() {
                                 Alert.alert('Éxito', 'Paciente eliminado correctamente');
                                 // If the deleted patient was selected, clear the selection
                                 if (selectedPatient?.id === patient.id) {
-                                    setSelectedPatient(null);
+                                    await setSelectedPatient(null);
                                 }
                                 loadPatients();
                             } else {
@@ -131,11 +131,11 @@ export default function PatientsScreen() {
         );
     };
 
-    const handleSelectPatient = (patient: Patient) => {
+    const handleSelectPatient = async (patient: Patient) => {
         if (selectedPatient?.id === patient.id) {
-            setSelectedPatient(null);
+            await setSelectedPatient(null);
         } else {
-            setSelectedPatient(patient);
+            await setSelectedPatient(patient);
         }
     };
 
@@ -209,10 +209,12 @@ export default function PatientsScreen() {
 
             <View style={styles.content}>
 
-                {loading ? (
+                {loading || patientContextLoading ? (
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color={COLORS.PRIMARY} />
-                        <Text style={styles.loadingText}>Cargando pacientes...</Text>
+                        <Text style={styles.loadingText}>
+                            {loading ? 'Cargando pacientes...' : 'Cargando configuración...'}
+                        </Text>
                     </View>
                 ) : (
                     <FlatList

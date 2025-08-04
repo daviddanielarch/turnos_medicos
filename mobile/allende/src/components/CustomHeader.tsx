@@ -4,6 +4,7 @@ import { usePatientContext } from '@/src/contexts/PatientContext';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import secureStorage from '../../services/secureStorage';
 
 interface CustomHeaderProps {
     title?: string;
@@ -23,7 +24,7 @@ export default function CustomHeader({
     showPatientInfo = true
 }: CustomHeaderProps) {
     const { user, clearSession } = useAuth0Context();
-    const { selectedPatient } = usePatientContext();
+    const { selectedPatient, clearSelectedPatient } = usePatientContext();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const getUserDisplayName = () => {
@@ -45,6 +46,11 @@ export default function CustomHeader({
                     onPress: async () => {
                         setIsLoggingOut(true);
                         try {
+                            // Clear selected patient first
+                            await clearSelectedPatient();
+                            // Clear all secure storage data
+                            await secureStorage.clearAllData();
+                            // Then clear the session
                             await clearSession();
                         } catch (error) {
                             console.error('Logout error:', error);
