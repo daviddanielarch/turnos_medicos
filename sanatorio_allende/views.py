@@ -10,6 +10,8 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
+from sanatorio_allende.appointments import Allende
+
 from .models import (
     AppointmentType,
     BestAppointmentFound,
@@ -283,7 +285,6 @@ class PatientListView(LoginRequiredMixin, View):
         """Create a new patient"""
         data = json.loads(request.body)
         name = data.get("name")
-        id_paciente = data.get("id_paciente")
         docid = data.get("docid")
         password = data.get("password")
 
@@ -292,6 +293,15 @@ class PatientListView(LoginRequiredMixin, View):
                 {
                     "success": False,
                     "error": "name, docid, and password are required",
+                },
+                status=400,
+            )
+
+        if not Allende.validate_credentials(dni=docid, password=password):
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Invalid credentials",
                 },
                 status=400,
             )
@@ -307,11 +317,9 @@ class PatientListView(LoginRequiredMixin, View):
                 status=400,
             )
 
-        # Create new patient
         patient = PacienteAllende.objects.create(
             user=request.user,
             name=name,
-            id_paciente=id_paciente,
             docid=docid,
             password=password,
         )

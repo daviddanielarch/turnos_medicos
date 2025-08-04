@@ -29,6 +29,7 @@ class PushNotificationService:
         sound: str = "default",
         priority: str = "high",
         channel_id: str = None,
+        user: User = None,
     ) -> Dict[str, Any]:
         """
         Send push notification to all registered devices
@@ -46,7 +47,7 @@ class PushNotificationService:
         """
         try:
             # Get all active device registrations
-            devices = DeviceRegistration.objects.filter(is_active=True)
+            devices = DeviceRegistration.objects.filter(is_active=True, user=user)
 
             if not devices.exists():
                 logger.warning("No active devices registered for push notifications")

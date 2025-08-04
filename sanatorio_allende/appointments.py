@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import base64
 import json
 import logging
 from datetime import datetime
@@ -32,6 +33,23 @@ class Allende:
 
     def get_auth_header(self):
         return self.auth_header
+
+    @classmethod
+    def validate_credentials(cls, user: str, password: str):
+        data = requests.post(
+            "https://miportal.sanatorioallende.com/backend/Token",
+            data={
+                "UserName": "",
+                "Password": base64.b64encode(password.encode("utf-8")).decode("utf-8"),
+                "NumeroDocumento": base64.b64encode(dni.encode("utf-8")).decode(
+                    "utf-8"
+                ),
+                "IdTipoDocumento": 1,
+                "Sistema": base64.b64encode(b"app-portal-paciente").decode("utf-8"),
+                "ReCaptcha": "",
+            },
+        )
+        return data.status_code == HTTP_OK
 
     def login(self, user: str, password: str):
         if self.is_authorized(self.auth_header):

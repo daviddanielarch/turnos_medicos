@@ -112,6 +112,7 @@ class Command(BaseCommand):
                 data={"type": "appointment_update", "appointment": appointment_data},
                 sound="default",
                 priority="high",
+                user=appointment.patient.user,
             )
 
             if push_result["success"]:
@@ -158,101 +159,104 @@ class Command(BaseCommand):
 
         self.stdout.write("Starting appointment search...")
 
-        user = PacienteAllende.objects.first()
-        auth_service = AllendeAuthService(user)
-        auth_service.login()
+        for patient in PacienteAllende.objects.all():
+            auth_service = AllendeAuthService(patient)
+            auth_service.login()
 
-        allende = Allende(user.token)
-        appointments_to_find = FindAppointment.objects.filter(active=True)
+            allende = Allende(patient.token)
+            appointments_to_find = FindAppointment.objects.filter(
+                active=True, patient=patient
+            )
 
-        self.stdout.write(
-            f"Found {appointments_to_find.count()} active appointments to check"
-        )
-
-        for appointment in appointments_to_find:
             self.stdout.write(
-                f"Checking appointments for {appointment.doctor.name} - {appointment.tipo_de_turno.name}"
+                f"Found {appointments_to_find.count()} active appointments to check"
             )
 
-            doctor_data = {
-                "IdPaciente": user.id_paciente,
-                "IdServicio": appointment.doctor.especialidad.id_servicio,
-                "IdSucursal": appointment.doctor.especialidad.id_sucursal,
-                "IdRecurso": appointment.doctor.id_recurso,
-                "IdEspecialidad": appointment.doctor.especialidad.id_especialidad,
-                "IdTipoRecurso": appointment.doctor.id_tipo_recurso,
-                "Prestaciones": [
-                    {
-                        "IdPrestacion": appointment.tipo_de_turno.id_tipo_turno,
-                        "IdItemSolicitudEstudios": 0,
-                    }
-                ],
-            }
-
-            try:
-                best_appointment_so_far = BestAppointmentFound.objects.get(
-                    appointment_wanted=appointment
-                )
-            except BestAppointmentFound.DoesNotExist:
-                best_appointment_so_far = None
-
-            new_best_appointment_datetime = allende.search_best_date_appointment(
-                doctor_data
-            )
-
-            # Make the naive datetime timezone-aware
-            if new_best_appointment_datetime:
-                new_best_appointment_datetime = timezone.make_aware(
-                    new_best_appointment_datetime
-                )
-            else:
+            for appointment in appointments_to_find:
                 self.stdout.write(
-                    self.style.WARNING(
-                        f"No new best appointment found for {appointment.doctor.name} - {appointment.tipo_de_turno.name}"
-                    )
-                )
-                continue
-
-            if best_appointment_so_far is None:
-                BestAppointmentFound.objects.create(
-                    appointment_wanted=appointment,
-                    datetime=new_best_appointment_datetime,
-                )
-                self.stdout.write(
-                    self.style.SUCCESS(
-                        f"New best appointment found for {appointment.doctor.name} - {appointment.tipo_de_turno.name}: {new_best_appointment_datetime}"
-                    )
-                )
-                self.send_notifications(
-                    appointment, new_best_appointment_datetime, "new"
+                    f"Checking appointments for {appointment.doctor.name} - {appointment.tipo_de_turno.name}"
                 )
 
-            elif new_best_appointment_datetime == best_appointment_so_far.datetime:
-                self.stdout.write("Appointment is the same")
+                doctor_data = {
+                    "IdPaciente": patient.id_paciente,
+                    "IdServicio": appointment.doctor.especialidad.id_servicio,
+                    "IdSucursal": appointment.doctor.especialidad.id_sucursal,
+                    "IdRecurso": appointment.doctor.id_recurso,
+                    "IdEspecialidad": appointment.doctor.especialidad.id_especialidad,
+                    "IdTipoRecurso": appointment.doctor.id_tipo_recurso,
+                    "Prestaciones": [
+                        {
+                            "IdPrestacion": appointment.tipo_de_turno.id_tipo_turno,
+                            "IdItemSolicitudEstudios": 0,
+                        }
+                    ],
+                }
 
-            elif new_best_appointment_datetime < best_appointment_so_far.datetime:
-                best_appointment_so_far.datetime = new_best_appointment_datetime
-                best_appointment_so_far.save()
-                self.stdout.write(
-                    self.style.SUCCESS(
-                        f"New best appointment found for {appointment.doctor.name} - {appointment.tipo_de_turno.name}: {new_best_appointment_datetime}"
+                try:
+                    best_appointment_so_far = BestAppointmentFound.objects.get(
+                        appointment_wanted=appointment, patient=patient
                     )
-                )
-                self.send_notifications(
-                    appointment, new_best_appointment_datetime, "new"
+                except BestAppointmentFound.DoesNotExist:
+                    best_appointment_so_far = None
+
+                new_best_appointment_datetime = allende.search_best_date_appointment(
+                    doctor_data
                 )
 
-            else:
-                self.stdout.write(
-                    self.style.WARNING(
-                        f"Lost best appointment for {appointment.doctor.name} - {appointment.tipo_de_turno.name}: {best_appointment_so_far.datetime}"
+                # Make the naive datetime timezone-aware
+                if new_best_appointment_datetime:
+                    new_best_appointment_datetime = timezone.make_aware(
+                        new_best_appointment_datetime
                     )
-                )
-                best_appointment_so_far.datetime = new_best_appointment_datetime
-                best_appointment_so_far.save()
-                self.send_notifications(
-                    appointment, new_best_appointment_datetime, "lost"
-                )
+                else:
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"No new best appointment found for {appointment.doctor.name} - {appointment.tipo_de_turno.name}"
+                        )
+                    )
+                    continue
+
+                if best_appointment_so_far is None:
+                    BestAppointmentFound.objects.create(
+                        appointment_wanted=appointment,
+                        datetime=new_best_appointment_datetime,
+                        patient=patient,
+                    )
+                    self.stdout.write(
+                        self.style.SUCCESS(
+                            f"New best appointment found for {appointment.doctor.name} - {appointment.tipo_de_turno.name}: {new_best_appointment_datetime}"
+                        )
+                    )
+                    self.send_notifications(
+                        appointment, new_best_appointment_datetime, "new"
+                    )
+
+                elif new_best_appointment_datetime == best_appointment_so_far.datetime:
+                    self.stdout.write("Appointment is the same")
+
+                elif new_best_appointment_datetime < best_appointment_so_far.datetime:
+                    best_appointment_so_far.datetime = new_best_appointment_datetime
+                    best_appointment_so_far.save()
+                    self.stdout.write(
+                        self.style.SUCCESS(
+                            f"New best appointment found for {appointment.doctor.name} - {appointment.tipo_de_turno.name}: {new_best_appointment_datetime}"
+                        )
+                    )
+                    self.send_notifications(
+                        appointment, new_best_appointment_datetime, "new"
+                    )
+
+                else:
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"Lost best appointment for {appointment.doctor.name} - {appointment.tipo_de_turno.name}: {best_appointment_so_far.datetime}"
+                        )
+                    )
+                    best_appointment_so_far.datetime = new_best_appointment_datetime
+                    best_appointment_so_far.save()
+                    self.send_notifications(
+                        appointment, new_best_appointment_datetime, "lost"
+                    )
 
         self.stdout.write(
             self.style.SUCCESS("Appointment search completed successfully")
