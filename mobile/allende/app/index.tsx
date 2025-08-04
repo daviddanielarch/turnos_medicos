@@ -5,7 +5,7 @@ import { usePatientContext } from "@/src/contexts/PatientContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import apiService from "../services/apiService";
 
 interface Item {
@@ -49,7 +49,6 @@ export default function Index() {
 
     if (!selectedPatient.id) {
       console.log('Selected patient has no ID:', selectedPatient);
-      Alert.alert('Error', 'El paciente seleccionado no tiene un ID válido');
       return;
     }
 
@@ -64,11 +63,9 @@ export default function Index() {
         setItems(response.data.appointments);
       } else {
         console.error('Failed to fetch appointments:', response.error);
-        Alert.alert('Error', response.error || 'Failed to load appointments');
       }
     } catch (error) {
       console.error('Error fetching appointments:', error);
-      Alert.alert('Error', 'Network error while loading appointments');
     } finally {
       setLoading(false);
     }
@@ -91,12 +88,10 @@ export default function Index() {
         return true;
       } else {
         console.error('Failed to update appointment status:', response.error);
-        Alert.alert('Error', response.error || 'Failed to update appointment status');
         return false;
       }
     } catch (error) {
       console.error('Error updating appointment status:', error);
-      Alert.alert('Error', 'Network error while updating appointment status');
       return false;
     }
   };
