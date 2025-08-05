@@ -70,7 +70,7 @@ class Command(BaseCommand):
         especialidad = appointment.doctor.especialidad.name
         tipo_de_turno = appointment.tipo_de_turno.name
         datetime_str = new_best_appointment_datetime.strftime("%d/%m/%Y %H:%M")
-        patient_dni = appointment.patient.dni
+        patient_dni = appointment.patient.docid
 
         if message_type == "new":
             push_title = (

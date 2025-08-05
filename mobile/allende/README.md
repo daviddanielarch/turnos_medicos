@@ -123,38 +123,3 @@ services/
    ```bash
    npx eas build --platform android
    ```
-
-### iOS
-
-1. **Configure EAS Build**:
-   ```bash
-   npx eas build:configure
-   ```
-
-2. **Build IPA**:
-   ```bash
-   npx eas build --platform ios
-   ```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Authentication errors**: Check Auth0 configuration in `AUTH_SETUP.md`
-2. **API connection issues**: Verify API host configuration
-3. **Push notification problems**: Ensure proper notification setup
-4. **Build failures**: Check EAS configuration and credentials
-
-### Debug Mode
-
-Enable debug logging by adding console.log statements in the relevant service files.
-
-## Contributing
-
-1. Follow the existing code style and TypeScript conventions
-2. Test on both iOS and Android before submitting changes
-3. Update documentation for any new features or configuration changes
-
-## License
-
-This project is part of the Turnos Medicos system for Sanatorio Allende.

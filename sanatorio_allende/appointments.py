@@ -106,7 +106,7 @@ class Allende:
     def search_best_date_appointment(self, doctor_data: dict):
         """Searches the best date for an appointment with the given doctor"""
         response = requests.post(
-            "https://miportal.sanatorioallende.com/backend/api/DisponibilidadDeTurnos/ObtenerPrimerTurnoAsignableDeCadaRecursoDelServicioParaPortalWebConParticular",
+            "https://miportal.sanatorioallende.com/backend/api/DisponibilidadDeTurnos/ObtenerPrimerTurnoAsignableParaPortalWebConParticular",
             headers={"authorization": self.auth_header},
             json=doctor_data,
         )
@@ -124,9 +124,6 @@ class Allende:
         """Parses the appointments from the response data to get the appointment dates"""
         appointments = []
         for turno in data["PrimerosTurnosDeCadaRecurso"]:
-            if not turno["Atiende"]:
-                continue
-
             date = turno["Fecha"].split("T")[0]
             date = datetime.strptime(date, "%Y-%m-%d")
             hora = turno["Hora"]
