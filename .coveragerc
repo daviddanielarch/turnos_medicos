@@ -1,0 +1,15 @@
+[run]
+source = sanatorio_allende
+omit = 
+    */migrations/*
+    */tests/*
+    */test_*.py
+    */__init__.py
+    */admin.py
+    */apps.py
+    */urls.py
+    */wsgi.py
+    */asgi.py
+    */settings.py
+    */manage.py
+    */conftest.py

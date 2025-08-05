@@ -37,6 +37,10 @@ addopts = [
     "--strict-config",
     "--verbose",
     "--tb=short",
+    "--cov=sanatorio_allende",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml:coverage.xml",
 ]
 testpaths = ["sanatorio_allende"]
 markers = [

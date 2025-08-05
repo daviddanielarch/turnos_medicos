@@ -43,7 +43,7 @@ jobs:
     - name: Run Black
       run: |
         black --check --diff .
-    - name: Run Tests
+    - name: Run Tests with Coverage
       env:
         PGDATABASE: test_db
         PGUSER: postgres
@@ -53,3 +53,10 @@ jobs:
       run: |
         python manage.py migrate
         pytest
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
