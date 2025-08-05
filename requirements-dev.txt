@@ -1,0 +1,12 @@
+# Development dependencies
+# Install with: pip install -r requirements-dev.txt
+
+# Include production requirements
+-r requirements.txt
+
+# Code formatting
+black==24.1.1
+
+# Testing
+pytest==8.0.0
+pytest-django==4.8.0 
