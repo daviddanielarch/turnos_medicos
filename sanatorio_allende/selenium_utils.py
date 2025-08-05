@@ -68,11 +68,10 @@ def find_request(browser: webdriver.Chrome, url: str):
             if "message" in log:
                 message = json.loads(log["message"])
                 message = message.get("message", {})
-                print(message)
                 if message.get("method") == "Network.requestWillBeSent":
                     request = message.get("params", {}).get("request", {})
                     if request.get("url", "").endswith(url):
                         return request
 
-        time.sleep(2)
+        time.sleep(5)
         attempts += 1

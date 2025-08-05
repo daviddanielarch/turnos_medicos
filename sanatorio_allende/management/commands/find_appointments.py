@@ -164,12 +164,13 @@ class Command(BaseCommand):
                 )
 
                 doctor_data = {
-                    "IdPaciente": patient.id_paciente,
+                    "IdPaciente": int(patient.id_paciente),
                     "IdServicio": appointment.doctor.especialidad.id_servicio,
                     "IdSucursal": appointment.doctor.especialidad.id_sucursal,
                     "IdRecurso": appointment.doctor.id_recurso,
                     "IdEspecialidad": appointment.doctor.especialidad.id_especialidad,
                     "IdTipoRecurso": appointment.doctor.id_tipo_recurso,
+                    "ControlarEdad": False,
                     "Prestaciones": [
                         {
                             "IdPrestacion": appointment.tipo_de_turno.id_tipo_turno,
@@ -177,7 +178,7 @@ class Command(BaseCommand):
                         }
                     ],
                 }
-
+                print(doctor_data)
                 try:
                     best_appointment_so_far = BestAppointmentFound.objects.get(
                         appointment_wanted=appointment, patient=patient
