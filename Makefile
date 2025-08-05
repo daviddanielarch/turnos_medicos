@@ -1,3 +1,6 @@
+test:
+	pytest
+
 run-chrome-x86:
 	docker-compose up -d chrome-x86
 
