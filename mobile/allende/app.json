@@ -8,6 +8,14 @@
     "scheme": "com.daviddanielarch.turnosmedicos",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "updates": {
+      "enabled": true,
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/92a909fc-8725-4e6c-a922-3f53e42399e0"
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",

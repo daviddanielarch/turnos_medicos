@@ -7,9 +7,36 @@ import { useEffect } from "react";
 import { StyleSheet } from "react-native";
 import LoginScreen from "../auth/login";
 import pushNotificationService from "../services/pushNotificationService";
+import { UpdateService } from "../services/updateService";
 
 function AppContent() {
   const { isAuthenticated, user, error, getCredentials } = useAuth0Context();
+
+  useEffect(() => {
+    // Check for updates when app starts
+    const checkForUpdates = async () => {
+      try {
+        console.log('[App] Checking for updates...');
+        const hasUpdate = await UpdateService.checkForUpdates();
+
+        if (hasUpdate) {
+          console.log('[App] Update available, fetching...');
+          const updated = await UpdateService.fetchUpdate();
+          if (updated) {
+            console.log('[App] Update applied successfully');
+          } else {
+            console.log('[App] Failed to apply update');
+          }
+        } else {
+          console.log('[App] No updates available');
+        }
+      } catch (error) {
+        console.error('[App] Error checking for updates:', error);
+      }
+    };
+
+    checkForUpdates();
+  }, []);
 
   useEffect(() => {
     // Only set up push notifications if user is authenticated
