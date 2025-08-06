@@ -12,6 +12,15 @@ if (process.env.GOOGLE_SERVICES_JSON && !fs.existsSync(path.join(__dirname, 'goo
     }
 }
 
+// Create allende-mobile-app-57c0658681aa.json from environment variable if it doesn't exist
+if (process.env.MOBILE_APP_SERVICE_ACCOUNT_JSON && !fs.existsSync(path.join(__dirname, 'allende-mobile-app-57c0658681aa.json'))) {
+    try {
+        fs.writeFileSync(path.join(__dirname, 'allende-mobile-app-57c0658681aa.json'), process.env.MOBILE_APP_SERVICE_ACCOUNT_JSON);
+        console.log('Created allende-mobile-app-57c0658681aa.json from environment variable');
+    } catch (error) {
+        console.error('Failed to create allende-mobile-app-57c0658681aa.json:', error);
+    }
+}
 
 const config = getDefaultConfig(__dirname);
 
