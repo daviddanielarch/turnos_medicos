@@ -38,6 +38,6 @@ jobs:
       - name: Build Android
         working-directory: mobile/allende
         run: |
-          eas update --auto --platform android --profile 'production' --non-interactive
+          eas update --auto --platform android --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
