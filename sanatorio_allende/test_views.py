@@ -8,8 +8,15 @@ from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import (AppointmentType, BestAppointmentFound, DeviceRegistration,
-                     Doctor, Especialidad, FindAppointment, PacienteAllende)
+from .models import (
+    AppointmentType,
+    BestAppointmentFound,
+    DeviceRegistration,
+    Doctor,
+    Especialidad,
+    FindAppointment,
+    PacienteAllende,
+)
 
 
 @pytest.fixture
