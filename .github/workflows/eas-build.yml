@@ -22,7 +22,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'yarn'
+          cache: 'npm'
+          cache-dependency-path: mobile/allende/package-lock.json
 
       - name: Setup Expo CLI
         uses: expo/expo-github-action@v8
@@ -32,7 +33,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: mobile/allende
-        run: yarn install
+        run: npm ci
 
       - name: Build Android
         working-directory: mobile/allende
