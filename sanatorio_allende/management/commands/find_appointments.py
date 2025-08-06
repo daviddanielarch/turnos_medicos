@@ -1,3 +1,4 @@
+import datetime
 import time
 
 from django.conf import settings
@@ -178,7 +179,7 @@ class Command(BaseCommand):
                         }
                     ],
                 }
-                print(doctor_data)
+
                 try:
                     best_appointment_so_far = BestAppointmentFound.objects.get(
                         appointment_wanted=appointment, patient=patient
@@ -199,6 +200,24 @@ class Command(BaseCommand):
                     self.stdout.write(
                         self.style.WARNING(
                             f"No new best appointment found for {appointment.doctor.name} - {appointment.tipo_de_turno.name}"
+                        )
+                    )
+                    continue
+
+                # Check using the appointment desired timeframe
+                datetime_boundary = {
+                    "1 week": datetime.timedelta(days=7),
+                    "2 weeks": datetime.timedelta(days=14),
+                    "3 weeks": datetime.timedelta(days=21),
+                    "anytime": datetime.timedelta(days=365),
+                }
+                if (
+                    new_best_appointment_datetime
+                    > timezone.now() + datetime_boundary[appointment.desired_timeframe]
+                ):
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"Appointment {new_best_appointment_datetime} is outside desired timeframe ({appointment.desired_timeframe}) for {appointment.doctor.name} - {appointment.tipo_de_turno.name}"
                         )
                     )
                     continue

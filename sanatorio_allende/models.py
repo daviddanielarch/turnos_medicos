@@ -89,11 +89,25 @@ class Doctor(models.Model):
 
 
 class FindAppointment(models.Model):
+    DEFAULT_DESIRED_TIMEFRAME = "anytime"
+
     patient = models.ForeignKey(
         PacienteAllende, on_delete=models.CASCADE, null=True, blank=True
     )
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     tipo_de_turno = models.ForeignKey(AppointmentType, on_delete=models.CASCADE)
+    desired_timeframe = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        default=DEFAULT_DESIRED_TIMEFRAME,
+        choices=[
+            ("1 week", "1 week"),
+            ("2 weeks", "2 weeks"),
+            ("3 weeks", "3 weeks"),
+            ("anytime", "anytime"),
+        ],
+    )
     active = models.BooleanField(default=False)
 
     def __str__(self):

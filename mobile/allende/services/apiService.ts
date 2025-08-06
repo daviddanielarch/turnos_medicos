@@ -15,6 +15,7 @@ interface FindAppointmentsResponse {
         especialidad: string;
         enabled: boolean;
         tipo_de_turno: string;
+        desired_timeframe: string;
     }>;
 }
 
@@ -186,6 +187,7 @@ class ApiService {
         doctor_id: number;
         appointment_type_id: number;
         patient_id: number;
+        desired_timeframe?: string;
     }) {
         return this.post('/api/find-appointments/', data);
     }

@@ -8,15 +8,8 @@ from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import (
-    AppointmentType,
-    BestAppointmentFound,
-    DeviceRegistration,
-    Doctor,
-    Especialidad,
-    FindAppointment,
-    PacienteAllende,
-)
+from .models import (AppointmentType, BestAppointmentFound, DeviceRegistration,
+                     Doctor, Especialidad, FindAppointment, PacienteAllende)
 
 
 @pytest.fixture
@@ -242,6 +235,10 @@ class TestFindAppointmentView:
             data["appointments"][0]["tipo_de_turno_id"]
             == find_appointment.tipo_de_turno.id
         )
+        assert (
+            data["appointments"][0]["desired_timeframe"]
+            == find_appointment.desired_timeframe
+        )
 
     @pytest.mark.django_db
     def test_post_create_appointment_for_other_user(
@@ -284,6 +281,7 @@ class TestFindAppointmentView:
         assert created_appointment.tipo_de_turno == appointment_type
         assert created_appointment.patient == patient
         assert created_appointment.active is True
+        assert created_appointment.desired_timeframe == "anytime"
 
     @pytest.mark.django_db
     def test_post_create_appointment_missing_parameters(self, client):
@@ -342,25 +340,6 @@ class TestFindAppointmentView:
         response = client.post(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 404
-
-    @pytest.mark.django_db
-    def test_post_create_appointment_already_exists(self, client, find_appointment):
-        """Test POST request when appointment already exists"""
-        url = reverse("sanatorio_allende:api_find_appointments")
-        data = {
-            "doctor_id": find_appointment.doctor.id,
-            "appointment_type_id": find_appointment.tipo_de_turno.id,
-            "patient_id": find_appointment.patient.id,
-        }
-        response = client.post(url, json.dumps(data), content_type="application/json")
-
-        assert response.status_code == 400
-        data = json.loads(response.content)
-        assert data["success"] is False
-        assert (
-            "Appointment already exists for this doctor, service type, and patient"
-            in data["error"]
-        )
 
     @pytest.mark.django_db
     def test_patch_update_appointment_for_other_user(
@@ -423,6 +402,82 @@ class TestFindAppointmentView:
         response = client.patch(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 404
+
+    @pytest.mark.django_db
+    def test_post_create_appointment_with_desired_timeframe(
+        self, client, doctor, appointment_type, patient
+    ):
+        """Test successful POST request to create appointment with desired_timeframe"""
+        url = reverse("sanatorio_allende:api_find_appointments")
+        data = {
+            "doctor_id": doctor.id,
+            "appointment_type_id": appointment_type.id,
+            "patient_id": patient.id,
+            "desired_timeframe": "2 weeks",
+        }
+        response = client.post(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["success"] is True
+        assert "Appointment created successfully" in data["message"]
+        assert "appointment_id" in data
+
+        created_appointment = FindAppointment.objects.get(id=data["appointment_id"])
+        assert created_appointment.doctor == doctor
+        assert created_appointment.tipo_de_turno == appointment_type
+        assert created_appointment.patient == patient
+        assert created_appointment.active is True
+        assert created_appointment.desired_timeframe == "2 weeks"
+
+    @pytest.mark.django_db
+    def test_post_update_existing_appointment_change_timeframe(
+        self, client, find_appointment
+    ):
+        """Test POST request changes existing appointment's desired_timeframe"""
+        # Set initial desired_timeframe
+        find_appointment.desired_timeframe = "3 weeks"
+        find_appointment.save()
+
+        url = reverse("sanatorio_allende:api_find_appointments")
+        data = {
+            "doctor_id": find_appointment.doctor.id,
+            "appointment_type_id": find_appointment.tipo_de_turno.id,
+            "patient_id": find_appointment.patient.id,
+            "desired_timeframe": "2 weeks",
+        }
+        response = client.post(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["success"] is True
+        assert "Appointment updated successfully" in data["message"]
+
+        # Verify the appointment was updated
+        find_appointment.refresh_from_db()
+        assert find_appointment.desired_timeframe == "2 weeks"
+
+    @pytest.mark.django_db
+    def test_post_create_appointment_invalid_timeframe(
+        self, client, doctor, appointment_type, patient
+    ):
+        """Test POST request with invalid desired_timeframe value"""
+        url = reverse("sanatorio_allende:api_find_appointments")
+        data = {
+            "doctor_id": doctor.id,
+            "appointment_type_id": appointment_type.id,
+            "patient_id": patient.id,
+            "desired_timeframe": "invalid_timeframe",
+        }
+        response = client.post(url, json.dumps(data), content_type="application/json")
+
+        # The view should still accept the request since validation is handled at model level
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["success"] is True
+
+        created_appointment = FindAppointment.objects.get(id=data["appointment_id"])
+        assert created_appointment.desired_timeframe == "invalid_timeframe"
 
 
 class TestBestAppointmentListView:

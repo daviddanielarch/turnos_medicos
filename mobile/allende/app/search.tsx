@@ -22,12 +22,26 @@ interface ServiceOption {
     id_tipo_turno: number;
 }
 
+interface TimeframeOption {
+    value: string;
+    label: string;
+}
+
+const TIMEFRAME_OPTIONS: TimeframeOption[] = [
+    { value: "anytime", label: "Cualquier momento" },
+    { value: "1 week", label: "1 semana" },
+    { value: "2 weeks", label: "2 semanas" },
+    { value: "3 weeks", label: "3 semanas" },
+];
+
 export default function Search() {
     const [searchText, setSearchText] = useState("");
     const [selectedItem, setSelectedItem] = useState<Item | null>(null);
     const [selectedService, setSelectedService] = useState<ServiceOption | null>(null);
+    const [selectedTimeframe, setSelectedTimeframe] = useState<TimeframeOption>(TIMEFRAME_OPTIONS[0]);
     const [showDropdown, setShowDropdown] = useState(false);
     const [showServiceDropdown, setShowServiceDropdown] = useState(false);
+    const [showTimeframeDropdown, setShowTimeframeDropdown] = useState(false);
     const [filteredItems, setFilteredItems] = useState<Item[]>([]);
     const [allItems, setAllItems] = useState<Item[]>([]);
     const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([]);
@@ -104,9 +118,15 @@ export default function Search() {
         setShowServiceDropdown(false);
     };
 
+    const selectTimeframe = (timeframe: TimeframeOption) => {
+        setSelectedTimeframe(timeframe);
+        setShowTimeframeDropdown(false);
+    };
+
     const clearSelection = () => {
         setSelectedItem(null);
         setSelectedService(null);
+        setSelectedTimeframe(TIMEFRAME_OPTIONS[0]);
         setSearchText("");
         setFilteredItems([]);
         setServiceOptions([]);
@@ -128,7 +148,8 @@ export default function Search() {
                 const response = await apiService.createFindAppointment({
                     doctor_id: selectedItem.id,
                     appointment_type_id: parseInt(selectedService.id),
-                    patient_id: selectedPatient.id
+                    patient_id: selectedPatient.id,
+                    desired_timeframe: selectedTimeframe.value
                 });
 
                 if (response.success) {
@@ -423,6 +444,86 @@ export default function Search() {
                                             </Text>
                                             <Text style={{ fontSize: 14, color: '#6b7280' }}>
                                                 {service.description}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
+                        </View>
+
+                        {/* Timeframe Selection */}
+                        <View style={{ marginBottom: 16 }}>
+                            <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 12, color: '#111827' }}>
+                                Marco de tiempo deseado
+                            </Text>
+
+                            <TouchableOpacity
+                                style={{
+                                    backgroundColor: 'white',
+                                    borderRadius: 12,
+                                    paddingHorizontal: 16,
+                                    paddingVertical: 14,
+                                    borderWidth: 1,
+                                    borderColor: COLORS.PRIMARY,
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 0, height: 1 },
+                                    shadowOpacity: 0.05,
+                                    shadowRadius: 2,
+                                    elevation: 1,
+                                }}
+                                onPress={() => setShowTimeframeDropdown(!showTimeframeDropdown)}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Ionicons name="time" size={18} color="#6b7280" style={{ marginRight: 10 }} />
+                                    <Text style={{
+                                        fontSize: 16,
+                                        color: '#111827',
+                                        fontWeight: '500'
+                                    }}>
+                                        {selectedTimeframe.label}
+                                    </Text>
+                                </View>
+                                <Ionicons
+                                    name={showTimeframeDropdown ? "chevron-up" : "chevron-down"}
+                                    size={18}
+                                    color="#6b7280"
+                                />
+                            </TouchableOpacity>
+
+                            {/* Timeframe Options Dropdown */}
+                            {showTimeframeDropdown && (
+                                <View style={{
+                                    backgroundColor: 'white',
+                                    borderRadius: 12,
+                                    marginTop: 8,
+                                    shadowColor: '#000',
+                                    shadowOffset: { width: 0, height: 4 },
+                                    shadowOpacity: 0.15,
+                                    shadowRadius: 8,
+                                    elevation: 4,
+                                    borderWidth: 1,
+                                    borderColor: '#e5e7eb',
+                                }}>
+                                    {TIMEFRAME_OPTIONS.map((timeframe, index) => (
+                                        <TouchableOpacity
+                                            key={timeframe.value}
+                                            style={{
+                                                paddingVertical: 14,
+                                                paddingHorizontal: 16,
+                                                borderBottomWidth: index === TIMEFRAME_OPTIONS.length - 1 ? 0 : 1,
+                                                borderBottomColor: '#f3f4f6',
+                                            }}
+                                            onPress={() => selectTimeframe(timeframe)}
+                                        >
+                                            <Text style={{
+                                                fontSize: 16,
+                                                fontWeight: '500',
+                                                color: selectedTimeframe.value === timeframe.value ? COLORS.PRIMARY : '#111827'
+                                            }}>
+                                                {timeframe.label}
                                             </Text>
                                         </TouchableOpacity>
                                     ))}

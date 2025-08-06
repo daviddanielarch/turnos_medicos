@@ -15,6 +15,7 @@ interface Item {
   especialidad: string;
   enabled: boolean;
   tipo_de_turno: string;
+  desired_timeframe: string;
 }
 
 export default function Index() {
@@ -239,6 +240,15 @@ export default function Index() {
                     <Ionicons name="location" size={14} color="#6b7280" style={{ marginRight: 4 }} />
                     <Text style={{ fontSize: 14, color: '#6b7280' }}>
                       {item.location}
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                    <Ionicons name="time" size={14} color="#6b7280" style={{ marginRight: 4 }} />
+                    <Text style={{ fontSize: 14, color: '#6b7280' }}>
+                      {item.desired_timeframe === 'anytime' ? 'Cualquier momento' :
+                        item.desired_timeframe === '1 week' ? '1 semana' :
+                          item.desired_timeframe === '2 weeks' ? '2 semanas' :
+                            item.desired_timeframe === '3 weeks' ? '3 semanas' : item.desired_timeframe}
                     </Text>
                   </View>
                 </View>

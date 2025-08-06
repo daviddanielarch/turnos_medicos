@@ -175,17 +175,21 @@ AUTH0_CLIENT_ID = os.environ.get("AUTH0_CLIENT_ID")
 
 AUTH0_MANAGEMENT_CLIENT_ID = os.environ.get("AUTH0_MANAGEMENT_CLIENT_ID")
 AUTH0_MANAGEMENT_CLIENT_SECRET = os.environ.get("AUTH0_MANAGEMENT_CLIENT_SECRET")
-
-
-sentry_sdk.init(
-    dsn="https://700a98cfb99b6fd3f23aa7e2327c5d12@o4509792920076288.ingest.us.sentry.io/4509792921321472",
-    send_default_pii=True,
-    traces_sample_rate=1.0,
-    profile_session_sample_rate=1.0,
-    profile_lifecycle="trace",
+SENTRY_DSN = os.environ.get(
+    "SENTRY_DSN",
+    "https://700a98cfb99b6fd3f23aa7e2327c5d12@o4509792920076288.ingest.us.sentry.io/4509792921321472",
 )
 
 try:
     from .local import *
 except ModuleNotFoundError:
     pass
+
+
+sentry_sdk.init(
+    dsn=SENTRY_DSN,
+    send_default_pii=True,
+    traces_sample_rate=1.0,
+    profile_session_sample_rate=1.0,
+    profile_lifecycle="trace",
+)

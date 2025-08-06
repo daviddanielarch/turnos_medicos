@@ -142,6 +142,7 @@ class FindAppointmentView(LoginRequiredMixin, View):
                     "tipo_de_turno": appointment.tipo_de_turno.name,
                     "doctor_id": appointment.doctor.id,
                     "tipo_de_turno_id": appointment.tipo_de_turno.id,
+                    "desired_timeframe": appointment.desired_timeframe,
                 }
             )
 
@@ -153,6 +154,9 @@ class FindAppointmentView(LoginRequiredMixin, View):
         doctor_id = data.get("doctor_id")
         appointment_type_id = data.get("appointment_type_id")
         patient_id = data.get("patient_id")
+        desired_timeframe = data.get(
+            "desired_timeframe", FindAppointment.DEFAULT_DESIRED_TIMEFRAME
+        )
 
         if not doctor_id or not appointment_type_id or not patient_id:
             return JsonResponse(
@@ -180,12 +184,10 @@ class FindAppointmentView(LoginRequiredMixin, View):
         ).first()
 
         if existing_appointment:
+            existing_appointment.desired_timeframe = desired_timeframe
+            existing_appointment.save()
             return JsonResponse(
-                {
-                    "success": False,
-                    "error": "Appointment already exists for this doctor, service type, and patient",
-                },
-                status=400,
+                {"success": True, "message": "Appointment updated successfully"}
             )
 
         # Create new appointment
@@ -194,6 +196,7 @@ class FindAppointmentView(LoginRequiredMixin, View):
             tipo_de_turno=appointment_type,
             patient=patient,
             active=True,
+            desired_timeframe=desired_timeframe,
         )
 
         return JsonResponse(
