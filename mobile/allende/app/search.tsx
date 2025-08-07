@@ -459,7 +459,7 @@ export default function Search() {
                         {/* Timeframe Selection */}
                         <View style={{ marginBottom: 16 }}>
                             <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 12, color: '#111827' }}>
-                                Marco de tiempo deseado
+                                Buscar turnos dentro de
                             </Text>
 
                             <TouchableOpacity
