@@ -172,7 +172,12 @@ export default function Search() {
             <CustomHeader title="Buscar" />
 
             {/* Search Section */}
-            <View style={{ padding: 20 }}>
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ padding: 20 }}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+            >
                 {/* Search Input */}
                 <View style={{
                     backgroundColor: 'white',
@@ -499,6 +504,7 @@ export default function Search() {
                                     backgroundColor: 'white',
                                     borderRadius: 12,
                                     marginTop: 8,
+                                    maxHeight: 200,
                                     shadowColor: '#000',
                                     shadowOffset: { width: 0, height: 4 },
                                     shadowOpacity: 0.15,
@@ -506,27 +512,33 @@ export default function Search() {
                                     elevation: 4,
                                     borderWidth: 1,
                                     borderColor: '#e5e7eb',
+                                    zIndex: 1000,
                                 }}>
-                                    {TIMEFRAME_OPTIONS.map((timeframe, index) => (
-                                        <TouchableOpacity
-                                            key={timeframe.value}
-                                            style={{
-                                                paddingVertical: 14,
-                                                paddingHorizontal: 16,
-                                                borderBottomWidth: index === TIMEFRAME_OPTIONS.length - 1 ? 0 : 1,
-                                                borderBottomColor: '#f3f4f6',
-                                            }}
-                                            onPress={() => selectTimeframe(timeframe)}
-                                        >
-                                            <Text style={{
-                                                fontSize: 16,
-                                                fontWeight: '500',
-                                                color: selectedTimeframe.value === timeframe.value ? COLORS.PRIMARY : '#111827'
-                                            }}>
-                                                {timeframe.label}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
+                                    <ScrollView
+                                        showsVerticalScrollIndicator={false}
+                                        nestedScrollEnabled={true}
+                                    >
+                                        {TIMEFRAME_OPTIONS.map((timeframe, index) => (
+                                            <TouchableOpacity
+                                                key={timeframe.value}
+                                                style={{
+                                                    paddingVertical: 14,
+                                                    paddingHorizontal: 16,
+                                                    borderBottomWidth: index === TIMEFRAME_OPTIONS.length - 1 ? 0 : 1,
+                                                    borderBottomColor: '#f3f4f6',
+                                                }}
+                                                onPress={() => selectTimeframe(timeframe)}
+                                            >
+                                                <Text style={{
+                                                    fontSize: 16,
+                                                    fontWeight: '500',
+                                                    color: selectedTimeframe.value === timeframe.value ? COLORS.PRIMARY : '#111827'
+                                                }}>
+                                                    {timeframe.label}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </ScrollView>
                                 </View>
                             )}
                         </View>
@@ -561,8 +573,7 @@ export default function Search() {
                     </View>
                 )}
 
-
-            </View>
+            </ScrollView>
         </View>
     );
 } 
