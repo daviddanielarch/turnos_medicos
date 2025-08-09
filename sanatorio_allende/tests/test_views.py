@@ -3,8 +3,10 @@ from unittest.mock import patch
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 
 from sanatorio_allende.models import (
+    BestAppointmentFound,
     DeviceRegistration,
     FindAppointment,
     PacienteAllende,
@@ -430,6 +432,203 @@ class TestBestAppointmentListView:
         data = json.loads(response.content)
         assert data["success"] is True
         assert len(data["best_appointments"]) == 0
+
+    @pytest.mark.django_db
+    def test_get_best_appointments_excludes_not_interested(
+        self, client, best_appointment_found
+    ):
+        """Test GET request excludes appointments marked as not interested"""
+        # Mark the appointment as not interested
+        best_appointment_found.not_interested = True
+        best_appointment_found.save()
+
+        url = reverse("sanatorio_allende:api_best_appointments")
+        response = client.get(url, {"patient_id": best_appointment_found.patient.id})
+
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["success"] is True
+        assert len(data["best_appointments"]) == 0  # Should be excluded
+
+    @pytest.mark.django_db
+    def test_get_best_appointments_includes_interested_and_excludes_not_interested(
+        self, client, find_appointment, patient
+    ):
+        """Test GET request includes interested appointments and excludes not interested ones"""
+        # Create two appointments - one interested, one not interested
+        interested_appointment = BestAppointmentFound.objects.create(
+            appointment_wanted=find_appointment,
+            patient=patient,
+            datetime=timezone.now(),
+            not_interested=False,
+        )
+
+        not_interested_appointment = BestAppointmentFound.objects.create(
+            appointment_wanted=find_appointment,
+            patient=patient,
+            datetime=timezone.now() + timezone.timedelta(days=1),
+            not_interested=True,
+        )
+
+        url = reverse("sanatorio_allende:api_best_appointments")
+        response = client.get(url, {"patient_id": patient.id})
+
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["success"] is True
+        assert len(data["best_appointments"]) == 1  # Only the interested one
+
+        # Verify it's the interested appointment
+        returned_appointment = data["best_appointments"][0]
+        assert returned_appointment["id"] == interested_appointment.id
+
+    @pytest.mark.django_db
+    def test_patch_mark_appointment_not_interested_success(
+        self, client, best_appointment_found
+    ):
+        """Test successful PATCH request to mark appointment as not interested"""
+        url = reverse("sanatorio_allende:api_best_appointments")
+        data = {
+            "appointment_id": best_appointment_found.id,
+            "not_interested": True,
+        }
+        response = client.patch(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["success"] is True
+        assert "Appointment marked as not interested" in data["message"]
+
+        # Verify the appointment was actually updated
+        best_appointment_found.refresh_from_db()
+        assert best_appointment_found.not_interested is True
+
+    @pytest.mark.django_db
+    def test_patch_mark_appointment_interested_success(
+        self, client, best_appointment_found
+    ):
+        """Test successful PATCH request to mark appointment as interested"""
+        # First mark as not interested
+        best_appointment_found.not_interested = True
+        best_appointment_found.save()
+
+        url = reverse("sanatorio_allende:api_best_appointments")
+        data = {
+            "appointment_id": best_appointment_found.id,
+            "not_interested": False,
+        }
+        response = client.patch(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["success"] is True
+        assert "Appointment marked as interested" in data["message"]
+
+        # Verify the appointment was actually updated
+        best_appointment_found.refresh_from_db()
+        assert best_appointment_found.not_interested is False
+
+    @pytest.mark.django_db
+    def test_patch_mark_appointment_not_interested_default_value(
+        self, client, best_appointment_found
+    ):
+        """Test PATCH request with default not_interested value (True)"""
+        url = reverse("sanatorio_allende:api_best_appointments")
+        data = {
+            "appointment_id": best_appointment_found.id,
+            # not_interested not provided, should default to True
+        }
+        response = client.patch(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["success"] is True
+        assert "Appointment marked as not interested" in data["message"]
+
+        # Verify the appointment was actually updated
+        best_appointment_found.refresh_from_db()
+        assert best_appointment_found.not_interested is True
+
+    @pytest.mark.django_db
+    def test_patch_mark_appointment_missing_appointment_id(self, client):
+        """Test PATCH request without appointment_id parameter"""
+        url = reverse("sanatorio_allende:api_best_appointments")
+        data = {
+            "not_interested": True,
+            # appointment_id missing
+        }
+        response = client.patch(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 400
+        data = json.loads(response.content)
+        assert data["success"] is False
+        assert "appointment_id is required" in data["error"]
+
+    @pytest.mark.django_db
+    def test_patch_mark_appointment_not_found(self, client):
+        """Test PATCH request with non-existent appointment_id"""
+        url = reverse("sanatorio_allende:api_best_appointments")
+        data = {
+            "appointment_id": 999,
+            "not_interested": True,
+        }
+        response = client.patch(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 404
+        data = json.loads(response.content)
+        assert data["success"] is False
+        assert "Appointment not found" in data["error"]
+
+    @pytest.mark.django_db
+    def test_patch_mark_appointment_for_other_user(
+        self, evil_client, best_appointment_found
+    ):
+        """Test PATCH request for appointment belonging to another user"""
+        url = reverse("sanatorio_allende:api_best_appointments")
+        data = {
+            "appointment_id": best_appointment_found.id,
+            "not_interested": True,
+        }
+        response = evil_client.patch(
+            url, json.dumps(data), content_type="application/json"
+        )
+
+        assert response.status_code == 401
+        data = json.loads(response.content)
+        assert data["success"] is False
+        assert "Appointment does not belong to the current user" in data["error"]
+
+        # Verify the appointment was not changed
+        best_appointment_found.refresh_from_db()
+        assert best_appointment_found.not_interested is False
+
+    @pytest.mark.django_db
+    def test_patch_mark_appointment_with_patient_no_user(
+        self, client, find_appointment, patient
+    ):
+        """Test PATCH request for appointment with patient that has no user"""
+        # Create a patient without a user
+        patient.user = None
+        patient.save()
+
+        best_appointment = BestAppointmentFound.objects.create(
+            appointment_wanted=find_appointment,
+            patient=patient,
+            datetime=timezone.now(),
+        )
+
+        url = reverse("sanatorio_allende:api_best_appointments")
+        data = {
+            "appointment_id": best_appointment.id,
+            "not_interested": True,
+        }
+        response = client.patch(url, json.dumps(data), content_type="application/json")
+
+        # Should return 401 since patient has no user
+        assert response.status_code == 401
+        data = json.loads(response.content)
+        assert data["success"] is False
+        assert "Appointment does not belong to the current user" in data["error"]
 
 
 class TestPatientListView:
