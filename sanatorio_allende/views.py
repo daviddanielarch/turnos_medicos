@@ -250,7 +250,7 @@ class BestAppointmentListView(LoginRequiredMixin, View):
     """Class-based view for listing BestAppointmentFound objects"""
 
     def get(self, request):
-        """Get all BestAppointmentFound objects"""
+        """Get all BestAppointmentFound objects (excluding not_interested ones)"""
         patient_id = request.GET.get("patient_id")
         patient = get_object_or_404(PacienteAllende, id=patient_id)
         if patient.user != request.user:
@@ -267,7 +267,7 @@ class BestAppointmentListView(LoginRequiredMixin, View):
             "appointment_wanted__doctor",
             "appointment_wanted__doctor__especialidad",
             "appointment_wanted__tipo_de_turno",
-        ).filter(patient=patient)
+        ).filter(patient=patient, not_interested=False)
 
         appointments_data = []
         for best_appointment in best_appointments:
@@ -284,6 +284,52 @@ class BestAppointmentListView(LoginRequiredMixin, View):
             )
 
         return JsonResponse({"success": True, "best_appointments": appointments_data})
+
+    def patch(self, request):
+        """Mark an appointment as not interested"""
+        data = json.loads(request.body)
+        appointment_id = data.get("appointment_id")
+        not_interested = data.get("not_interested", True)
+
+        if appointment_id is None:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "appointment_id is required",
+                },
+                status=400,
+            )
+
+        try:
+            best_appointment = BestAppointmentFound.objects.get(id=appointment_id)
+
+            # Check if the appointment belongs to the current user
+            if best_appointment.patient.user != request.user:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "Appointment does not belong to the current user",
+                    },
+                    status=401,
+                )
+
+            best_appointment.not_interested = not_interested
+            best_appointment.save()
+
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": f"Appointment marked as {'not interested' if not_interested else 'interested'}",
+                }
+            )
+        except BestAppointmentFound.DoesNotExist:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Appointment not found",
+                },
+                status=404,
+            )
 
 
 @method_decorator(csrf_exempt, name="dispatch")

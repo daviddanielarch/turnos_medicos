@@ -214,6 +214,16 @@ class ApiService {
     }
 
     /**
+     * Mark appointment as not interested
+     */
+    async markAppointmentNotInterested(appointmentId: number, notInterested: boolean = true) {
+        return this.patch('/api/best-appointments/', {
+            appointment_id: appointmentId,
+            not_interested: notInterested,
+        });
+    }
+
+    /**
      * Get patients
      */
     async getPatients() {

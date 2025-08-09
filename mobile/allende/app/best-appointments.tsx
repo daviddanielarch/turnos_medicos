@@ -5,7 +5,7 @@ import { usePatientContext } from "@/src/contexts/PatientContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import apiService from "../services/apiService";
 
 interface BestAppointment {
@@ -21,6 +21,7 @@ export default function BestAppointments() {
     const [bestAppointments, setBestAppointments] = useState<BestAppointment[]>([]);
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+    const [processingAppointment, setProcessingAppointment] = useState<number | null>(null);
     const { isAuthenticated } = useAuth0Context();
     const { selectedPatient } = usePatientContext();
 
@@ -68,6 +69,24 @@ export default function BestAppointments() {
         setRefreshing(true);
         await fetchBestAppointments();
         setRefreshing(false);
+    };
+
+    const handleNotInterested = async (appointmentId: number) => {
+        setProcessingAppointment(appointmentId);
+        try {
+            const response = await apiService.markAppointmentNotInterested(appointmentId);
+
+            if (response.success) {
+                // Remove the appointment from the local state
+                setBestAppointments(prev => prev.filter(appointment => appointment.id !== appointmentId));
+            } else {
+                console.error('Failed to mark appointment as not interested:', response.error);
+            }
+        } catch (error) {
+            console.error('Error marking appointment as not interested:', error);
+        } finally {
+            setProcessingAppointment(null);
+        }
     };
 
     const formatDate = (dateString: string) => {
@@ -174,11 +193,31 @@ export default function BestAppointments() {
                             </Text>
                         </View>
 
-                        <View style={styles.statusContainer}>
-                            <View style={styles.statusBadge}>
-                                <Ionicons name="checkmark-circle" size={16} color="#10b981" />
-                                <Text style={styles.statusText}>Mejor turno disponible</Text>
+                        <View style={styles.cardFooter}>
+                            <View style={styles.statusContainer}>
+                                <View style={styles.statusBadge}>
+                                    <Ionicons name="checkmark-circle" size={16} color="#10b981" />
+                                    <Text style={styles.statusText}>Mejor turno disponible</Text>
+                                </View>
                             </View>
+
+                            <TouchableOpacity
+                                style={[
+                                    styles.notInterestedButton,
+                                    processingAppointment === appointment.id && styles.notInterestedButtonDisabled
+                                ]}
+                                onPress={() => handleNotInterested(appointment.id)}
+                                disabled={processingAppointment === appointment.id}
+                            >
+                                {processingAppointment === appointment.id ? (
+                                    <ActivityIndicator size="small" color="#ef4444" />
+                                ) : (
+                                    <>
+                                        <Ionicons name="close-circle-outline" size={16} color="#ef4444" />
+                                        <Text style={styles.notInterestedButtonText}>No me interesa</Text>
+                                    </>
+                                )}
+                            </TouchableOpacity>
                         </View>
                     </View>
                 ))}
@@ -291,6 +330,31 @@ const styles = {
         marginLeft: 4,
         fontSize: 12,
         color: '#065f46',
+        fontWeight: '500' as const,
+    },
+    cardFooter: {
+        flexDirection: 'row' as const,
+        justifyContent: 'space-between' as const,
+        alignItems: 'center' as const,
+        marginTop: 8,
+    },
+    notInterestedButton: {
+        flexDirection: 'row' as const,
+        alignItems: 'center' as const,
+        backgroundColor: '#fef2f2',
+        borderWidth: 1,
+        borderColor: '#fecaca',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 6,
+    },
+    notInterestedButtonDisabled: {
+        opacity: 0.6,
+    },
+    notInterestedButtonText: {
+        marginLeft: 4,
+        fontSize: 12,
+        color: '#ef4444',
         fontWeight: '500' as const,
     },
 }; 
