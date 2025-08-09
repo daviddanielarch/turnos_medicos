@@ -101,7 +101,6 @@ export default function BestAppointments() {
         });
     };
 
-    // Show authentication required message if not authenticated
     if (!isAuthenticated) {
         return (
             <View style={{ flex: 1, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' }}>
