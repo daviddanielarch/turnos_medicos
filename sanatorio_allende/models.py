@@ -123,8 +123,13 @@ class BestAppointmentFound(models.Model):
     patient = models.ForeignKey(
         PacienteAllende, on_delete=models.CASCADE, null=True, blank=True
     )
-    appointment_wanted = models.OneToOneField(FindAppointment, on_delete=models.CASCADE)
+    appointment_wanted = models.ForeignKey(FindAppointment, on_delete=models.CASCADE)
     datetime = models.DateTimeField()
+    not_interested = models.BooleanField(default=False)
+
+    class Meta:
+        # Allow multiple BestAppointmentFound per FindAppointment
+        unique_together = [["appointment_wanted", "patient", "datetime"]]
 
 
 class DeviceRegistration(models.Model):
