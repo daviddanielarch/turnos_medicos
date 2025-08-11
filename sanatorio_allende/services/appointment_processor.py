@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, Optional
 
+from django.utils import timezone
+
 
 class AppointmentAction(Enum):
     """Actions to take based on appointment comparison"""
@@ -75,15 +77,9 @@ class AppointmentProcessor:
             current_time = datetime.datetime.now()
 
         if appointment_datetime.tzinfo is None:
-            # Make naive datetime timezone-aware
-            from django.utils import timezone
-
             appointment_datetime = timezone.make_aware(appointment_datetime)
 
         if current_time.tzinfo is None:
-            # Make naive datetime timezone-aware
-            from django.utils import timezone
-
             current_time = timezone.make_aware(current_time)
 
         boundary = cls.TIMEFRAME_BOUNDARIES.get(desired_timeframe)
@@ -115,13 +111,9 @@ class AppointmentProcessor:
 
         # Ensure timezone awareness
         if new_appointment_datetime.tzinfo is None:
-            from django.utils import timezone
-
             new_appointment_datetime = timezone.make_aware(new_appointment_datetime)
 
         if current_best_datetime and current_best_datetime.tzinfo is None:
-            from django.utils import timezone
-
             current_best_datetime = timezone.make_aware(current_best_datetime)
 
         # Make all not_interested datetimes timezone-aware

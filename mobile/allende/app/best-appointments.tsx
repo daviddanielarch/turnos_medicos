@@ -98,6 +98,7 @@ export default function BestAppointments() {
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
+            timeZone: 'America/Argentina/Buenos_Aires',
         });
     };
 
