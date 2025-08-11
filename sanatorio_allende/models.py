@@ -9,6 +9,8 @@ class PacienteAllende(models.Model):
     docid = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
     token = models.CharField(max_length=2048, null=True, blank=True)
+    id_financiador = models.IntegerField(null=True, blank=True)
+    id_plan = models.IntegerField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -126,6 +128,19 @@ class BestAppointmentFound(models.Model):
     appointment_wanted = models.ForeignKey(FindAppointment, on_delete=models.CASCADE)
     datetime = models.DateTimeField()
     not_interested = models.BooleanField(default=False)
+
+    # New fields for appointment confirmation
+    duracion_individual = models.IntegerField(null=True, blank=True)
+    id_plantilla_turno = models.IntegerField(null=True, blank=True)
+    id_item_plantilla = models.IntegerField(null=True, blank=True)
+    hora = models.CharField(
+        max_length=10, null=True, blank=True
+    )  # Store time as "HH:MM"
+    confirmed = models.BooleanField(default=False)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.appointment_wanted.doctor.name} - {self.datetime}"
 
     class Meta:
         # Allow multiple BestAppointmentFound per FindAppointment

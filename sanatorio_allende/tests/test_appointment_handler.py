@@ -26,10 +26,18 @@ class TestAppointmentHandler:
         future_time = current_time + datetime.timedelta(days=5)
 
         # Process appointment
+        appointment_data = {
+            "datetime": future_time,
+            "duracion_individual": 20,
+            "id_plantilla_turno": 81268,
+            "id_item_plantilla": 767071,
+            "hora": "13:20",
+        }
+
         result = AppointmentHandler.process_appointment(
             appointment=find_appointment,
             patient=patient,
-            new_appointment_datetime=future_time,
+            appointment_data=appointment_data,
             user=user,
         )
 
@@ -45,6 +53,13 @@ class TestAppointmentHandler:
         )
         assert best_appointment.datetime == future_time
         assert best_appointment.not_interested is False
+        # Verify additional appointment data is stored correctly
+        assert best_appointment.duracion_individual == 20
+        assert best_appointment.id_plantilla_turno == 81268
+        assert best_appointment.id_item_plantilla == 767071
+        assert best_appointment.hora == "13:20"
+        assert best_appointment.confirmed is False
+        assert best_appointment.confirmed_at is None
 
         # Verify push notification was called
         mock_post.assert_called_once()
@@ -74,10 +89,18 @@ class TestAppointmentHandler:
         )
 
         # Process appointment (better time)
+        appointment_data = {
+            "datetime": better_time,
+            "duracion_individual": 20,
+            "id_plantilla_turno": 81268,
+            "id_item_plantilla": 767071,
+            "hora": "13:20",
+        }
+
         result = AppointmentHandler.process_appointment(
             appointment=find_appointment,
             patient=patient,
-            new_appointment_datetime=better_time,
+            appointment_data=appointment_data,
             user=user,
         )
 
@@ -90,6 +113,14 @@ class TestAppointmentHandler:
         # Verify database was updated
         existing_appointment.refresh_from_db()
         assert existing_appointment.datetime == better_time
+        # Verify additional appointment data is updated correctly
+        assert existing_appointment.duracion_individual == 20
+        assert existing_appointment.id_plantilla_turno == 81268
+        assert existing_appointment.id_item_plantilla == 767071
+        assert existing_appointment.hora == "13:20"
+
+        # Verify push notification was called
+        mock_post.assert_called_once()
 
     @pytest.mark.django_db
     @patch("sanatorio_allende.services.push_notifications.requests.post")
@@ -114,10 +145,18 @@ class TestAppointmentHandler:
         )
 
         # Process appointment (worse time)
+        appointment_data = {
+            "datetime": worse_time,
+            "duracion_individual": 20,
+            "id_plantilla_turno": 81268,
+            "id_item_plantilla": 767071,
+            "hora": "13:20",
+        }
+
         result = AppointmentHandler.process_appointment(
             appointment=find_appointment,
             patient=patient,
-            new_appointment_datetime=worse_time,
+            appointment_data=appointment_data,
             user=user,
         )
 
@@ -158,10 +197,18 @@ class TestAppointmentHandler:
         )
 
         # Process appointment (worse time)
+        appointment_data = {
+            "datetime": worse_time,
+            "duracion_individual": 20,
+            "id_plantilla_turno": 81268,
+            "id_item_plantilla": 767071,
+            "hora": "13:20",
+        }
+
         result = AppointmentHandler.process_appointment(
             appointment=find_appointment,
             patient=patient,
-            new_appointment_datetime=worse_time,
+            appointment_data=appointment_data,
             user=user,
         )
 
@@ -192,10 +239,18 @@ class TestAppointmentHandler:
         )
 
         # Process appointment (same time)
+        appointment_data = {
+            "datetime": appointment_time,
+            "duracion_individual": 20,
+            "id_plantilla_turno": 81268,
+            "id_item_plantilla": 767071,
+            "hora": "13:20",
+        }
+
         result = AppointmentHandler.process_appointment(
             appointment=find_appointment,
             patient=patient,
-            new_appointment_datetime=appointment_time,
+            appointment_data=appointment_data,
             user=user,
         )
 
@@ -225,10 +280,18 @@ class TestAppointmentHandler:
         outside_timeframe = current_time + datetime.timedelta(days=10)
 
         # Process appointment outside timeframe
+        appointment_data = {
+            "datetime": outside_timeframe,
+            "duracion_individual": 20,
+            "id_plantilla_turno": 81268,
+            "id_item_plantilla": 767071,
+            "hora": "13:20",
+        }
+
         result = AppointmentHandler.process_appointment(
             appointment=find_appointment,
             patient=patient,
-            new_appointment_datetime=outside_timeframe,
+            appointment_data=appointment_data,
             user=user,
         )
 
@@ -269,10 +332,18 @@ class TestAppointmentHandler:
         )
 
         # Process appointment matching not_interested time
+        appointment_data = {
+            "datetime": not_interested_time,
+            "duracion_individual": 20,
+            "id_plantilla_turno": 81268,
+            "id_item_plantilla": 767071,
+            "hora": "13:20",
+        }
+
         result = AppointmentHandler.process_appointment(
             appointment=find_appointment,
             patient=patient,
-            new_appointment_datetime=not_interested_time,
+            appointment_data=appointment_data,
             user=user,
         )
 
@@ -317,10 +388,18 @@ class TestAppointmentHandler:
         )
 
         # Process appointment matching one of the not_interested times
+        appointment_data = {
+            "datetime": not_interested_time_1,
+            "duracion_individual": 20,
+            "id_plantilla_turno": 81268,
+            "id_item_plantilla": 767071,
+            "hora": "13:20",
+        }
+
         result = AppointmentHandler.process_appointment(
             appointment=find_appointment,
             patient=patient,
-            new_appointment_datetime=not_interested_time_1,
+            appointment_data=appointment_data,
             user=user,
         )
 
@@ -337,7 +416,7 @@ class TestAppointmentHandler:
     def test_process_appointment_creates_appointment_data_correctly(
         self, mock_post, find_appointment, patient, user, device_registration
     ):
-        """Test that appointment data is created with correct information"""
+        """Test that appointment data is created with correct information and structure"""
         # Mock successful push notification response
         mock_response = type("MockResponse", (), {"status_code": 200})()
         mock_response.json = lambda: [{"status": "ok", "id": "test_receipt_id"}]
@@ -346,13 +425,81 @@ class TestAppointmentHandler:
         current_time = timezone.now()
         future_time = current_time + datetime.timedelta(days=5)
 
-        # Process appointment
+        # Test AppointmentData structure
+        from sanatorio_allende.services.appointment_processor import (
+            AppointmentProcessor,
+        )
+
+        # Create appointment data with all fields
+        appointment_data_obj = AppointmentProcessor.create_appointment_data(
+            doctor_name="Dr. Test",
+            especialidad_name="Test Specialty",
+            tipo_de_turno_name="Test Appointment",
+            patient_dni="12345678",
+            desired_timeframe="2 weeks",
+            duracion_individual=30,
+            id_plantilla_turno=12345,
+            id_item_plantilla=67890,
+            hora="14:30",
+        )
+
+        # Verify AppointmentData structure
+        assert appointment_data_obj.doctor_name == "Dr. Test"
+        assert appointment_data_obj.especialidad_name == "Test Specialty"
+        assert appointment_data_obj.tipo_de_turno_name == "Test Appointment"
+        assert appointment_data_obj.patient_dni == "12345678"
+        assert appointment_data_obj.desired_timeframe == "2 weeks"
+        assert appointment_data_obj.duracion_individual == 30
+        assert appointment_data_obj.id_plantilla_turno == 12345
+        assert appointment_data_obj.id_item_plantilla == 67890
+        assert appointment_data_obj.hora == "14:30"
+
+        # Test with optional fields as None
+        appointment_data_minimal = AppointmentProcessor.create_appointment_data(
+            doctor_name="Dr. Test",
+            especialidad_name="Test Specialty",
+            tipo_de_turno_name="Test Appointment",
+            patient_dni="12345678",
+            desired_timeframe="2 weeks",
+        )
+
+        assert appointment_data_minimal.duracion_individual is None
+        assert appointment_data_minimal.id_plantilla_turno is None
+        assert appointment_data_minimal.id_item_plantilla is None
+        assert appointment_data_minimal.hora is None
+
+        # Process appointment with additional data
+        appointment_data = {
+            "datetime": future_time,
+            "duracion_individual": 20,
+            "id_plantilla_turno": 81268,
+            "id_item_plantilla": 767071,
+            "hora": "13:20",
+        }
+
         result = AppointmentHandler.process_appointment(
             appointment=find_appointment,
             patient=patient,
-            new_appointment_datetime=future_time,
+            appointment_data=appointment_data,
             user=user,
         )
+
+        # Verify result
+        assert result["action"] == "created"
+        assert result["success"] is True
+
+        # Verify database was updated with additional data
+        best_appointment = BestAppointmentFound.objects.get(
+            appointment_wanted=find_appointment, patient=patient
+        )
+        assert best_appointment.datetime == future_time
+        assert best_appointment.duracion_individual == 20
+        assert best_appointment.id_plantilla_turno == 81268
+        assert best_appointment.id_item_plantilla == 767071
+        assert best_appointment.hora == "13:20"
+        assert best_appointment.not_interested is False
+        assert best_appointment.confirmed is False
+        assert best_appointment.confirmed_at is None
 
         # Verify push notification was called with correct data
         mock_post.assert_called_once()
@@ -382,10 +529,18 @@ class TestAppointmentHandler:
         future_time = current_time + datetime.timedelta(days=5)
 
         # Process appointment without device registration
+        appointment_data = {
+            "datetime": future_time,
+            "duracion_individual": 20,
+            "id_plantilla_turno": 81268,
+            "id_item_plantilla": 767071,
+            "hora": "13:20",
+        }
+
         result = AppointmentHandler.process_appointment(
             appointment=find_appointment,
             patient=patient,
-            new_appointment_datetime=future_time,
+            appointment_data=appointment_data,
             user=user,
         )
 
@@ -399,6 +554,11 @@ class TestAppointmentHandler:
             appointment_wanted=find_appointment, patient=patient
         )
         assert best_appointment.datetime == future_time
+        # Verify additional appointment data is stored correctly
+        assert best_appointment.duracion_individual == 20
+        assert best_appointment.id_plantilla_turno == 81268
+        assert best_appointment.id_item_plantilla == 767071
+        assert best_appointment.hora == "13:20"
 
         mock_post.assert_not_called()
 
@@ -425,10 +585,18 @@ class TestAppointmentHandler:
         )
 
         # Process appointment (better time within 2 weeks timeframe)
+        appointment_data = {
+            "datetime": better_time,
+            "duracion_individual": 20,
+            "id_plantilla_turno": 81268,
+            "id_item_plantilla": 767071,
+            "hora": "13:20",
+        }
+
         result = AppointmentHandler.process_appointment(
             appointment=find_appointment,
             patient=patient,
-            new_appointment_datetime=better_time,
+            appointment_data=appointment_data,
             user=user,
         )
 
@@ -437,6 +605,13 @@ class TestAppointmentHandler:
         assert result["success"] is True
         assert result["notification_sent"] is True
 
-        # Verify database was updated
+        # Verify database was updated with additional data
         existing_appointment.refresh_from_db()
         assert existing_appointment.datetime == better_time
+        assert existing_appointment.duracion_individual == 20
+        assert existing_appointment.id_plantilla_turno == 81268
+        assert existing_appointment.id_item_plantilla == 767071
+        assert existing_appointment.hora == "13:20"
+
+        # Verify push notification was called
+        mock_post.assert_called_once()

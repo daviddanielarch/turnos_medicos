@@ -29,6 +29,11 @@ urlpatterns = [
         name="api_best_appointments",
     ),
     path(
+        "api/confirm-appointment/",
+        views.ConfirmAppointmentView.as_view(),
+        name="api_confirm_appointment",
+    ),
+    path(
         "api/device-registrations/",
         views.DeviceRegistrationView.as_view(),
         name="api_register_device",

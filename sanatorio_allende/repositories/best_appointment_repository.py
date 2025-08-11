@@ -84,6 +84,10 @@ class BestAppointmentRepository:
         patient: PacienteAllende,
         appointment_datetime: timezone.datetime,
         not_interested: bool = False,
+        duracion_individual: int = None,
+        id_plantilla_turno: int = None,
+        id_item_plantilla: int = None,
+        hora: str = None,
     ) -> BestAppointmentFound:
         """
         Create a new BestAppointmentFound record
@@ -93,6 +97,10 @@ class BestAppointmentRepository:
             patient: The PacienteAllende object
             appointment_datetime: The appointment datetime
             not_interested: Whether the patient is not interested in this appointment
+            duracion_individual: Duration of the individual appointment
+            id_plantilla_turno: ID of the appointment template
+            id_item_plantilla: ID of the template item
+            hora: Time of the appointment as "HH:MM"
 
         Returns:
             Created BestAppointmentFound object
@@ -102,23 +110,45 @@ class BestAppointmentRepository:
             datetime=appointment_datetime,
             patient=patient,
             not_interested=not_interested,
+            duracion_individual=duracion_individual,
+            id_plantilla_turno=id_plantilla_turno,
+            id_item_plantilla=id_item_plantilla,
+            hora=hora,
         )
 
     @classmethod
     def update_best_appointment(
-        cls, best_appointment: BestAppointmentFound, new_datetime: timezone.datetime
+        cls,
+        best_appointment: BestAppointmentFound,
+        new_datetime: timezone.datetime,
+        duracion_individual: int = None,
+        id_plantilla_turno: int = None,
+        id_item_plantilla: int = None,
+        hora: str = None,
     ) -> BestAppointmentFound:
         """
-        Update an existing BestAppointmentFound record with new datetime
+        Update an existing BestAppointmentFound record with new datetime and additional data
 
         Args:
             best_appointment: The BestAppointmentFound object to update
             new_datetime: The new appointment datetime
+            duracion_individual: Duration of the individual appointment
+            id_plantilla_turno: ID of the appointment template
+            id_item_plantilla: ID of the template item
+            hora: Time of the appointment as "HH:MM"
 
         Returns:
             Updated BestAppointmentFound object
         """
         best_appointment.datetime = new_datetime
+        if duracion_individual is not None:
+            best_appointment.duracion_individual = duracion_individual
+        if id_plantilla_turno is not None:
+            best_appointment.id_plantilla_turno = id_plantilla_turno
+        if id_item_plantilla is not None:
+            best_appointment.id_item_plantilla = id_item_plantilla
+        if hora is not None:
+            best_appointment.hora = hora
         best_appointment.save()
         return best_appointment
 

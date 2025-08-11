@@ -87,6 +87,9 @@ def patient(user):
         id_paciente="12345",
         docid="12345678",
         password="testpass123",
+        token="test_auth_token_123",
+        id_financiador=1,
+        id_plan=1,
     )
 
 

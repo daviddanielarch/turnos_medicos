@@ -178,7 +178,7 @@ export default function Index() {
 
       {/* Items List */}
       <ScrollView
-        style={{ flex: 1, paddingHorizontal: 16 }}
+        style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 16 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

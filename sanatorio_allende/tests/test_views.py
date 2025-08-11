@@ -870,3 +870,189 @@ class TestDeviceRegistrationView:
         # Verify default platform was used
         device = DeviceRegistration.objects.get(push_token="test_token_123")
         assert device.platform == "expo"
+
+
+class TestConfirmAppointmentView:
+    """Test cases for ConfirmAppointmentView"""
+
+    @pytest.mark.django_db
+    @patch("sanatorio_allende.appointments.requests.post")
+    def test_post_confirm_appointment_success(
+        self, mock_post, client, best_appointment_found
+    ):
+        """Test successful POST request to confirm an appointment"""
+        mock_response = type(
+            "MockResponse",
+            (),
+            {
+                "status_code": 200,
+                "json": lambda self: {},
+            },
+        )()
+        mock_post.return_value = mock_response
+
+        url = reverse("sanatorio_allende:api_confirm_appointment")
+        data = {"appointment_id": best_appointment_found.id}
+        response = client.post(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["success"] is True
+        assert data["message"] == "Appointment confirmed successfully"
+
+        # Verify the appointment was marked as confirmed
+        best_appointment_found.refresh_from_db()
+        assert best_appointment_found.confirmed is True
+        assert best_appointment_found.confirmed_at is not None
+
+        # Verify the correct data was sent to the Allende API
+        mock_post.assert_called_once()
+        call_args = mock_post.call_args
+        assert (
+            call_args[0][0]
+            == "https://miportal.sanatorioallende.com/backend/api/turnos/Asignar"
+        )
+        assert (
+            call_args[1]["headers"]["authorization"]
+            == best_appointment_found.patient.token
+        )
+
+    @pytest.mark.django_db
+    def test_post_confirm_appointment_invalid_json(self, client):
+        """Test POST request with invalid JSON"""
+        url = reverse("sanatorio_allende:api_confirm_appointment")
+        response = client.post(url, "invalid json", content_type="application/json")
+
+        assert response.status_code == 400
+        data = json.loads(response.content)
+        assert data["success"] is False
+        assert data["error"] == "Invalid JSON"
+
+    @pytest.mark.django_db
+    def test_post_confirm_appointment_not_found(self, client):
+        """Test POST request with non-existent appointment_id"""
+        url = reverse("sanatorio_allende:api_confirm_appointment")
+        data = {"appointment_id": 999}
+        response = client.post(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 404
+
+    @pytest.mark.django_db
+    def test_post_confirm_appointment_already_confirmed(
+        self, client, best_appointment_found
+    ):
+        """Test POST request for an appointment that is already confirmed"""
+        # Mark the appointment as already confirmed
+        best_appointment_found.confirmed = True
+        best_appointment_found.confirmed_at = timezone.now()
+        best_appointment_found.save()
+
+        url = reverse("sanatorio_allende:api_confirm_appointment")
+        data = {"appointment_id": best_appointment_found.id}
+        response = client.post(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 400
+        data = json.loads(response.content)
+        assert data["success"] is False
+        assert data["error"] == "Appointment is already confirmed"
+
+    @pytest.mark.django_db
+    @patch("sanatorio_allende.appointments.requests.post")
+    def test_post_confirm_appointment_unauthorized(
+        self, mock_post, client, best_appointment_found
+    ):
+        """Test POST request when the Allende API returns unauthorized"""
+        # Mock the unauthorized response from the Allende API
+        from sanatorio_allende.appointments import UnauthorizedException
+
+        mock_post.side_effect = UnauthorizedException()
+
+        url = reverse("sanatorio_allende:api_confirm_appointment")
+        data = {"appointment_id": best_appointment_found.id}
+        response = client.post(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 401
+        data = json.loads(response.content)
+        assert data["success"] is False
+        assert data["error"] == "Unauthorized - please re-authenticate"
+
+        # Verify the appointment was not marked as confirmed
+        best_appointment_found.refresh_from_db()
+        assert best_appointment_found.confirmed is False
+        assert best_appointment_found.confirmed_at is None
+
+    @pytest.mark.django_db
+    def test_post_confirm_appointment_for_other_user(
+        self, evil_client, best_appointment_found
+    ):
+        """Test POST request for an appointment belonging to another user"""
+        url = reverse("sanatorio_allende:api_confirm_appointment")
+        data = {"appointment_id": best_appointment_found.id}
+        response = evil_client.post(
+            url, json.dumps(data), content_type="application/json"
+        )
+
+        assert response.status_code == 401
+
+    @pytest.mark.django_db
+    @patch("sanatorio_allende.appointments.requests.post")
+    def test_post_confirm_appointment_verify_appointment_data_structure(
+        self, mock_post, client, best_appointment_found
+    ):
+        """Test that the appointment data structure sent to Allende API is correct"""
+        # Mock the successful response from the Allende API
+        mock_response = type(
+            "MockResponse",
+            (),
+            {
+                "status_code": 200,
+                "json": lambda self: {"success": True, "appointment_id": "12345"},
+            },
+        )()
+        mock_post.return_value = mock_response
+
+        url = reverse("sanatorio_allende:api_confirm_appointment")
+        data = {"appointment_id": best_appointment_found.id}
+        response = client.post(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 200
+
+        # Verify the appointment data structure sent to Allende API
+        mock_post.assert_called_once()
+        call_args = mock_post.call_args
+        appointment_data = call_args[1]["json"]
+
+        # Check the main structure
+        assert "CriterioBusquedaDto" in appointment_data
+        assert "TurnoElegidoDto" in appointment_data
+        assert "Observaciones" in appointment_data
+
+        # Check CriterioBusquedaDto structure
+        criterio = appointment_data["CriterioBusquedaDto"]
+        assert "IdPaciente" in criterio
+        assert "IdServicio" in criterio
+        assert "IdSucursal" in criterio
+        assert "IdRecurso" in criterio
+        assert "IdEspecialidad" in criterio
+        assert "ControlarEdad" in criterio
+        assert "IdTipoDeTurno" in criterio
+        assert "IdFinanciador" in criterio
+        assert "IdTipoRecurso" in criterio
+        assert "IdPlan" in criterio
+        assert "Prestaciones" in criterio
+
+        # Check TurnoElegidoDto structure
+        turno = appointment_data["TurnoElegidoDto"]
+        assert "Fecha" in turno
+        assert "Hora" in turno
+        assert "IdItemDePlantilla" in turno
+        assert "IdPlantillaTurno" in turno
+        assert "IdSucursal" in turno
+        assert "DuracionIndividual" in turno
+        assert "RequisitoAdministrativoAlOtorgar" in turno
+
+        # Check Prestaciones structure
+        prestaciones = criterio["Prestaciones"]
+        assert len(prestaciones) == 1
+        assert "IdPrestacion" in prestaciones[0]
+        assert "IdItemSolicitudEstudios" in prestaciones[0]

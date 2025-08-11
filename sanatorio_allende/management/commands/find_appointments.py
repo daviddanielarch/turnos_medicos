@@ -97,6 +97,8 @@ class Command(BaseCommand):
                     "IdEspecialidad": appointment.doctor.especialidad.id_especialidad,
                     "IdTipoRecurso": appointment.doctor.id_tipo_recurso,
                     "ControlarEdad": False,
+                    "IdFinanciador": patient.id_financiador,  # Add this field
+                    "IdPlan": patient.id_plan,  # Add this field
                     "Prestaciones": [
                         {
                             "IdPrestacion": appointment.tipo_de_turno.id_tipo_turno,
@@ -106,12 +108,12 @@ class Command(BaseCommand):
                 }
 
                 # Search for new appointment
-                new_best_appointment_datetime = allende.search_best_date_appointment(
+                new_best_appointment_data = allende.search_best_date_appointment(
                     doctor_data
                 )
 
                 # Handle case where no appointment is found
-                if not new_best_appointment_datetime:
+                if not new_best_appointment_data:
                     self.stdout.write(
                         self.style.WARNING(
                             f"No new best appointment found for {appointment.doctor.name} - {appointment.tipo_de_turno.name}"
@@ -120,13 +122,13 @@ class Command(BaseCommand):
                     continue
 
                 # Make the naive datetime timezone-aware
-                new_best_appointment_datetime = timezone.make_aware(
-                    new_best_appointment_datetime
+                new_best_appointment_data["datetime"] = timezone.make_aware(
+                    new_best_appointment_data["datetime"]
                 )
 
                 # Process appointment using simplified handler
                 result = AppointmentHandler.process_appointment(
-                    appointment, patient, new_best_appointment_datetime, patient.user
+                    appointment, patient, new_best_appointment_data, patient.user
                 )
 
                 # Log result

@@ -3,6 +3,7 @@
 import base64
 import json
 import logging
+import re
 from datetime import datetime
 
 import requests
@@ -95,6 +96,32 @@ class Allende:
 
         return auth_header
 
+    def get_user_data(self):
+        if not self.user_id:
+            raise Exception("User id not found")
+
+        response = requests.get(
+            f"https://miportal.sanatorioallende.com/backend/api/Paciente/ObtenerPorId/{self.user_id}",
+            headers={"authorization": self.auth_header},
+        )
+        data = response.json()
+        return {
+            "IdFinanciador": data["CoberturaPorDefecto"]["IdMutual"],
+            "IdPlan": data["CoberturaPorDefecto"]["IdPlanMutual"],
+        }
+
+    def reservar(self, appointment_data: dict):
+        url = "https://miportal.sanatorioallende.com/backend/api/turnos/Asignar"
+
+        response = requests.post(
+            url, headers={"authorization": self.auth_header}, json=appointment_data
+        )
+
+        if response.status_code == HTTP_UNAUTHORIZED:
+            raise UnauthorizedException()
+
+        return response.json()
+
     @classmethod
     def is_authorized(cls, auth_header: str):
         response = requests.get(
@@ -118,10 +145,11 @@ class Allende:
         if not appointments:
             return
 
-        return min(appointments)
+        # Return the appointment with the earliest datetime
+        return min(appointments, key=lambda x: x["datetime"])
 
-    def _get_appointment_dates(self, data: list[dict]) -> list[datetime]:
-        """Parses the appointments from the response data to get the appointment dates"""
+    def _get_appointment_dates(self, data: list[dict]) -> list[dict]:
+        """Parses the appointments from the response data to get the appointment dates and additional data"""
         appointments = []
         for turno in data["PrimerosTurnosDeCadaRecurso"]:
             date = turno["Fecha"].split("T")[0]
@@ -133,7 +161,16 @@ class Allende:
             hora = datetime.strptime(hora, "%H:%M")
             date_and_time = date.replace(hour=hora.hour, minute=hora.minute)
 
-            appointments.append(date_and_time)
+            # Extract additional appointment data
+            appointment_data = {
+                "datetime": date_and_time,
+                "duracion_individual": turno.get("DuracionIndividual"),
+                "id_plantilla_turno": turno.get("IdPlantillaTurno"),
+                "id_item_plantilla": turno.get("IdItemDePlantilla"),
+                "hora": turno.get("Hora"),
+            }
+
+            appointments.append(appointment_data)
 
         return appointments
 

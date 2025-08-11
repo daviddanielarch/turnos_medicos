@@ -25,7 +25,7 @@ class AppointmentHandler:
         cls,
         appointment: FindAppointment,
         patient: PacienteAllende,
-        new_appointment_datetime: timezone.datetime,
+        appointment_data: dict,
         user: User,
     ) -> dict:
         """
@@ -34,12 +34,14 @@ class AppointmentHandler:
         Args:
             appointment: The FindAppointment object
             patient: The PacienteAllende object
-            new_appointment_datetime: The newly found appointment datetime
+            appointment_data: Dictionary containing appointment data including datetime and additional fields
             user: The user to send notifications to
 
         Returns:
             Dictionary with processing result
         """
+        new_appointment_datetime = appointment_data["datetime"]
+
         # Get current best appointment
         best_appointment_so_far = (
             BestAppointmentRepository.get_current_best_appointment(appointment, patient)
@@ -78,18 +80,26 @@ class AppointmentHandler:
             new_appointment_datetime, current_best_datetime, not_interested_datetimes
         )
 
-        # Create appointment data for notifications
-        appointment_data = AppointmentProcessor.create_appointment_data(
+        # Create appointment data for notifications and processing
+        complete_appointment_data = AppointmentProcessor.create_appointment_data(
             doctor_name=appointment.doctor.name,
             especialidad_name=appointment.doctor.especialidad.name,
             tipo_de_turno_name=appointment.tipo_de_turno.name,
             patient_dni=patient.docid,
             desired_timeframe=appointment.desired_timeframe,
+            duracion_individual=appointment_data.get("duracion_individual"),
+            id_plantilla_turno=appointment_data.get("id_plantilla_turno"),
+            id_item_plantilla=appointment_data.get("id_item_plantilla"),
+            hora=appointment_data.get("hora"),
         )
 
         # Handle the action
         result = cls._handle_action(
-            comparison_result, appointment, patient, appointment_data, user
+            comparison_result,
+            appointment,
+            patient,
+            complete_appointment_data,
+            user,
         )
 
         return result
@@ -108,7 +118,13 @@ class AppointmentHandler:
         if comparison_result.action == AppointmentAction.CREATE_NEW:
             # Create new best appointment
             BestAppointmentRepository.create_best_appointment(
-                appointment, patient, comparison_result.new_datetime
+                appointment,
+                patient,
+                comparison_result.new_datetime,
+                duracion_individual=appointment_data.duracion_individual,
+                id_plantilla_turno=appointment_data.id_plantilla_turno,
+                id_item_plantilla=appointment_data.id_item_plantilla,
+                hora=appointment_data.hora,
             )
 
             result = {
@@ -125,7 +141,12 @@ class AppointmentHandler:
                 )
             )
             BestAppointmentRepository.update_best_appointment(
-                best_appointment_so_far, comparison_result.new_datetime
+                best_appointment_so_far,
+                comparison_result.new_datetime,
+                duracion_individual=appointment_data.duracion_individual,
+                id_plantilla_turno=appointment_data.id_plantilla_turno,
+                id_item_plantilla=appointment_data.id_item_plantilla,
+                hora=appointment_data.hora,
             )
 
             result = {

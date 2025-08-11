@@ -66,9 +66,9 @@ class BestAppointmentFoundAdmin(admin.ModelAdmin):
 
 @admin.register(PacienteAllende)
 class PacienteAllendeAdmin(admin.ModelAdmin):
-    list_display = ["name", "id_paciente"]
-    list_filter = ["id_paciente"]
-    search_fields = ["id_paciente"]
+    list_display = ["name", "id_paciente", "id_financiador", "id_plan"]
+    list_filter = ["id_paciente", "id_financiador", "id_plan"]
+    search_fields = ["id_paciente", "name"]
 
 
 @admin.register(Doctor)

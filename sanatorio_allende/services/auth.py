@@ -24,6 +24,9 @@ class AllendeAuthService:
         user_id = allende.get_user_id()
         if user_id:
             self.user.id_paciente = user_id
+            user_data = allende.get_user_data()
+            self.user.id_financiador = user_data["IdFinanciador"]
+            self.user.id_plan = user_data["IdPlan"]
 
         self.user.save()
 

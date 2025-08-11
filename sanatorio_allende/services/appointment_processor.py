@@ -32,6 +32,10 @@ class AppointmentData:
     tipo_de_turno_name: str
     patient_dni: str
     desired_timeframe: str
+    duracion_individual: Optional[int] = None
+    id_plantilla_turno: Optional[int] = None
+    id_item_plantilla: Optional[int] = None
+    hora: Optional[str] = None
 
 
 @dataclass
@@ -179,19 +183,27 @@ class AppointmentProcessor:
         tipo_de_turno_name: str,
         patient_dni: str,
         desired_timeframe: str,
+        duracion_individual: Optional[int] = None,
+        id_plantilla_turno: Optional[int] = None,
+        id_item_plantilla: Optional[int] = None,
+        hora: Optional[str] = None,
     ) -> AppointmentData:
         """
-        Create AppointmentData object from individual fields
+        Create AppointmentData object with all appointment information
 
         Args:
             doctor_name: Name of the doctor
-            especialidad_name: Name of the specialty
+            especialidad_name: Name of the medical specialty
             tipo_de_turno_name: Name of the appointment type
             patient_dni: Patient's DNI
-            desired_timeframe: Desired timeframe for the appointment
+            desired_timeframe: Desired timeframe for appointments
+            duracion_individual: Duration of the individual appointment
+            id_plantilla_turno: ID of the appointment template
+            id_item_plantilla: ID of the template item
+            hora: Time of the appointment as "HH:MM"
 
         Returns:
-            AppointmentData object
+            AppointmentData object with all appointment information
         """
         return AppointmentData(
             doctor_name=doctor_name,
@@ -199,6 +211,10 @@ class AppointmentProcessor:
             tipo_de_turno_name=tipo_de_turno_name,
             patient_dni=patient_dni,
             desired_timeframe=desired_timeframe,
+            duracion_individual=duracion_individual,
+            id_plantilla_turno=id_plantilla_turno,
+            id_item_plantilla=id_item_plantilla,
+            hora=hora,
         )
 
     @classmethod

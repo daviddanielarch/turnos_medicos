@@ -10,7 +10,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
-from sanatorio_allende.appointments import Allende
+from sanatorio_allende.appointments import Allende, UnauthorizedException
 
 from .models import (
     AppointmentType,
@@ -280,6 +280,16 @@ class BestAppointmentListView(LoginRequiredMixin, View):
                     "location": appointment.doctor.especialidad.sucursal,
                     "tipo_de_turno": appointment.tipo_de_turno.name,
                     "best_datetime": best_appointment.datetime.isoformat(),
+                    "duracion_individual": best_appointment.duracion_individual,
+                    "id_plantilla_turno": best_appointment.id_plantilla_turno,
+                    "id_item_plantilla": best_appointment.id_item_plantilla,
+                    "hora": best_appointment.hora,
+                    "confirmed": best_appointment.confirmed,
+                    "confirmed_at": (
+                        best_appointment.confirmed_at.isoformat()
+                        if best_appointment.confirmed_at
+                        else None
+                    ),
                 }
             )
 
@@ -479,3 +489,81 @@ class DeviceRegistrationView(LoginRequiredMixin, View):
                 "created": created,
             }
         )
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class ConfirmAppointmentView(LoginRequiredMixin, View):
+    """Class-based view for confirming appointments"""
+
+    def post(self, request):
+        """Confirm an appointment by calling the Allende reservar endpoint"""
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {"success": False, "error": "Invalid JSON"},
+                status=400,
+            )
+
+        appointment_id = data.get("appointment_id")
+        appointment = get_object_or_404(BestAppointmentFound, id=appointment_id)
+
+        if appointment.confirmed:
+            return JsonResponse(
+                {"success": False, "error": "Appointment is already confirmed"},
+                status=400,
+            )
+
+        patient = appointment.patient
+
+        allende = Allende(auth_header=patient.token)
+
+        appointment_data = {
+            "CriterioBusquedaDto": {
+                "IdPaciente": int(patient.id_paciente),
+                "IdServicio": appointment.appointment_wanted.doctor.especialidad.id_servicio,
+                "IdSucursal": appointment.appointment_wanted.doctor.especialidad.id_sucursal,
+                "IdRecurso": appointment.appointment_wanted.doctor.id_recurso,
+                "IdEspecialidad": appointment.appointment_wanted.doctor.especialidad.id_especialidad,
+                "ControlarEdad": False,
+                "IdTipoDeTurno": appointment.appointment_wanted.tipo_de_turno.id_tipo_turno,
+                "IdFinanciador": int(patient.id_financiador),
+                "IdTipoRecurso": appointment.appointment_wanted.doctor.id_tipo_recurso,
+                "IdPlan": int(patient.id_plan),
+                "Prestaciones": [
+                    {
+                        "IdPrestacion": appointment.appointment_wanted.tipo_de_turno.id_tipo_turno,
+                        "IdItemSolicitudEstudios": 0,
+                    }
+                ],
+            },
+            "TurnoElegidoDto": {
+                "Fecha": appointment.datetime.strftime("%Y-%m-%dT00:00:00"),
+                "Hora": appointment.datetime.strftime("%H:%M"),
+                "IdItemDePlantilla": appointment.id_item_plantilla,
+                "IdPlantillaTurno": appointment.id_plantilla_turno,
+                "IdSucursal": appointment.appointment_wanted.doctor.especialidad.id_sucursal,
+                "DuracionIndividual": appointment.duracion_individual,
+                "RequisitoAdministrativoAlOtorgar": "DNI\nCredencial Financiador\n AUTORIZACION: Con autorización online",
+            },
+            "Observaciones": None,
+        }
+
+        try:
+            result = allende.reservar(appointment_data)
+            appointment.confirmed = True
+            appointment.confirmed_at = timezone.now()
+            appointment.save()
+
+            return JsonResponse(
+                {"success": True, "message": "Appointment confirmed successfully"}
+            )
+
+        except UnauthorizedException:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Unauthorized - please re-authenticate",
+                },
+                status=401,
+            )
