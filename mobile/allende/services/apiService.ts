@@ -224,6 +224,15 @@ class ApiService {
     }
 
     /**
+     * Confirm an appointment
+     */
+    async confirmAppointment(appointmentId: number) {
+        return this.post('/api/confirm-appointment/', {
+            appointment_id: appointmentId,
+        });
+    }
+
+    /**
      * Get patients
      */
     async getPatients() {

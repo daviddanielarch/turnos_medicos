@@ -68,6 +68,7 @@ class DataLoader:
                 AppointmentType(
                     name=appointment_type["Nombre"],
                     id_tipo_turno=appointment_type["Id"],
+                    id_tipo_prestacion=appointment_type["IdTipoPrestacion"],
                     especialidad=especialidad,
                 )
                 for appointment_type in appointment_types

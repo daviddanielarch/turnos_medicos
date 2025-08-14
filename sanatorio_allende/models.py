@@ -50,6 +50,7 @@ class AppointmentType(models.Model):
     name = models.CharField(max_length=255)
     id_tipo_turno = models.IntegerField()
     especialidad = models.ForeignKey(Especialidad, on_delete=models.CASCADE)
+    id_tipo_prestacion = models.IntegerField(null=True, blank=True)
 
     def from_json(self, json_data):
         """
@@ -129,13 +130,14 @@ class BestAppointmentFound(models.Model):
     datetime = models.DateTimeField()
     not_interested = models.BooleanField(default=False)
 
-    # New fields for appointment confirmation
+    # Fields for appointment confirmation
     duracion_individual = models.IntegerField(null=True, blank=True)
     id_plantilla_turno = models.IntegerField(null=True, blank=True)
     id_item_plantilla = models.IntegerField(null=True, blank=True)
-    hora = models.CharField(
-        max_length=10, null=True, blank=True
-    )  # Store time as "HH:MM"
+    hora = models.CharField(max_length=10, null=True, blank=True)
+
+    # Fields for confirmed appointment
+    confirmed_id_turno = models.IntegerField(null=True, blank=True)
     confirmed = models.BooleanField(default=False)
     confirmed_at = models.DateTimeField(null=True, blank=True)
 

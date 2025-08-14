@@ -466,7 +466,6 @@ class DeviceRegistrationView(LoginRequiredMixin, View):
                 status=400,
             )
 
-        # Check if device is already registered
         device, created = DeviceRegistration.objects.get_or_create(
             push_token=push_token,
             defaults={
@@ -477,7 +476,6 @@ class DeviceRegistrationView(LoginRequiredMixin, View):
         )
 
         if not created:
-            # Update existing device
             device.platform = platform
             device.is_active = True
             device.save()
@@ -526,7 +524,7 @@ class ConfirmAppointmentView(LoginRequiredMixin, View):
                 "IdRecurso": appointment.appointment_wanted.doctor.id_recurso,
                 "IdEspecialidad": appointment.appointment_wanted.doctor.especialidad.id_especialidad,
                 "ControlarEdad": False,
-                "IdTipoDeTurno": appointment.appointment_wanted.tipo_de_turno.id_tipo_turno,
+                "IdTipoDeTurno": appointment.appointment_wanted.tipo_de_turno.id_tipo_prestacion,
                 "IdFinanciador": int(patient.id_financiador),
                 "IdTipoRecurso": appointment.appointment_wanted.doctor.id_tipo_recurso,
                 "IdPlan": int(patient.id_plan),
@@ -551,6 +549,18 @@ class ConfirmAppointmentView(LoginRequiredMixin, View):
 
         try:
             result = allende.reservar(appointment_data)
+            id_turno = result.get("Entidad", {}).get("Id")
+            if not id_turno:
+                print(result)
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "No se pudo obtener el ID del turno",
+                    },
+                    status=400,
+                )
+
+            appointment.confirmed_id_turno = id_turno
             appointment.confirmed = True
             appointment.confirmed_at = timezone.now()
             appointment.save()

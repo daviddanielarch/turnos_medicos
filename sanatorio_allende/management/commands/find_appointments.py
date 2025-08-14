@@ -97,8 +97,8 @@ class Command(BaseCommand):
                     "IdEspecialidad": appointment.doctor.especialidad.id_especialidad,
                     "IdTipoRecurso": appointment.doctor.id_tipo_recurso,
                     "ControlarEdad": False,
-                    "IdFinanciador": patient.id_financiador,  # Add this field
-                    "IdPlan": patient.id_plan,  # Add this field
+                    "IdFinanciador": patient.id_financiador,
+                    "IdPlan": patient.id_plan,
                     "Prestaciones": [
                         {
                             "IdPrestacion": appointment.tipo_de_turno.id_tipo_turno,

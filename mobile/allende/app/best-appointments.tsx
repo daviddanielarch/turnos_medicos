@@ -15,6 +15,8 @@ interface BestAppointment {
     location: string;
     tipo_de_turno: string;
     best_datetime: string;
+    confirmed: boolean;
+    confirmed_at: string | null;
 }
 
 export default function BestAppointments() {
@@ -22,6 +24,7 @@ export default function BestAppointments() {
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [processingAppointment, setProcessingAppointment] = useState<number | null>(null);
+    const [confirmingAppointment, setConfirmingAppointment] = useState<number | null>(null);
     const { isAuthenticated } = useAuth0Context();
     const { selectedPatient } = usePatientContext();
 
@@ -89,6 +92,30 @@ export default function BestAppointments() {
         }
     };
 
+    const handleConfirmAppointment = async (appointmentId: number) => {
+        setConfirmingAppointment(appointmentId);
+        try {
+            const response = await apiService.confirmAppointment(appointmentId);
+
+            if (response.success) {
+                // Update the appointment in local state to mark it as confirmed
+                setBestAppointments(prev => prev.map(appointment =>
+                    appointment.id === appointmentId
+                        ? { ...appointment, confirmed: true, confirmed_at: new Date().toISOString() }
+                        : appointment
+                ));
+            } else {
+                console.error('Failed to confirm appointment:', response.error);
+                Alert.alert('Error', 'Failed to confirm appointment');
+            }
+        } catch (error) {
+            console.error('Error confirming appointment:', error);
+            Alert.alert('Error', 'Network error while confirming appointment');
+        } finally {
+            setConfirmingAppointment(null);
+        }
+    };
+
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('es-AR', {
@@ -97,8 +124,7 @@ export default function BestAppointments() {
             month: 'long',
             day: 'numeric',
             hour: '2-digit',
-            minute: '2-digit',
-            timeZone: 'America/Argentina/Buenos_Aires',
+            minute: '2-digit'
         });
     };
 
@@ -195,29 +221,51 @@ export default function BestAppointments() {
 
                         <View style={styles.cardFooter}>
                             <View style={styles.statusContainer}>
-                                <View style={styles.statusBadge}>
-                                    <Ionicons name="checkmark-circle" size={16} color="#10b981" />
-                                    <Text style={styles.statusText}>Mejor turno disponible</Text>
-                                </View>
+                                {appointment.confirmed ? (
+                                    <View style={styles.statusBadge}>
+                                        <Ionicons name="checkmark-circle" size={16} color="#10b981" />
+                                        <Text style={styles.statusText}>Confirmado</Text>
+                                    </View>
+                                ) : (
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.confirmButton,
+                                            confirmingAppointment === appointment.id && styles.confirmButtonDisabled
+                                        ]}
+                                        onPress={() => handleConfirmAppointment(appointment.id)}
+                                        disabled={confirmingAppointment === appointment.id}
+                                    >
+                                        {confirmingAppointment === appointment.id ? (
+                                            <ActivityIndicator size="small" color="white" />
+                                        ) : (
+                                            <>
+                                                <Ionicons name="checkmark-circle" size={16} color="white" />
+                                                <Text style={styles.confirmButtonText}>Confirmar</Text>
+                                            </>
+                                        )}
+                                    </TouchableOpacity>
+                                )}
                             </View>
 
-                            <TouchableOpacity
-                                style={[
-                                    styles.notInterestedButton,
-                                    processingAppointment === appointment.id && styles.notInterestedButtonDisabled
-                                ]}
-                                onPress={() => handleNotInterested(appointment.id)}
-                                disabled={processingAppointment === appointment.id}
-                            >
-                                {processingAppointment === appointment.id ? (
-                                    <ActivityIndicator size="small" color="#ef4444" />
-                                ) : (
-                                    <>
-                                        <Ionicons name="close-circle-outline" size={16} color="#ef4444" />
-                                        <Text style={styles.notInterestedButtonText}>No me interesa</Text>
-                                    </>
-                                )}
-                            </TouchableOpacity>
+                            {!appointment.confirmed && (
+                                <TouchableOpacity
+                                    style={[
+                                        styles.notInterestedButton,
+                                        processingAppointment === appointment.id && styles.notInterestedButtonDisabled
+                                    ]}
+                                    onPress={() => handleNotInterested(appointment.id)}
+                                    disabled={processingAppointment === appointment.id}
+                                >
+                                    {processingAppointment === appointment.id ? (
+                                        <ActivityIndicator size="small" color="#ef4444" />
+                                    ) : (
+                                        <>
+                                            <Ionicons name="close-circle-outline" size={16} color="#ef4444" />
+                                            <Text style={styles.notInterestedButtonText}>No me interesa</Text>
+                                        </>
+                                    )}
+                                </TouchableOpacity>
+                            )}
                         </View>
                     </View>
                 ))}
@@ -356,6 +404,23 @@ const styles = {
         marginLeft: 4,
         fontSize: 12,
         color: '#ef4444',
+        fontWeight: '500' as const,
+    },
+    confirmButton: {
+        flexDirection: 'row' as const,
+        alignItems: 'center' as const,
+        backgroundColor: COLORS.PRIMARY,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 6,
+    },
+    confirmButtonDisabled: {
+        opacity: 0.6,
+    },
+    confirmButtonText: {
+        marginLeft: 4,
+        fontSize: 12,
+        color: 'white',
         fontWeight: '500' as const,
     },
 }; 
