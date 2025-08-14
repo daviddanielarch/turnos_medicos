@@ -2,6 +2,23 @@ import json
 from unittest.mock import patch
 
 import pytest
+from conftest import (
+    TEST_CONFIRMED_ID_TURNO,
+    TEST_DURACION_INDIVIDUAL,
+    TEST_ESPECIALIDAD_ID,
+    TEST_FINANCIADOR_ID,
+    TEST_ITEM_PLANTILLA_ID,
+    TEST_ITEM_SOLICITUD_ESTUDIOS_ID,
+    TEST_PATIENT_ID,
+    TEST_PLAN_ID,
+    TEST_PLANTILLA_TURNO_ID,
+    TEST_PRESTACION_ID,
+    TEST_RECURSO_ID,
+    TEST_SERVICIO_ID,
+    TEST_SUCURSAL_ID,
+    TEST_TIPO_RECURSO_ID,
+    TEST_TIPO_TURNO_ID,
+)
 from django.urls import reverse
 from django.utils import timezone
 
@@ -886,7 +903,7 @@ class TestConfirmAppointmentView:
             (),
             {
                 "status_code": 200,
-                "json": lambda self: {},
+                "json": lambda self: {"Entidad": {"Id": TEST_CONFIRMED_ID_TURNO}},
             },
         )()
         mock_post.return_value = mock_response
@@ -904,6 +921,7 @@ class TestConfirmAppointmentView:
         best_appointment_found.refresh_from_db()
         assert best_appointment_found.confirmed is True
         assert best_appointment_found.confirmed_at is not None
+        assert best_appointment_found.confirmed_id_turno == TEST_CONFIRMED_ID_TURNO
 
         # Verify the correct data was sent to the Allende API
         mock_post.assert_called_once()
@@ -1006,7 +1024,7 @@ class TestConfirmAppointmentView:
             (),
             {
                 "status_code": 200,
-                "json": lambda self: {"success": True, "appointment_id": "12345"},
+                "json": lambda self: {"Entidad": {"Id": TEST_CONFIRMED_ID_TURNO}},
             },
         )()
         mock_post.return_value = mock_response
@@ -1022,37 +1040,33 @@ class TestConfirmAppointmentView:
         call_args = mock_post.call_args
         appointment_data = call_args[1]["json"]
 
-        # Check the main structure
-        assert "CriterioBusquedaDto" in appointment_data
-        assert "TurnoElegidoDto" in appointment_data
-        assert "Observaciones" in appointment_data
-
-        # Check CriterioBusquedaDto structure
-        criterio = appointment_data["CriterioBusquedaDto"]
-        assert "IdPaciente" in criterio
-        assert "IdServicio" in criterio
-        assert "IdSucursal" in criterio
-        assert "IdRecurso" in criterio
-        assert "IdEspecialidad" in criterio
-        assert "ControlarEdad" in criterio
-        assert "IdTipoDeTurno" in criterio
-        assert "IdFinanciador" in criterio
-        assert "IdTipoRecurso" in criterio
-        assert "IdPlan" in criterio
-        assert "Prestaciones" in criterio
-
-        # Check TurnoElegidoDto structure
-        turno = appointment_data["TurnoElegidoDto"]
-        assert "Fecha" in turno
-        assert "Hora" in turno
-        assert "IdItemDePlantilla" in turno
-        assert "IdPlantillaTurno" in turno
-        assert "IdSucursal" in turno
-        assert "DuracionIndividual" in turno
-        assert "RequisitoAdministrativoAlOtorgar" in turno
-
-        # Check Prestaciones structure
-        prestaciones = criterio["Prestaciones"]
-        assert len(prestaciones) == 1
-        assert "IdPrestacion" in prestaciones[0]
-        assert "IdItemSolicitudEstudios" in prestaciones[0]
+        assert appointment_data == {
+            "CriterioBusquedaDto": {
+                "IdPaciente": TEST_PATIENT_ID,
+                "IdServicio": TEST_SERVICIO_ID,
+                "IdSucursal": TEST_SUCURSAL_ID,
+                "IdRecurso": TEST_RECURSO_ID,
+                "IdEspecialidad": TEST_ESPECIALIDAD_ID,
+                "ControlarEdad": False,
+                "IdTipoDeTurno": TEST_TIPO_TURNO_ID,
+                "IdFinanciador": TEST_FINANCIADOR_ID,
+                "IdTipoRecurso": TEST_TIPO_RECURSO_ID,
+                "IdPlan": TEST_PLAN_ID,
+                "Prestaciones": [
+                    {
+                        "IdPrestacion": TEST_PRESTACION_ID,
+                        "IdItemSolicitudEstudios": TEST_ITEM_SOLICITUD_ESTUDIOS_ID,
+                    }
+                ],
+            },
+            "TurnoElegidoDto": {
+                "Fecha": best_appointment_found.datetime.strftime("%Y-%m-%dT00:00:00"),
+                "Hora": best_appointment_found.datetime.strftime("%H:%M"),
+                "IdItemDePlantilla": TEST_ITEM_PLANTILLA_ID,
+                "IdPlantillaTurno": TEST_PLANTILLA_TURNO_ID,
+                "IdSucursal": TEST_SUCURSAL_ID,
+                "DuracionIndividual": TEST_DURACION_INDIVIDUAL,
+                "RequisitoAdministrativoAlOtorgar": "DNI\nCredencial Financiador\n AUTORIZACION: Con autorización online",
+            },
+            "Observaciones": None,
+        }

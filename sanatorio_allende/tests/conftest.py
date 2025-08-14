@@ -13,6 +13,23 @@ from sanatorio_allende.models import (
     PacienteAllende,
 )
 
+# Test constants to replace hardcoded values
+TEST_PATIENT_ID = 12345
+TEST_SERVICIO_ID = 7
+TEST_SUCURSAL_ID = 2
+TEST_RECURSO_ID = 1
+TEST_ESPECIALIDAD_ID = 19
+TEST_TIPO_TURNO_ID = 1
+TEST_FINANCIADOR_ID = 12345
+TEST_TIPO_RECURSO_ID = 12
+TEST_PLAN_ID = 6
+TEST_PRESTACION_ID = 5495
+TEST_ITEM_SOLICITUD_ESTUDIOS_ID = 0
+TEST_DURACION_INDIVIDUAL = 20
+TEST_ITEM_PLANTILLA_ID = 12
+TEST_PLANTILLA_TURNO_ID = 10
+TEST_CONFIRMED_ID_TURNO = 100
+
 
 @pytest.fixture
 def user():
@@ -51,9 +68,9 @@ def especialidad():
     """Create a test especialidad"""
     return Especialidad.objects.create(
         name="Cardiología",
-        id_especialidad=1,
-        id_servicio=1,
-        id_sucursal=1,
+        id_especialidad=TEST_ESPECIALIDAD_ID,
+        id_servicio=TEST_SERVICIO_ID,
+        id_sucursal=TEST_SUCURSAL_ID,
         sucursal="Centro",
         servicio="Cardiología",
     )
@@ -64,8 +81,8 @@ def doctor(especialidad):
     """Create a test doctor"""
     return Doctor.objects.create(
         name="Dr. Juan Pérez",
-        id_recurso=1,
-        id_tipo_recurso=1,
+        id_recurso=TEST_RECURSO_ID,
+        id_tipo_recurso=TEST_TIPO_RECURSO_ID,
         especialidad=especialidad,
     )
 
@@ -74,7 +91,10 @@ def doctor(especialidad):
 def appointment_type(especialidad):
     """Create a test appointment type"""
     return AppointmentType.objects.create(
-        name="CONSULTA", id_tipo_turno=5495, especialidad=especialidad
+        name="CONSULTA",
+        id_tipo_turno=TEST_PRESTACION_ID,
+        especialidad=especialidad,
+        id_tipo_prestacion=TEST_TIPO_TURNO_ID,
     )
 
 
@@ -84,12 +104,12 @@ def patient(user):
     return PacienteAllende.objects.create(
         user=user,
         name="Juan Pérez",
-        id_paciente="12345",
+        id_paciente=str(TEST_PATIENT_ID),
         docid="12345678",
         password="testpass123",
         token="test_auth_token_123",
-        id_financiador=1,
-        id_plan=1,
+        id_financiador=TEST_FINANCIADOR_ID,
+        id_plan=TEST_PLAN_ID,
     )
 
 
@@ -109,7 +129,13 @@ def find_appointment(doctor, appointment_type, patient):
 def best_appointment_found(find_appointment, patient):
     """Create a test best appointment found"""
     return BestAppointmentFound.objects.create(
-        appointment_wanted=find_appointment, patient=patient, datetime=timezone.now()
+        appointment_wanted=find_appointment,
+        patient=patient,
+        datetime=timezone.now(),
+        duracion_individual=TEST_DURACION_INDIVIDUAL,
+        id_plantilla_turno=TEST_PLANTILLA_TURNO_ID,
+        id_item_plantilla=TEST_ITEM_PLANTILLA_ID,
+        hora="23:03",
     )
 
 
