@@ -20,7 +20,7 @@ from sanatorio_allende.services.auth import AllendeAuthService
 class Command(BaseCommand):
     help = "Find medical appointments"
 
-    def check_database_connectivity(self, max_retries=3, retry_delay=2):
+    def check_database_connectivity(self, max_retries=10, retry_delay=2):
         """
         Check if the database is accessible, since the database needs to wake up.
         """
@@ -73,7 +73,29 @@ class Command(BaseCommand):
 
         for patient in PacienteAllende.objects.all():
             auth_service = AllendeAuthService(patient)
-            auth_service.login()
+
+            # Retry login up to 3 times with an exponential backoff
+            for attempt in range(3):
+                try:
+                    auth_service.login()
+                    break
+                except Exception as e:
+                    self.stdout.write(
+                        self.style.ERROR(
+                            f"Error logging in for patient {patient.id}: {str(e)}"
+                        )
+                    )
+                    if attempt < 2:
+                        self.stdout.write(
+                            f"Retrying login for patient {patient.id} (attempt {attempt + 2})..."
+                        )
+                        time.sleep(2 * attempt)
+
+            if not patient.token:
+                self.stdout.write(
+                    self.style.ERROR(f"Failed to login for patient {patient.id}")
+                )
+                continue
 
             allende = Allende(patient.token)
             appointments_to_find = FindAppointment.objects.filter(
@@ -111,15 +133,6 @@ class Command(BaseCommand):
                 new_best_appointment_data = allende.search_best_date_appointment(
                     doctor_data
                 )
-
-                # Handle case where no appointment is found
-                if not new_best_appointment_data:
-                    self.stdout.write(
-                        self.style.WARNING(
-                            f"No new best appointment found for {appointment.doctor.name} - {appointment.tipo_de_turno.name}"
-                        )
-                    )
-                    continue
 
                 # Make the naive datetime timezone-aware - UTC - 3
                 new_best_appointment_data["datetime"] = timezone.make_aware(

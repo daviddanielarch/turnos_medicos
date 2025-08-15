@@ -1,3 +1,5 @@
+import time
+
 from django.conf import settings
 
 from sanatorio_allende.appointments import Allende
@@ -18,7 +20,24 @@ class AllendeAuthService:
                 implicit_wait=settings.SELENIUM_IMPLICIT_WAIT,
             ),
         )
-        allende.login(self.user.docid, self.user.password)
+
+        # Retry login up to 3 times with a simple exponential backoff implementation
+        sleep_time = 2
+        for attempt in range(3):
+            try:
+                allende.login(self.user.docid, self.user.password)
+                break
+            except Exception as e:
+                if attempt < 2:
+                    print(f"Error logging in for patient {self.user.id}: {str(e)}")
+                    time.sleep(sleep_time)
+                    sleep_time *= 2
+                else:
+                    print(f"Error logging in for patient {self.user.id}: {str(e)}")
+                    raise Exception(
+                        f"Error logging in for patient {self.user.id}: {str(e)}"
+                    )
+
         self.user.token = allende.get_auth_header()
 
         user_id = allende.get_user_id()

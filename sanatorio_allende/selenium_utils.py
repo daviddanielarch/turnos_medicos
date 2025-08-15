@@ -32,6 +32,7 @@ def get_browser(hostname: str, port: int) -> webdriver.Chrome:
     )
 
     attempts = 1
+    time_to_sleep = 2
     last_exception = None
 
     while attempts <= MAX_BROWSER_RETRY_ATTEMPTS:
@@ -42,7 +43,9 @@ def get_browser(hostname: str, port: int) -> webdriver.Chrome:
         except urllib3.exceptions.MaxRetryError as e:
             last_exception = e
             if attempts < MAX_BROWSER_RETRY_ATTEMPTS:
-                time.sleep(1)  # Wait 1 second before retrying
+                time.sleep(time_to_sleep)
+                time_to_sleep *= 2
+
             attempts += 1
 
     # If we get here, all retries failed

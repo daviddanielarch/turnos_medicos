@@ -150,7 +150,14 @@ class FindAppointmentView(LoginRequiredMixin, View):
 
     def post(self, request):
         """Create a new FindAppointment"""
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {"success": False, "error": "Invalid JSON"},
+                status=400,
+            )
+
         doctor_id = data.get("doctor_id")
         appointment_type_id = data.get("appointment_type_id")
         patient_id = data.get("patient_id")
@@ -209,7 +216,13 @@ class FindAppointmentView(LoginRequiredMixin, View):
 
     def patch(self, request):
         """Update the active status of a FindAppointment"""
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {"success": False, "error": "Invalid JSON"},
+                status=400,
+            )
         appointment_id = data.get("appointment_id")
         active = data.get("active")
 
@@ -297,7 +310,13 @@ class BestAppointmentListView(LoginRequiredMixin, View):
 
     def patch(self, request):
         """Mark an appointment as not interested"""
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {"success": False, "error": "Invalid JSON"},
+                status=400,
+            )
         appointment_id = data.get("appointment_id")
         not_interested = data.get("not_interested", True)
 
@@ -368,7 +387,13 @@ class PatientListView(LoginRequiredMixin, View):
 
     def post(self, request):
         """Create a new patient"""
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {"success": False, "error": "Invalid JSON"},
+                status=400,
+            )
         name = data.get("name")
         docid = data.get("docid")
         password = data.get("password")
@@ -419,7 +444,13 @@ class PatientListView(LoginRequiredMixin, View):
 
     def delete(self, request):
         """Delete a patient"""
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {"success": False, "error": "Invalid JSON"},
+                status=400,
+            )
         patient_id = data.get("patient_id")
 
         if not patient_id:
@@ -456,7 +487,13 @@ class DeviceRegistrationView(LoginRequiredMixin, View):
 
     def post(self, request):
         """Register or update a device for push notifications"""
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {"success": False, "error": "Invalid JSON"},
+                status=400,
+            )
         push_token = data.get("push_token")
         platform = data.get("platform", "expo")
 
