@@ -73,29 +73,7 @@ class Command(BaseCommand):
 
         for patient in PacienteAllende.objects.all():
             auth_service = AllendeAuthService(patient)
-
-            # Retry login up to 3 times with an exponential backoff
-            for attempt in range(3):
-                try:
-                    auth_service.login()
-                    break
-                except Exception as e:
-                    self.stdout.write(
-                        self.style.ERROR(
-                            f"Error logging in for patient {patient.id}: {str(e)}"
-                        )
-                    )
-                    if attempt < 2:
-                        self.stdout.write(
-                            f"Retrying login for patient {patient.id} (attempt {attempt + 2})..."
-                        )
-                        time.sleep(2 * attempt)
-
-            if not patient.token:
-                self.stdout.write(
-                    self.style.ERROR(f"Failed to login for patient {patient.id}")
-                )
-                continue
+            auth_service.login()
 
             allende = Allende(patient.token)
             appointments_to_find = FindAppointment.objects.filter(
