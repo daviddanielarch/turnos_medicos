@@ -267,7 +267,7 @@ class BestAppointmentListView(LoginRequiredMixin, View):
             "appointment_wanted__doctor",
             "appointment_wanted__doctor__especialidad",
             "appointment_wanted__tipo_de_turno",
-        ).filter(patient=patient, not_interested=False)
+        ).filter(patient=patient, not_interested=False, datetime__gte=timezone.now())
 
         appointments_data = []
         for best_appointment in best_appointments:

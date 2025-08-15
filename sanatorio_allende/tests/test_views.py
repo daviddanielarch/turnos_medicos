@@ -476,14 +476,14 @@ class TestBestAppointmentListView:
         interested_appointment = BestAppointmentFound.objects.create(
             appointment_wanted=find_appointment,
             patient=patient,
-            datetime=timezone.now(),
+            datetime=timezone.now() + timezone.timedelta(days=1),
             not_interested=False,
         )
 
         not_interested_appointment = BestAppointmentFound.objects.create(
             appointment_wanted=find_appointment,
             patient=patient,
-            datetime=timezone.now() + timezone.timedelta(days=1),
+            datetime=timezone.now() + timezone.timedelta(days=2),
             not_interested=True,
         )
 
@@ -498,6 +498,21 @@ class TestBestAppointmentListView:
         # Verify it's the interested appointment
         returned_appointment = data["best_appointments"][0]
         assert returned_appointment["id"] == interested_appointment.id
+
+    @pytest.mark.django_db
+    def test_get_filters_appointments_in_the_past(self, client, best_appointment_found):
+        """Test GET request filters appointments in the past"""
+        # Set the datetime to the past
+        best_appointment_found.datetime = timezone.now() - timezone.timedelta(days=1)
+        best_appointment_found.save()
+
+        url = reverse("sanatorio_allende:api_best_appointments")
+        response = client.get(url, {"patient_id": best_appointment_found.patient.id})
+
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["success"] is True
+        assert len(data["best_appointments"]) == 0
 
     @pytest.mark.django_db
     def test_patch_mark_appointment_not_interested_success(

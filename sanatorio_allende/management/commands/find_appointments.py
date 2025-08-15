@@ -121,9 +121,10 @@ class Command(BaseCommand):
                     )
                     continue
 
-                # Make the naive datetime timezone-aware
+                # Make the naive datetime timezone-aware - UTC - 3
                 new_best_appointment_data["datetime"] = timezone.make_aware(
-                    new_best_appointment_data["datetime"]
+                    new_best_appointment_data["datetime"],
+                    timezone=timezone(datetime.timedelta(hours=-3)),
                 )
 
                 # Process appointment using simplified handler

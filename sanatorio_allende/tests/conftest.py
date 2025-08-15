@@ -131,7 +131,7 @@ def best_appointment_found(find_appointment, patient):
     return BestAppointmentFound.objects.create(
         appointment_wanted=find_appointment,
         patient=patient,
-        datetime=timezone.now(),
+        datetime=timezone.now() + timezone.timedelta(days=1),
         duracion_individual=TEST_DURACION_INDIVIDUAL,
         id_plantilla_turno=TEST_PLANTILLA_TURNO_ID,
         id_item_plantilla=TEST_ITEM_PLANTILLA_ID,
