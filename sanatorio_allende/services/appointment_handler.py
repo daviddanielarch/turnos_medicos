@@ -12,6 +12,7 @@ from sanatorio_allende.services.appointment_notification_service import (
 )
 from sanatorio_allende.services.appointment_processor import (
     AppointmentAction,
+    AppointmentComparisonResult,
     AppointmentData,
     AppointmentProcessor,
 )
@@ -107,7 +108,7 @@ class AppointmentHandler:
     @classmethod
     def _handle_action(
         cls,
-        comparison_result,
+        comparison_result: AppointmentComparisonResult,
         appointment: FindAppointment,
         patient: PacienteAllende,
         appointment_data: AppointmentData,
@@ -181,9 +182,14 @@ class AppointmentHandler:
 
         # Send notification if needed
         if comparison_result.should_notify:
+            datetime = (
+                comparison_result.previous_datetime
+                if comparison_result.action == AppointmentAction.REMOVE_EXISTING
+                else comparison_result.new_datetime
+            )
             push_result = AppointmentNotificationService.send_appointment_notification(
                 appointment_data,
-                comparison_result.new_datetime,
+                datetime,
                 comparison_result.notification_type,
                 user,
             )
