@@ -95,7 +95,7 @@ class AppointmentProcessor:
     @classmethod
     def compare_appointments(
         cls,
-        new_appointment_datetime: datetime.datetime,
+        new_appointment_datetime: Optional[datetime.datetime],
         current_best_datetime: Optional[datetime.datetime],
         not_interested_datetimes: list[datetime.datetime] = None,
     ) -> AppointmentComparisonResult:
@@ -110,6 +110,16 @@ class AppointmentProcessor:
         Returns:
             AppointmentComparisonResult with comparison details
         """
+        # If no new appointment found, remove the existing one
+        if new_appointment_datetime is None and current_best_datetime is not None:
+            return AppointmentComparisonResult(
+                action=AppointmentAction.REMOVE_EXISTING,
+                new_datetime=None,
+                previous_datetime=current_best_datetime,
+                should_notify=True,
+                notification_type=NotificationType.LOST,
+            )
+
         if not_interested_datetimes is None:
             not_interested_datetimes = []
 

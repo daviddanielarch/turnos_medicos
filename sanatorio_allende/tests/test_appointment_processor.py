@@ -141,3 +141,17 @@ class TestAppointmentProcessor:
         assert result.action == AppointmentAction.CREATE_NEW
         assert result.should_notify is True
         assert result.notification_type == NotificationType.NEW
+
+    def test_no_new_appointment_removes_existing(self):
+        """Test that no new appointment removes the existing one"""
+        current_time = datetime.datetime.now()
+        existing_appointment = current_time + datetime.timedelta(days=5)
+
+        result = AppointmentProcessor.compare_appointments(
+            new_appointment_datetime=None,
+            current_best_datetime=existing_appointment,
+        )
+
+        assert result.action == AppointmentAction.REMOVE_EXISTING
+        assert result.should_notify is True
+        assert result.notification_type == NotificationType.LOST
