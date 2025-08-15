@@ -1,7 +1,6 @@
 from typing import Optional
 
 from django.contrib.auth.models import User
-from django.utils import timezone
 
 from sanatorio_allende.models import FindAppointment, PacienteAllende
 from sanatorio_allende.repositories.best_appointment_repository import (
@@ -26,8 +25,8 @@ class AppointmentHandler:
         cls,
         appointment: FindAppointment,
         patient: PacienteAllende,
-        appointment_data: dict,
         user: User,
+        appointment_data: Optional[dict] = None,
     ) -> dict:
         """
         Process a new appointment and handle all logic in one place
@@ -41,7 +40,9 @@ class AppointmentHandler:
         Returns:
             Dictionary with processing result
         """
-        new_appointment_datetime = appointment_data["datetime"]
+        new_appointment_datetime = (
+            appointment_data["datetime"] if appointment_data else None
+        )
 
         # Get current best appointment
         best_appointment_so_far = (

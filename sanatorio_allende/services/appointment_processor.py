@@ -78,13 +78,7 @@ class AppointmentProcessor:
             True if appointment is within desired timeframe, False otherwise
         """
         if current_time is None:
-            current_time = datetime.datetime.now()
-
-        if appointment_datetime.tzinfo is None:
-            appointment_datetime = timezone.make_aware(appointment_datetime)
-
-        if current_time.tzinfo is None:
-            current_time = timezone.make_aware(current_time)
+            current_time = timezone.make_aware(datetime.datetime.now())
 
         boundary = cls.TIMEFRAME_BOUNDARIES.get(desired_timeframe)
         if boundary is None:
@@ -122,19 +116,6 @@ class AppointmentProcessor:
 
         if not_interested_datetimes is None:
             not_interested_datetimes = []
-
-        # Ensure timezone awareness
-        if new_appointment_datetime.tzinfo is None:
-            new_appointment_datetime = timezone.make_aware(new_appointment_datetime)
-
-        if current_best_datetime and current_best_datetime.tzinfo is None:
-            current_best_datetime = timezone.make_aware(current_best_datetime)
-
-        # Make all not_interested datetimes timezone-aware
-        not_interested_datetimes = [
-            timezone.make_aware(dt) if dt.tzinfo is None else dt
-            for dt in not_interested_datetimes
-        ]
 
         # Check if new appointment matches any not_interested appointment
         if new_appointment_datetime in not_interested_datetimes:

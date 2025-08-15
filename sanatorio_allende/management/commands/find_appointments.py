@@ -112,15 +112,12 @@ class Command(BaseCommand):
                     doctor_data
                 )
 
-                # Make the naive datetime timezone-aware - UTC - 3
-                new_best_appointment_data["datetime"] = timezone.make_aware(
-                    new_best_appointment_data["datetime"],
-                    timezone=datetime.timezone(datetime.timedelta(hours=-3)),
-                )
-
                 # Process appointment using simplified handler
                 result = AppointmentHandler.process_appointment(
-                    appointment, patient, new_best_appointment_data, patient.user
+                    appointment=appointment,
+                    patient=patient,
+                    user=patient.user,
+                    appointment_data=new_best_appointment_data,
                 )
 
                 # Log result

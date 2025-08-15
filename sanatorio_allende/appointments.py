@@ -4,7 +4,7 @@ import base64
 import json
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import requests
 
@@ -145,7 +145,6 @@ class Allende:
         if not appointments:
             return
 
-        # Return the appointment with the earliest datetime
         return min(appointments, key=lambda x: x["datetime"])
 
     def _get_appointment_dates(self, data: list[dict]) -> list[dict]:
@@ -163,7 +162,7 @@ class Allende:
 
             # Extract additional appointment data
             appointment_data = {
-                "datetime": date_and_time,
+                "datetime": date_and_time.replace(tzinfo=timezone(timedelta(hours=-3))),
                 "duracion_individual": turno.get("DuracionIndividual"),
                 "id_plantilla_turno": turno.get("IdPlantillaTurno"),
                 "id_item_plantilla": turno.get("IdItemDePlantilla"),
