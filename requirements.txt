@@ -26,8 +26,7 @@ tzdata==2024.2
 vine==5.1.0
 wcwidth==0.2.13
 whitenoise==6.7.0
-selenium==4.8.2
-python-telegram-bot==20.7
+selenium>=4.15.0
 requests
 python-jose[cryptography]==3.3.0
 sentry-sdk==2.34.1

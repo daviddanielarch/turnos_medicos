@@ -5,6 +5,7 @@ repos:
       - id: black
         language_version: python3
         args: [--line-length=88]
+        types: [python]
 
   - repo: local
     hooks:
@@ -14,7 +15,7 @@ repos:
         language: system
         args: [--ignore-missing-imports, .]
         pass_filenames: false
-        always_run: true
+        types: [python]
         stages: [commit]
 
   - repo: local
@@ -24,5 +25,5 @@ repos:
         entry: pytest
         language: system
         pass_filenames: false
-        always_run: true
+        types: [python]
         stages: [commit]
