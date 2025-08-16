@@ -5,6 +5,7 @@ import urllib3
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.webdriver import WebDriver as ChromeDriver
 from selenium.webdriver.remote.webdriver import WebDriver
 
 MAX_BROWSER_REQUEST_UPDATE_ATTEMPS = 10
@@ -67,7 +68,8 @@ def find_request(browser: WebDriver, url: str) -> dict:
     attempts = 1
 
     while attempts < MAX_BROWSER_REQUEST_UPDATE_ATTEMPS:
-        logs = browser.get_log("performance")  # type: ignore[attr-defined]
+        # Remote driver doesn't have get_log method, so we need to use the ChromeDriver class
+        logs = ChromeDriver.get_log(browser, "performance")  # type: ignore[arg-type]
         for log in logs:
             if "message" in log:
                 message = json.loads(log["message"])
