@@ -1,6 +1,19 @@
 test:
 	pytest
 
+# Pre-commit commands
+precommit-setup:
+	./setup-precommit.sh
+
+precommit-run:
+	pre-commit run --all-files
+
+precommit-install:
+	pre-commit install
+
+format:
+	black .
+
 run-chrome-x86:
 	docker-compose -f docker-compose-selenium.yml up -d chrome-x86
 

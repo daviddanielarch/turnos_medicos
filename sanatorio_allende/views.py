@@ -296,7 +296,6 @@ class BestAppointmentListView(LoginRequiredMixin, View):
                     "duracion_individual": best_appointment.duracion_individual,
                     "id_plantilla_turno": best_appointment.id_plantilla_turno,
                     "id_item_plantilla": best_appointment.id_item_plantilla,
-                    "hora": best_appointment.hora,
                     "confirmed": best_appointment.confirmed,
                     "confirmed_at": (
                         best_appointment.confirmed_at.isoformat()

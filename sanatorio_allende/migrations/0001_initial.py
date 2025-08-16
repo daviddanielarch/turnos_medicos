@@ -8,87 +8,164 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='PacienteAllende',
+            name="PacienteAllende",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('id_paciente', models.CharField(max_length=255)),
-                ('docid', models.CharField(max_length=255)),
-                ('password', models.CharField(max_length=255)),
-                ('token', models.CharField(blank=True, max_length=2048, null=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                ("id_paciente", models.CharField(max_length=255)),
+                ("docid", models.CharField(max_length=255)),
+                ("password", models.CharField(max_length=255)),
+                ("token", models.CharField(blank=True, max_length=2048, null=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'verbose_name': 'Paciente Allende',
-                'verbose_name_plural': 'Pacientes Allende',
-                'ordering': ['id_paciente'],
+                "verbose_name": "Paciente Allende",
+                "verbose_name_plural": "Pacientes Allende",
+                "ordering": ["id_paciente"],
             },
         ),
         migrations.CreateModel(
-            name='Especialidad',
+            name="Especialidad",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('id_especialidad', models.IntegerField()),
-                ('id_servicio', models.IntegerField()),
-                ('id_sucursal', models.IntegerField()),
-                ('sucursal', models.CharField(max_length=255)),
-                ('servicio', models.CharField(max_length=255)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                ("id_especialidad", models.IntegerField()),
+                ("id_servicio", models.IntegerField()),
+                ("id_sucursal", models.IntegerField()),
+                ("sucursal", models.CharField(max_length=255)),
+                ("servicio", models.CharField(max_length=255)),
             ],
             options={
-                'unique_together': {('id_especialidad', 'id_sucursal', 'id_servicio')},
+                "unique_together": {("id_especialidad", "id_sucursal", "id_servicio")},
             },
         ),
         migrations.CreateModel(
-            name='Doctor',
+            name="Doctor",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(db_index=True, max_length=255)),
-                ('id_recurso', models.IntegerField()),
-                ('id_tipo_recurso', models.IntegerField()),
-                ('especialidad', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='sanatorio_allende.especialidad')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(db_index=True, max_length=255)),
+                ("id_recurso", models.IntegerField()),
+                ("id_tipo_recurso", models.IntegerField()),
+                (
+                    "especialidad",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="sanatorio_allende.especialidad",
+                    ),
+                ),
             ],
             options={
-                'unique_together': {('id_recurso', 'especialidad')},
+                "unique_together": {("id_recurso", "especialidad")},
             },
         ),
         migrations.CreateModel(
-            name='AppointmentType',
+            name="AppointmentType",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('id_tipo_turno', models.IntegerField()),
-                ('especialidad', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='sanatorio_allende.especialidad')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                ("id_tipo_turno", models.IntegerField()),
+                (
+                    "especialidad",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="sanatorio_allende.especialidad",
+                    ),
+                ),
             ],
             options={
-                'unique_together': {('id_tipo_turno', 'especialidad')},
+                "unique_together": {("id_tipo_turno", "especialidad")},
             },
         ),
         migrations.CreateModel(
-            name='FindAppointment',
+            name="FindAppointment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('active', models.BooleanField(default=False)),
-                ('doctor', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='sanatorio_allende.doctor')),
-                ('tipo_de_turno', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='sanatorio_allende.appointmenttype')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("active", models.BooleanField(default=False)),
+                (
+                    "doctor",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="sanatorio_allende.doctor",
+                    ),
+                ),
+                (
+                    "tipo_de_turno",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="sanatorio_allende.appointmenttype",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Find Appointment',
-                'verbose_name_plural': 'Find Appointments',
-                'ordering': ['doctor'],
+                "verbose_name": "Find Appointment",
+                "verbose_name_plural": "Find Appointments",
+                "ordering": ["doctor"],
             },
         ),
         migrations.CreateModel(
-            name='BestAppointmentFound',
+            name="BestAppointmentFound",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('datetime', models.DateTimeField()),
-                ('appointment_wanted', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='sanatorio_allende.findappointment')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("datetime", models.DateTimeField()),
+                (
+                    "appointment_wanted",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="sanatorio_allende.findappointment",
+                    ),
+                ),
             ],
         ),
     ]
