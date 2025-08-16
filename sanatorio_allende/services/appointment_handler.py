@@ -40,9 +40,8 @@ class AppointmentHandler:
         Returns:
             Dictionary with processing result
         """
-        new_appointment_datetime = (
-            appointment_data["datetime"] if appointment_data else None
-        )
+        appointment_data = appointment_data or {"datetime": None}
+        new_appointment_datetime = appointment_data["datetime"]
 
         # Get current best appointment
         best_appointment_so_far = (
