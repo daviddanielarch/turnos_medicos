@@ -3,7 +3,6 @@
 import base64
 import json
 import logging
-import re
 from datetime import datetime, timedelta, timezone
 
 import requests
@@ -166,7 +165,6 @@ class Allende:
                 "duracion_individual": turno.get("DuracionIndividual"),
                 "id_plantilla_turno": turno.get("IdPlantillaTurno"),
                 "id_item_plantilla": turno.get("IdItemDePlantilla"),
-                "hora": turno.get("Hora"),
             }
 
             appointments.append(appointment_data)

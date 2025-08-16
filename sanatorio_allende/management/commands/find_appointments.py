@@ -1,19 +1,14 @@
-import datetime
 import time
 
-from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import connection
-from django.utils import timezone
 
 from sanatorio_allende.appointments import Allende
-from sanatorio_allende.models import (
-    BestAppointmentFound,
-    FindAppointment,
-    PacienteAllende,
+from sanatorio_allende.models import FindAppointment, PacienteAllende
+from sanatorio_allende.services.appointment_handler import (
+    AppointmentActionType,
+    AppointmentHandler,
 )
-from sanatorio_allende.services.appointment_handler import AppointmentHandler
-from sanatorio_allende.services.appointment_processor import AppointmentProcessor
 from sanatorio_allende.services.auth import AllendeAuthService
 
 
@@ -84,24 +79,24 @@ class Command(BaseCommand):
                 f"Found {appointments_to_find.count()} active appointments to check"
             )
 
-            for appointment in appointments_to_find:
+            for appointment_to_find in appointments_to_find:
                 self.stdout.write(
-                    f"Checking appointments for {appointment.doctor.name} - {appointment.tipo_de_turno.name}"
+                    f"Checking appointments for {appointment_to_find.doctor.name} - {appointment_to_find.tipo_de_turno.name}"
                 )
 
                 doctor_data = {
                     "IdPaciente": int(patient.id_paciente),
-                    "IdServicio": appointment.doctor.especialidad.id_servicio,
-                    "IdSucursal": appointment.doctor.especialidad.id_sucursal,
-                    "IdRecurso": appointment.doctor.id_recurso,
-                    "IdEspecialidad": appointment.doctor.especialidad.id_especialidad,
-                    "IdTipoRecurso": appointment.doctor.id_tipo_recurso,
+                    "IdServicio": appointment_to_find.doctor.especialidad.id_servicio,
+                    "IdSucursal": appointment_to_find.doctor.especialidad.id_sucursal,
+                    "IdRecurso": appointment_to_find.doctor.id_recurso,
+                    "IdEspecialidad": appointment_to_find.doctor.especialidad.id_especialidad,
+                    "IdTipoRecurso": appointment_to_find.doctor.id_tipo_recurso,
                     "ControlarEdad": False,
                     "IdFinanciador": patient.id_financiador,
                     "IdPlan": patient.id_plan,
                     "Prestaciones": [
                         {
-                            "IdPrestacion": appointment.tipo_de_turno.id_tipo_turno,
+                            "IdPrestacion": appointment_to_find.tipo_de_turno.id_tipo_turno,
                             "IdItemSolicitudEstudios": 0,
                         }
                     ],
@@ -112,23 +107,25 @@ class Command(BaseCommand):
                     doctor_data
                 )
 
-                # Process appointment using simplified handler
                 result = AppointmentHandler.process_appointment(
-                    appointment=appointment,
+                    appointment_to_find=appointment_to_find,
                     patient=patient,
                     user=patient.user,
-                    appointment_data=new_best_appointment_data,
+                    new_appointment_data=new_best_appointment_data,
                 )
 
                 # Log result
-                if result["action"] == "created" or result["action"] == "updated":
-                    self.stdout.write(self.style.SUCCESS(result["message"]))
-                elif result["action"] == "removed":
-                    self.stdout.write(self.style.WARNING(result["message"]))
-                elif result["action"] == "skipped":
-                    self.stdout.write(self.style.WARNING(result["message"]))
+                if (
+                    result.action == AppointmentActionType.CREATED
+                    or result.action == AppointmentActionType.UPDATED
+                ):
+                    self.stdout.write(self.style.SUCCESS(result.message))
+                elif result.action == AppointmentActionType.REMOVED:
+                    self.stdout.write(self.style.WARNING(result.message))
+                elif result.action == AppointmentActionType.SKIPPED:
+                    self.stdout.write(self.style.WARNING(result.message))
                 else:
-                    self.stdout.write(result["message"])
+                    self.stdout.write(result.message)
 
         self.stdout.write(
             self.style.SUCCESS("Appointment search completed successfully")

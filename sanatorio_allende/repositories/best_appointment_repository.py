@@ -87,7 +87,6 @@ class BestAppointmentRepository:
         duracion_individual: int = None,
         id_plantilla_turno: int = None,
         id_item_plantilla: int = None,
-        hora: str = None,
     ) -> BestAppointmentFound:
         """
         Create a new BestAppointmentFound record
@@ -100,7 +99,6 @@ class BestAppointmentRepository:
             duracion_individual: Duration of the individual appointment
             id_plantilla_turno: ID of the appointment template
             id_item_plantilla: ID of the template item
-            hora: Time of the appointment as "HH:MM"
 
         Returns:
             Created BestAppointmentFound object
@@ -113,7 +111,6 @@ class BestAppointmentRepository:
             duracion_individual=duracion_individual,
             id_plantilla_turno=id_plantilla_turno,
             id_item_plantilla=id_item_plantilla,
-            hora=hora,
         )
 
     @classmethod
@@ -124,7 +121,6 @@ class BestAppointmentRepository:
         duracion_individual: int = None,
         id_plantilla_turno: int = None,
         id_item_plantilla: int = None,
-        hora: str = None,
     ) -> BestAppointmentFound:
         """
         Update an existing BestAppointmentFound record with new datetime and additional data
@@ -135,7 +131,6 @@ class BestAppointmentRepository:
             duracion_individual: Duration of the individual appointment
             id_plantilla_turno: ID of the appointment template
             id_item_plantilla: ID of the template item
-            hora: Time of the appointment as "HH:MM"
 
         Returns:
             Updated BestAppointmentFound object
@@ -147,8 +142,6 @@ class BestAppointmentRepository:
             best_appointment.id_plantilla_turno = id_plantilla_turno
         if id_item_plantilla is not None:
             best_appointment.id_item_plantilla = id_item_plantilla
-        if hora is not None:
-            best_appointment.hora = hora
         best_appointment.save()
         return best_appointment
 

@@ -13,7 +13,6 @@ from sanatorio_allende.models import (
     PacienteAllende,
 )
 
-# Test constants to replace hardcoded values
 TEST_PATIENT_ID = 12345
 TEST_SERVICIO_ID = 7
 TEST_SUCURSAL_ID = 2
@@ -29,6 +28,8 @@ TEST_DURACION_INDIVIDUAL = 20
 TEST_ITEM_PLANTILLA_ID = 12
 TEST_PLANTILLA_TURNO_ID = 10
 TEST_CONFIRMED_ID_TURNO = 100
+TEST_ID_PLANTILLA_TURNO = 81268
+TEST_ID_ITEM_PLANTILLA = 767071
 
 
 @pytest.fixture
@@ -135,7 +136,6 @@ def best_appointment_found(find_appointment, patient):
         duracion_individual=TEST_DURACION_INDIVIDUAL,
         id_plantilla_turno=TEST_PLANTILLA_TURNO_ID,
         id_item_plantilla=TEST_ITEM_PLANTILLA_ID,
-        hora="23:03",
     )
 
 

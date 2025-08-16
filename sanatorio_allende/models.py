@@ -134,7 +134,6 @@ class BestAppointmentFound(models.Model):
     duracion_individual = models.IntegerField(null=True, blank=True)
     id_plantilla_turno = models.IntegerField(null=True, blank=True)
     id_item_plantilla = models.IntegerField(null=True, blank=True)
-    hora = models.CharField(max_length=10, null=True, blank=True)
 
     # Fields for confirmed appointment
     confirmed_id_turno = models.IntegerField(null=True, blank=True)

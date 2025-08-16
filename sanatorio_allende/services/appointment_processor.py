@@ -205,7 +205,6 @@ class AppointmentProcessor:
             duracion_individual=duracion_individual,
             id_plantilla_turno=id_plantilla_turno,
             id_item_plantilla=id_item_plantilla,
-            hora=hora,
         )
 
     @classmethod

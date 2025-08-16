@@ -2,10 +2,19 @@ import datetime
 from unittest.mock import patch
 
 import pytest
+from conftest import (
+    TEST_DURACION_INDIVIDUAL,
+    TEST_ID_ITEM_PLANTILLA,
+    TEST_ID_PLANTILLA_TURNO,
+)
 from django.utils import timezone
 
 from sanatorio_allende.models import BestAppointmentFound
-from sanatorio_allende.services.appointment_handler import AppointmentHandler
+from sanatorio_allende.services.appointment_handler import (
+    AppointmentActionType,
+    AppointmentHandler,
+)
+from sanatorio_allende.services.appointment_processor import AppointmentProcessor
 
 
 class TestAppointmentHandler:
@@ -28,24 +37,22 @@ class TestAppointmentHandler:
         # Process appointment
         appointment_data = {
             "datetime": future_time,
-            "duracion_individual": 20,
-            "id_plantilla_turno": 81268,
-            "id_item_plantilla": 767071,
-            "hora": "13:20",
+            "duracion_individual": TEST_DURACION_INDIVIDUAL,
+            "id_plantilla_turno": TEST_ID_PLANTILLA_TURNO,
+            "id_item_plantilla": TEST_ID_ITEM_PLANTILLA,
         }
 
         result = AppointmentHandler.process_appointment(
-            appointment=find_appointment,
+            appointment_to_find=find_appointment,
             patient=patient,
-            appointment_data=appointment_data,
+            new_appointment_data=appointment_data,
             user=user,
         )
 
         # Verify result
-        assert result["action"] == "created"
-        assert result["success"] is True
-        assert result["notification_sent"] is True
-        assert "New best appointment found" in result["message"]
+        assert result.action == AppointmentActionType.CREATED
+        assert result.notification_sent is True
+        assert "New best appointment found" in result.message
 
         # Verify database was updated
         best_appointment = BestAppointmentFound.objects.get(
@@ -54,10 +61,9 @@ class TestAppointmentHandler:
         assert best_appointment.datetime == future_time
         assert best_appointment.not_interested is False
         # Verify additional appointment data is stored correctly
-        assert best_appointment.duracion_individual == 20
-        assert best_appointment.id_plantilla_turno == 81268
-        assert best_appointment.id_item_plantilla == 767071
-        assert best_appointment.hora == "13:20"
+        assert best_appointment.duracion_individual == TEST_DURACION_INDIVIDUAL
+        assert best_appointment.id_plantilla_turno == TEST_ID_PLANTILLA_TURNO
+        assert best_appointment.id_item_plantilla == TEST_ID_ITEM_PLANTILLA
         assert best_appointment.confirmed is False
         assert best_appointment.confirmed_at is None
 
@@ -91,33 +97,30 @@ class TestAppointmentHandler:
         # Process appointment (better time)
         appointment_data = {
             "datetime": better_time,
-            "duracion_individual": 20,
-            "id_plantilla_turno": 81268,
-            "id_item_plantilla": 767071,
-            "hora": "13:20",
+            "duracion_individual": TEST_DURACION_INDIVIDUAL,
+            "id_plantilla_turno": TEST_ID_PLANTILLA_TURNO,
+            "id_item_plantilla": TEST_ID_ITEM_PLANTILLA,
         }
 
         result = AppointmentHandler.process_appointment(
-            appointment=find_appointment,
+            appointment_to_find=find_appointment,
             patient=patient,
-            appointment_data=appointment_data,
+            new_appointment_data=appointment_data,
             user=user,
         )
 
         # Verify result
-        assert result["action"] == "updated"
-        assert result["success"] is True
-        assert result["notification_sent"] is True
-        assert "Better appointment found" in result["message"]
+        assert result.action == AppointmentActionType.UPDATED
+        assert result.notification_sent is True
+        assert "Better appointment found" in result.message
 
         # Verify database was updated
         existing_appointment.refresh_from_db()
         assert existing_appointment.datetime == better_time
         # Verify additional appointment data is updated correctly
-        assert existing_appointment.duracion_individual == 20
-        assert existing_appointment.id_plantilla_turno == 81268
-        assert existing_appointment.id_item_plantilla == 767071
-        assert existing_appointment.hora == "13:20"
+        assert existing_appointment.duracion_individual == TEST_DURACION_INDIVIDUAL
+        assert existing_appointment.id_plantilla_turno == TEST_ID_PLANTILLA_TURNO
+        assert existing_appointment.id_item_plantilla == TEST_ID_ITEM_PLANTILLA
 
         # Verify push notification was called
         mock_post.assert_called_once()
@@ -147,24 +150,22 @@ class TestAppointmentHandler:
         # Process appointment (worse time)
         appointment_data = {
             "datetime": worse_time,
-            "duracion_individual": 20,
-            "id_plantilla_turno": 81268,
-            "id_item_plantilla": 767071,
-            "hora": "13:20",
+            "duracion_individual": TEST_DURACION_INDIVIDUAL,
+            "id_plantilla_turno": TEST_ID_PLANTILLA_TURNO,
+            "id_item_plantilla": TEST_ID_ITEM_PLANTILLA,
         }
 
         result = AppointmentHandler.process_appointment(
-            appointment=find_appointment,
+            appointment_to_find=find_appointment,
             patient=patient,
-            appointment_data=appointment_data,
+            new_appointment_data=appointment_data,
             user=user,
         )
 
         # Verify result
-        assert result["action"] == "removed"
-        assert result["success"] is True
-        assert result["notification_sent"] is True
-        assert "Removed worse appointments" in result["message"]
+        assert result.action == AppointmentActionType.REMOVED
+        assert result.notification_sent is True
+        assert "Removed worse appointments" in result.message
 
         # Verify database was updated - appointment should be deleted
         with pytest.raises(BestAppointmentFound.DoesNotExist):
@@ -199,24 +200,22 @@ class TestAppointmentHandler:
         # Process appointment (worse time)
         appointment_data = {
             "datetime": worse_time,
-            "duracion_individual": 20,
-            "id_plantilla_turno": 81268,
-            "id_item_plantilla": 767071,
-            "hora": "13:20",
+            "duracion_individual": TEST_DURACION_INDIVIDUAL,
+            "id_plantilla_turno": TEST_ID_PLANTILLA_TURNO,
+            "id_item_plantilla": TEST_ID_ITEM_PLANTILLA,
         }
 
         result = AppointmentHandler.process_appointment(
-            appointment=find_appointment,
+            appointment_to_find=find_appointment,
             patient=patient,
-            appointment_data=appointment_data,
+            new_appointment_data=appointment_data,
             user=user,
         )
 
         # Verify result
-        assert result["action"] == "removed"
-        assert result["success"] is True
-        assert result["notification_sent"] is True
-        assert "Removed worse appointments" in result["message"]
+        assert result.action == AppointmentActionType.REMOVED
+        assert result.notification_sent is True
+        assert "Removed worse appointments" in result.message
 
         # Verify database was updated - appointment should be deleted
         with pytest.raises(BestAppointmentFound.DoesNotExist):
@@ -241,24 +240,22 @@ class TestAppointmentHandler:
         # Process appointment (same time)
         appointment_data = {
             "datetime": appointment_time,
-            "duracion_individual": 20,
-            "id_plantilla_turno": 81268,
-            "id_item_plantilla": 767071,
-            "hora": "13:20",
+            "duracion_individual": TEST_DURACION_INDIVIDUAL,
+            "id_plantilla_turno": TEST_ID_PLANTILLA_TURNO,
+            "id_item_plantilla": TEST_ID_ITEM_PLANTILLA,
         }
 
         result = AppointmentHandler.process_appointment(
-            appointment=find_appointment,
+            appointment_to_find=find_appointment,
             patient=patient,
-            appointment_data=appointment_data,
+            new_appointment_data=appointment_data,
             user=user,
         )
 
         # Verify result
-        assert result["action"] == "none"
-        assert result["success"] is True
-        assert result["notification_sent"] is False
-        assert "No action needed" in result["message"]
+        assert result.action == AppointmentActionType.SKIPPED
+        assert result.notification_sent is False
+        assert "No action needed" in result.message
 
         # Verify database was not changed
         existing_appointment.refresh_from_db()
@@ -282,24 +279,22 @@ class TestAppointmentHandler:
         # Process appointment outside timeframe
         appointment_data = {
             "datetime": outside_timeframe,
-            "duracion_individual": 20,
-            "id_plantilla_turno": 81268,
-            "id_item_plantilla": 767071,
-            "hora": "13:20",
+            "duracion_individual": TEST_DURACION_INDIVIDUAL,
+            "id_plantilla_turno": TEST_ID_PLANTILLA_TURNO,
+            "id_item_plantilla": TEST_ID_ITEM_PLANTILLA,
         }
 
         result = AppointmentHandler.process_appointment(
-            appointment=find_appointment,
+            appointment_to_find=find_appointment,
             patient=patient,
-            appointment_data=appointment_data,
+            new_appointment_data=appointment_data,
             user=user,
         )
 
         # Verify result
-        assert result["action"] == "skipped"
-        assert result["success"] is False
-        assert result["notification_sent"] is False
-        assert "outside desired timeframe" in result["message"]
+        assert result.action == AppointmentActionType.SKIPPED
+        assert result.notification_sent is False
+        assert "outside desired timeframe" in result.message
 
         # Verify no appointment was created
         assert not BestAppointmentFound.objects.filter(
@@ -334,23 +329,21 @@ class TestAppointmentHandler:
         # Process appointment matching not_interested time
         appointment_data = {
             "datetime": not_interested_time,
-            "duracion_individual": 20,
-            "id_plantilla_turno": 81268,
-            "id_item_plantilla": 767071,
-            "hora": "13:20",
+            "duracion_individual": TEST_DURACION_INDIVIDUAL,
+            "id_plantilla_turno": TEST_ID_PLANTILLA_TURNO,
+            "id_item_plantilla": TEST_ID_ITEM_PLANTILLA,
         }
 
         result = AppointmentHandler.process_appointment(
-            appointment=find_appointment,
+            appointment_to_find=find_appointment,
             patient=patient,
-            appointment_data=appointment_data,
+            new_appointment_data=appointment_data,
             user=user,
         )
 
         # Verify result
-        assert result["action"] == "none"
-        assert result["success"] is True
-        assert result["notification_sent"] is False
+        assert result.action == AppointmentActionType.SKIPPED
+        assert result.notification_sent is False
 
         # Verify no push notification was sent
         mock_post.assert_not_called()
@@ -390,23 +383,21 @@ class TestAppointmentHandler:
         # Process appointment matching one of the not_interested times
         appointment_data = {
             "datetime": not_interested_time_1,
-            "duracion_individual": 20,
-            "id_plantilla_turno": 81268,
-            "id_item_plantilla": 767071,
-            "hora": "13:20",
+            "duracion_individual": TEST_DURACION_INDIVIDUAL,
+            "id_plantilla_turno": TEST_ID_PLANTILLA_TURNO,
+            "id_item_plantilla": TEST_ID_ITEM_PLANTILLA,
         }
 
         result = AppointmentHandler.process_appointment(
-            appointment=find_appointment,
+            appointment_to_find=find_appointment,
             patient=patient,
-            appointment_data=appointment_data,
+            new_appointment_data=appointment_data,
             user=user,
         )
 
         # Verify result
-        assert result["action"] == "none"
-        assert result["success"] is True
-        assert result["notification_sent"] is False
+        assert result.action == AppointmentActionType.SKIPPED
+        assert result.notification_sent is False
 
         # Verify no push notification was sent
         mock_post.assert_not_called()
@@ -425,11 +416,6 @@ class TestAppointmentHandler:
         current_time = timezone.now()
         future_time = current_time + datetime.timedelta(days=5)
 
-        # Test AppointmentData structure
-        from sanatorio_allende.services.appointment_processor import (
-            AppointmentProcessor,
-        )
-
         # Create appointment data with all fields
         appointment_data_obj = AppointmentProcessor.create_appointment_data(
             doctor_name="Dr. Test",
@@ -437,10 +423,9 @@ class TestAppointmentHandler:
             tipo_de_turno_name="Test Appointment",
             patient_dni="12345678",
             desired_timeframe="2 weeks",
-            duracion_individual=30,
-            id_plantilla_turno=12345,
-            id_item_plantilla=67890,
-            hora="14:30",
+            duracion_individual=TEST_DURACION_INDIVIDUAL,
+            id_plantilla_turno=TEST_ID_PLANTILLA_TURNO,
+            id_item_plantilla=TEST_ID_ITEM_PLANTILLA,
         )
 
         # Verify AppointmentData structure
@@ -449,10 +434,9 @@ class TestAppointmentHandler:
         assert appointment_data_obj.tipo_de_turno_name == "Test Appointment"
         assert appointment_data_obj.patient_dni == "12345678"
         assert appointment_data_obj.desired_timeframe == "2 weeks"
-        assert appointment_data_obj.duracion_individual == 30
-        assert appointment_data_obj.id_plantilla_turno == 12345
-        assert appointment_data_obj.id_item_plantilla == 67890
-        assert appointment_data_obj.hora == "14:30"
+        assert appointment_data_obj.duracion_individual == TEST_DURACION_INDIVIDUAL
+        assert appointment_data_obj.id_plantilla_turno == TEST_ID_PLANTILLA_TURNO
+        assert appointment_data_obj.id_item_plantilla == TEST_ID_ITEM_PLANTILLA
 
         # Test with optional fields as None
         appointment_data_minimal = AppointmentProcessor.create_appointment_data(
@@ -471,32 +455,29 @@ class TestAppointmentHandler:
         # Process appointment with additional data
         appointment_data = {
             "datetime": future_time,
-            "duracion_individual": 20,
-            "id_plantilla_turno": 81268,
-            "id_item_plantilla": 767071,
-            "hora": "13:20",
+            "duracion_individual": TEST_DURACION_INDIVIDUAL,
+            "id_plantilla_turno": TEST_ID_PLANTILLA_TURNO,
+            "id_item_plantilla": TEST_ID_ITEM_PLANTILLA,
         }
 
         result = AppointmentHandler.process_appointment(
-            appointment=find_appointment,
+            appointment_to_find=find_appointment,
             patient=patient,
-            appointment_data=appointment_data,
+            new_appointment_data=appointment_data,
             user=user,
         )
 
         # Verify result
-        assert result["action"] == "created"
-        assert result["success"] is True
+        assert result.action == AppointmentActionType.CREATED
 
         # Verify database was updated with additional data
         best_appointment = BestAppointmentFound.objects.get(
             appointment_wanted=find_appointment, patient=patient
         )
         assert best_appointment.datetime == future_time
-        assert best_appointment.duracion_individual == 20
-        assert best_appointment.id_plantilla_turno == 81268
-        assert best_appointment.id_item_plantilla == 767071
-        assert best_appointment.hora == "13:20"
+        assert best_appointment.duracion_individual == TEST_DURACION_INDIVIDUAL
+        assert best_appointment.id_plantilla_turno == TEST_ID_PLANTILLA_TURNO
+        assert best_appointment.id_item_plantilla == TEST_ID_ITEM_PLANTILLA
         assert best_appointment.not_interested is False
         assert best_appointment.confirmed is False
         assert best_appointment.confirmed_at is None
@@ -531,23 +512,21 @@ class TestAppointmentHandler:
         # Process appointment without device registration
         appointment_data = {
             "datetime": future_time,
-            "duracion_individual": 20,
-            "id_plantilla_turno": 81268,
-            "id_item_plantilla": 767071,
-            "hora": "13:20",
+            "duracion_individual": TEST_DURACION_INDIVIDUAL,
+            "id_plantilla_turno": TEST_ID_PLANTILLA_TURNO,
+            "id_item_plantilla": TEST_ID_ITEM_PLANTILLA,
         }
 
         result = AppointmentHandler.process_appointment(
-            appointment=find_appointment,
+            appointment_to_find=find_appointment,
             patient=patient,
-            appointment_data=appointment_data,
+            new_appointment_data=appointment_data,
             user=user,
         )
 
         # Verify result
-        assert result["action"] == "created"
-        assert result["success"] is True
-        assert result["notification_sent"] is True
+        assert result.action == AppointmentActionType.CREATED
+        assert result.notification_sent is True
 
         # Verify database was updated
         best_appointment = BestAppointmentFound.objects.get(
@@ -555,10 +534,9 @@ class TestAppointmentHandler:
         )
         assert best_appointment.datetime == future_time
         # Verify additional appointment data is stored correctly
-        assert best_appointment.duracion_individual == 20
-        assert best_appointment.id_plantilla_turno == 81268
-        assert best_appointment.id_item_plantilla == 767071
-        assert best_appointment.hora == "13:20"
+        assert best_appointment.duracion_individual == TEST_DURACION_INDIVIDUAL
+        assert best_appointment.id_plantilla_turno == TEST_ID_PLANTILLA_TURNO
+        assert best_appointment.id_item_plantilla == TEST_ID_ITEM_PLANTILLA
 
         mock_post.assert_not_called()
 
@@ -587,31 +565,43 @@ class TestAppointmentHandler:
         # Process appointment (better time within 2 weeks timeframe)
         appointment_data = {
             "datetime": better_time,
-            "duracion_individual": 20,
-            "id_plantilla_turno": 81268,
-            "id_item_plantilla": 767071,
-            "hora": "13:20",
+            "duracion_individual": TEST_DURACION_INDIVIDUAL,
+            "id_plantilla_turno": TEST_ID_PLANTILLA_TURNO,
+            "id_item_plantilla": TEST_ID_ITEM_PLANTILLA,
         }
 
         result = AppointmentHandler.process_appointment(
-            appointment=find_appointment,
+            appointment_to_find=find_appointment,
             patient=patient,
-            appointment_data=appointment_data,
+            new_appointment_data=appointment_data,
             user=user,
         )
 
         # Verify result
-        assert result["action"] == "updated"
-        assert result["success"] is True
-        assert result["notification_sent"] is True
+        assert result.action == AppointmentActionType.UPDATED
+        assert result.notification_sent is True
 
         # Verify database was updated with additional data
         existing_appointment.refresh_from_db()
         assert existing_appointment.datetime == better_time
-        assert existing_appointment.duracion_individual == 20
-        assert existing_appointment.id_plantilla_turno == 81268
-        assert existing_appointment.id_item_plantilla == 767071
-        assert existing_appointment.hora == "13:20"
+        assert existing_appointment.duracion_individual == TEST_DURACION_INDIVIDUAL
+        assert existing_appointment.id_plantilla_turno == TEST_ID_PLANTILLA_TURNO
+        assert existing_appointment.id_item_plantilla == TEST_ID_ITEM_PLANTILLA
 
         # Verify push notification was called
         mock_post.assert_called_once()
+
+    @pytest.mark.django_db
+    def test_process_appointment_no_exiting_appointment_and_null_new_appointment(
+        self, find_appointment, patient, user
+    ):
+        result = AppointmentHandler.process_appointment(
+            appointment_to_find=find_appointment,
+            patient=patient,
+            new_appointment_data=None,
+            user=user,
+        )
+
+        assert result.action == AppointmentActionType.SKIPPED
+        assert result.notification_sent is False
+        assert "No new appointment found" in result.message
