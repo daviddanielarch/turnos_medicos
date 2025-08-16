@@ -65,6 +65,14 @@ class AppointmentHandler:
 
         # Check timeframe only for new appointments (not for better appointments)
         if current_best_datetime is None:
+            if new_appointment_datetime is None:
+                return {
+                    "action": "skipped",
+                    "message": "No new appointment found",
+                    "success": False,
+                    "notification_sent": False,
+                }
+
             # For new appointments, check if within desired timeframe
             if not AppointmentProcessor.is_within_desired_timeframe(
                 new_appointment_datetime, appointment.desired_timeframe
@@ -82,7 +90,7 @@ class AppointmentHandler:
         )
 
         # Create appointment data for notifications and processing
-        complete_appointment_data = AppointmentProcessor.create_appointment_data(
+        complete_appointment_data = AppointmentData(
             doctor_name=appointment.doctor.name,
             especialidad_name=appointment.doctor.especialidad.name,
             tipo_de_turno_name=appointment.tipo_de_turno.name,
