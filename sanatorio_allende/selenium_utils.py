@@ -67,7 +67,7 @@ def find_request(browser: WebDriver, url: str) -> dict:
     attempts = 1
 
     while attempts < MAX_BROWSER_REQUEST_UPDATE_ATTEMPS:
-        logs = browser.get_log("performance")
+        logs = browser.get_log("performance")  # type: ignore[attr-defined]
         for log in logs:
             if "message" in log:
                 message = json.loads(log["message"])
