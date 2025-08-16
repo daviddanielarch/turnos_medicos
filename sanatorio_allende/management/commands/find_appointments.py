@@ -1,5 +1,7 @@
 import time
+from typing import Any
 
+from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db import connection
 
@@ -15,7 +17,9 @@ from sanatorio_allende.services.auth import AllendeAuthService
 class Command(BaseCommand):
     help = "Find medical appointments"
 
-    def check_database_connectivity(self, max_retries=10, retry_delay=2):
+    def check_database_connectivity(
+        self, max_retries: int = 10, retry_delay: int = 2
+    ) -> bool:
         """
         Check if the database is accessible, since the database needs to wake up.
         """
@@ -57,7 +61,7 @@ class Command(BaseCommand):
 
         return False
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         if not self.check_database_connectivity():
             self.stdout.write(
                 self.style.ERROR("Cannot proceed without database connectivity")
@@ -67,6 +71,9 @@ class Command(BaseCommand):
         self.stdout.write("Starting appointment search...")
 
         for patient in PacienteAllende.objects.all():
+            assert isinstance(patient.id_paciente, str)
+            assert isinstance(patient.user, User)
+
             auth_service = AllendeAuthService(patient)
             auth_service.login()
 

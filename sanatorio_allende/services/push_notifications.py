@@ -1,7 +1,7 @@
 import json
 import logging
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import requests
 from django.contrib.auth.models import User
@@ -24,11 +24,11 @@ class PushNotificationService:
         cls,
         title: str,
         body: str,
-        data: Dict[str, Any] = None,
+        data: Optional[Dict[str, Any]] = None,
         sound: str = "default",
         priority: str = "high",
-        channel_id: str = None,
-        user: User = None,
+        channel_id: Optional[str] = None,
+        user: Optional[User] = None,
     ) -> Dict[str, Any]:
         """
         Send push notification to all registered devices
@@ -63,7 +63,7 @@ class PushNotificationService:
             logger.info(f"Notification: '{title}' - '{body}'")
 
             # Prepare notification payload
-            notification_payload = {
+            notification_payload: Dict[str, Any] = {
                 "title": title,
                 "body": body,
                 "sound": sound,

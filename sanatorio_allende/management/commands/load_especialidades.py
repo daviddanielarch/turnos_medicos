@@ -1,5 +1,7 @@
+import argparse
 import json
 import os
+from typing import Any
 
 from django.core.management.base import BaseCommand
 
@@ -10,7 +12,7 @@ from sanatorio_allende.services.data_loader import DataLoader
 class Command(BaseCommand):
     help = "Load especialidades from JSON file into the database"
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             "--file",
             type=str,
@@ -23,7 +25,7 @@ class Command(BaseCommand):
             help="Clear existing especialidades before loading",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         file_path = options["file"]
         clear_existing = options["clear"]
 

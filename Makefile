@@ -14,6 +14,9 @@ precommit-install:
 format:
 	black .
 
+typecheck:
+	mypy --ignore-missing-imports .
+
 run-chrome-x86:
 	docker-compose -f docker-compose-selenium.yml up -d chrome-x86
 

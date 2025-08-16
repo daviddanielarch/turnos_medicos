@@ -1,4 +1,5 @@
 import datetime
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -23,8 +24,13 @@ class TestAppointmentHandler:
     @pytest.mark.django_db
     @patch("sanatorio_allende.services.push_notifications.requests.post")
     def test_process_appointment_creates_new_when_no_existing(
-        self, mock_post, find_appointment, patient, user, device_registration
-    ):
+        self,
+        mock_post: Any,
+        find_appointment: Any,
+        patient: Any,
+        user: Any,
+        device_registration: Any,
+    ) -> None:
         """Test that new appointments are created when no existing appointment"""
         # Mock successful push notification response
         mock_response = type("MockResponse", (), {"status_code": 200})()
@@ -75,8 +81,13 @@ class TestAppointmentHandler:
     @pytest.mark.django_db
     @patch("sanatorio_allende.services.push_notifications.requests.post")
     def test_process_appointment_updates_existing_when_better(
-        self, mock_post, find_appointment, patient, user, device_registration
-    ):
+        self,
+        mock_post: Any,
+        find_appointment: Any,
+        patient: Any,
+        user: Any,
+        device_registration: Any,
+    ) -> None:
         """Test that better appointments update existing ones"""
         # Mock successful push notification response
         mock_response = type("MockResponse", (), {"status_code": 200})()
@@ -128,8 +139,13 @@ class TestAppointmentHandler:
     @pytest.mark.django_db
     @patch("sanatorio_allende.services.push_notifications.requests.post")
     def test_process_appointment_removes_existing_when_worse(
-        self, mock_post, find_appointment, patient, user, device_registration
-    ):
+        self,
+        mock_post: Any,
+        find_appointment: Any,
+        patient: Any,
+        user: Any,
+        device_registration: Any,
+    ) -> None:
         """Test that worse appointments remove existing ones"""
         # Mock successful push notification response
         mock_response = type("MockResponse", (), {"status_code": 200})()
@@ -174,8 +190,13 @@ class TestAppointmentHandler:
     @pytest.mark.django_db
     @patch("sanatorio_allende.services.push_notifications.requests.post")
     def test_process_appointment_removes_existing_when_worse_even_if_outside_timeframe(
-        self, mock_post, find_appointment, patient, user, device_registration
-    ):
+        self,
+        mock_post: Any,
+        find_appointment: Any,
+        patient: Any,
+        user: Any,
+        device_registration: Any,
+    ) -> None:
         """Test that worse appointments remove existing ones even if outside timeframe"""
         # Mock successful push notification response
         mock_response = type("MockResponse", (), {"status_code": 200})()
@@ -224,8 +245,13 @@ class TestAppointmentHandler:
     @pytest.mark.django_db
     @patch("sanatorio_allende.services.push_notifications.requests.post")
     def test_process_appointment_does_nothing_when_same(
-        self, mock_post, find_appointment, patient, user, device_registration
-    ):
+        self,
+        mock_post: Any,
+        find_appointment: Any,
+        patient: Any,
+        user: Any,
+        device_registration: Any,
+    ) -> None:
         """Test that same appointments trigger no action"""
         current_time = timezone.now()
         appointment_time = current_time + datetime.timedelta(days=5)
@@ -266,8 +292,8 @@ class TestAppointmentHandler:
 
     @pytest.mark.django_db
     def test_process_appointment_skips_outside_timeframe_for_new(
-        self, find_appointment, patient, user
-    ):
+        self, find_appointment: Any, patient: Any, user: Any
+    ) -> None:
         """Test that appointments outside timeframe are skipped for new appointments"""
         # Set timeframe to 1 week
         find_appointment.desired_timeframe = "1 week"
@@ -304,8 +330,13 @@ class TestAppointmentHandler:
     @pytest.mark.django_db
     @patch("sanatorio_allende.services.push_notifications.requests.post")
     def test_process_appointment_ignores_not_interested_appointments(
-        self, mock_post, find_appointment, patient, user, device_registration
-    ):
+        self,
+        mock_post: Any,
+        find_appointment: Any,
+        patient: Any,
+        user: Any,
+        device_registration: Any,
+    ) -> None:
         """Test that not_interested appointments are ignored"""
         current_time = timezone.now()
         existing_time = current_time + datetime.timedelta(days=5)
@@ -351,8 +382,13 @@ class TestAppointmentHandler:
     @pytest.mark.django_db
     @patch("sanatorio_allende.services.push_notifications.requests.post")
     def test_process_appointment_handles_multiple_not_interested(
-        self, mock_post, find_appointment, patient, user, device_registration
-    ):
+        self,
+        mock_post: Any,
+        find_appointment: Any,
+        patient: Any,
+        user: Any,
+        device_registration: Any,
+    ) -> None:
         """Test that multiple not_interested appointments are handled correctly"""
         current_time = timezone.now()
         existing_time = current_time + datetime.timedelta(days=5)
@@ -405,8 +441,13 @@ class TestAppointmentHandler:
     @pytest.mark.django_db
     @patch("sanatorio_allende.services.push_notifications.requests.post")
     def test_process_appointment_creates_appointment_data_correctly(
-        self, mock_post, find_appointment, patient, user, device_registration
-    ):
+        self,
+        mock_post: Any,
+        find_appointment: Any,
+        patient: Any,
+        user: Any,
+        device_registration: Any,
+    ) -> None:
         """Test that appointment data is created with correct information and structure"""
         # Mock successful push notification response
         mock_response = type("MockResponse", (), {"status_code": 200})()
@@ -450,7 +491,6 @@ class TestAppointmentHandler:
         assert appointment_data_minimal.duracion_individual is None
         assert appointment_data_minimal.id_plantilla_turno is None
         assert appointment_data_minimal.id_item_plantilla is None
-        assert appointment_data_minimal.hora is None
 
         # Process appointment with additional data
         appointment_data = {
@@ -503,8 +543,8 @@ class TestAppointmentHandler:
     @pytest.mark.django_db
     @patch("sanatorio_allende.services.push_notifications.requests.post")
     def test_process_appointment_with_no_device_registration(
-        self, mock_post, find_appointment, patient, user
-    ):
+        self, mock_post: Any, find_appointment: Any, patient: Any, user: Any
+    ) -> None:
         """Test that appointments are processed even without device registration"""
         current_time = timezone.now()
         future_time = current_time + datetime.timedelta(days=5)
@@ -543,8 +583,13 @@ class TestAppointmentHandler:
     @pytest.mark.django_db
     @patch("sanatorio_allende.services.push_notifications.requests.post")
     def test_process_appointment_updates_existing_within_timeframe(
-        self, mock_post, find_appointment, patient, user, device_registration
-    ):
+        self,
+        mock_post: Any,
+        find_appointment: Any,
+        patient: Any,
+        user: Any,
+        device_registration: Any,
+    ) -> None:
         """Test that better appointments within timeframe update existing ones"""
         # Mock successful push notification response
         mock_response = type("MockResponse", (), {"status_code": 200})()
@@ -593,8 +638,8 @@ class TestAppointmentHandler:
 
     @pytest.mark.django_db
     def test_process_appointment_no_exiting_appointment_and_null_new_appointment(
-        self, find_appointment, patient, user
-    ):
+        self, find_appointment: Any, patient: Any, user: Any
+    ) -> None:
         result = AppointmentHandler.process_appointment(
             appointment_to_find=find_appointment,
             patient=patient,

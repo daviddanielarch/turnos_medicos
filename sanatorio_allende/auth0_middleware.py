@@ -1,14 +1,15 @@
 import json
+from typing import Any, Dict, Optional
 
 import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth.models import User
-from django.http import JsonResponse
+from django.http import HttpRequest, JsonResponse
 from django.utils.deprecation import MiddlewareMixin
 from jose import JWTError, jwt
 
-User = get_user_model()
+UserModel = get_user_model()
 
 
 class Auth0Middleware(MiddlewareMixin):
@@ -16,13 +17,15 @@ class Auth0Middleware(MiddlewareMixin):
     Middleware to handle Auth0 JWT token validation
     """
 
-    def __init__(self, get_response):
+    def __init__(self, get_response: Any) -> None:
         super().__init__(get_response)
-        self.auth0_domain = getattr(settings, "AUTH0_DOMAIN", None)
-        self.auth0_audience = getattr(settings, "AUTH0_AUDIENCE", None)
-        self.auth0_issuer = getattr(settings, "AUTH0_ISSUER", None)
-        self.auth0_client_id = getattr(settings, "AUTH0_MANAGEMENT_CLIENT_ID", None)
-        self.auth0_client_secret = getattr(
+        self.auth0_domain: Optional[str] = getattr(settings, "AUTH0_DOMAIN", None)
+        self.auth0_audience: Optional[str] = getattr(settings, "AUTH0_AUDIENCE", None)
+        self.auth0_issuer: Optional[str] = getattr(settings, "AUTH0_ISSUER", None)
+        self.auth0_client_id: Optional[str] = getattr(
+            settings, "AUTH0_MANAGEMENT_CLIENT_ID", None
+        )
+        self.auth0_client_secret: Optional[str] = getattr(
             settings, "AUTH0_MANAGEMENT_CLIENT_SECRET", None
         )
 
@@ -39,7 +42,7 @@ class Auth0Middleware(MiddlewareMixin):
                 "AUTH0_DOMAIN, AUTH0_AUDIENCE, AUTH0_ISSUER, AUTH0_CLIENT_ID, and AUTH0_CLIENT_SECRET must be set in Django settings"
             )
 
-    def process_request(self, request):
+    def process_request(self, request: HttpRequest) -> Optional[JsonResponse]:
         """
         Process the request and validate the Auth0 JWT token
         """
@@ -72,7 +75,7 @@ class Auth0Middleware(MiddlewareMixin):
                 {"error": f"Token validation failed: {str(e)}"}, status=401
             )
 
-    def _should_skip_auth(self, path):
+    def _should_skip_auth(self, path: str) -> bool:
         """
         Define paths that don't require authentication
         """
@@ -83,7 +86,7 @@ class Auth0Middleware(MiddlewareMixin):
         ]
         return any(path.startswith(skip_path) for skip_path in skip_paths)
 
-    def _validate_token(self, token):
+    def _validate_token(self, token: str) -> Dict[str, Any]:
         """
         Validate the JWT token using Auth0's public key
         """
@@ -118,7 +121,7 @@ class Auth0Middleware(MiddlewareMixin):
                 issuer=self.auth0_issuer,
             )
 
-            return payload
+            return payload  # type: ignore
 
         except JWTError as e:
             if "expired" in str(e).lower():
@@ -128,11 +131,11 @@ class Auth0Middleware(MiddlewareMixin):
         except Exception as e:
             raise Exception(f"Token validation error: {str(e)}")
 
-    def _get_or_create_user(self, payload):
+    def _get_or_create_user(self, payload: Dict[str, Any]) -> User:
         """
         Get or create a Django user based on Auth0 user info
         """
-        auth0_user_id = payload.get("sub")
+        auth0_user_id = payload["sub"]
 
         try:
             user = User.objects.get(username=auth0_user_id)
@@ -141,7 +144,7 @@ class Auth0Middleware(MiddlewareMixin):
 
         return user
 
-    def _get_auth0_user_data(self, user_id):
+    def _get_auth0_user_data(self, user_id: str) -> Dict[str, Any]:
         """
         Fetch user data from Auth0 Management API
         """
@@ -154,9 +157,10 @@ class Auth0Middleware(MiddlewareMixin):
         response = requests.get(url, headers=headers)
 
         response.raise_for_status()
-        return response.json()
+        auth0_user_data: Dict[str, Any] = response.json()
+        return auth0_user_data
 
-    def _get_management_token(self):
+    def _get_management_token(self) -> str:
         """
         Get Auth0 Management API token
         """
@@ -171,9 +175,10 @@ class Auth0Middleware(MiddlewareMixin):
 
         response = requests.post(token_url, json=payload)
         response.raise_for_status()
-        return response.json()["access_token"]
+        access_token: str = response.json()["access_token"]
+        return access_token
 
-    def _create_user_from_auth0(self, auth0_user_id):
+    def _create_user_from_auth0(self, auth0_user_id: str) -> User:
         """
         Create a new Django user with Auth0 data
         """

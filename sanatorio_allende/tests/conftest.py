@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pytest
 from django.contrib.auth.models import User
 from django.test import Client
@@ -33,7 +35,7 @@ TEST_ID_ITEM_PLANTILLA = 767071
 
 
 @pytest.fixture
-def user():
+def user() -> User:
     """Create a test user"""
     return User.objects.create_user(
         username="testuser", email="test@example.com", password="testpass123"
@@ -41,7 +43,7 @@ def user():
 
 
 @pytest.fixture
-def client(user):
+def client(user: User) -> Client:
     """Django test client fixture with authenticated user"""
     client = Client()
     client.force_login(user)
@@ -49,7 +51,7 @@ def client(user):
 
 
 @pytest.fixture
-def evil_user():
+def evil_user() -> User:
     """Create a test user for testing unauthorized access"""
     return User.objects.create_user(
         username="eviluser", email="evil@example.com", password="evilpass123"
@@ -57,7 +59,7 @@ def evil_user():
 
 
 @pytest.fixture
-def evil_client(evil_user):
+def evil_client(evil_user: User) -> Client:
     """Django test client fixture with evil user for testing unauthorized access"""
     client = Client()
     client.force_login(evil_user)
@@ -65,7 +67,7 @@ def evil_client(evil_user):
 
 
 @pytest.fixture
-def especialidad():
+def especialidad() -> Especialidad:
     """Create a test especialidad"""
     return Especialidad.objects.create(
         name="Cardiología",
@@ -78,7 +80,7 @@ def especialidad():
 
 
 @pytest.fixture
-def doctor(especialidad):
+def doctor(especialidad: Especialidad) -> Doctor:
     """Create a test doctor"""
     return Doctor.objects.create(
         name="Dr. Juan Pérez",
@@ -89,7 +91,7 @@ def doctor(especialidad):
 
 
 @pytest.fixture
-def appointment_type(especialidad):
+def appointment_type(especialidad: Especialidad) -> AppointmentType:
     """Create a test appointment type"""
     return AppointmentType.objects.create(
         name="CONSULTA",
@@ -100,7 +102,7 @@ def appointment_type(especialidad):
 
 
 @pytest.fixture
-def patient(user):
+def patient(user: User) -> PacienteAllende:
     """Create a test patient"""
     return PacienteAllende.objects.create(
         user=user,
@@ -115,7 +117,9 @@ def patient(user):
 
 
 @pytest.fixture
-def find_appointment(doctor, appointment_type, patient):
+def find_appointment(
+    doctor: Doctor, appointment_type: AppointmentType, patient: PacienteAllende
+) -> FindAppointment:
     """Create a test find appointment"""
     return FindAppointment.objects.create(
         doctor=doctor,
@@ -127,12 +131,14 @@ def find_appointment(doctor, appointment_type, patient):
 
 
 @pytest.fixture
-def best_appointment_found(find_appointment, patient):
+def best_appointment_found(
+    find_appointment: FindAppointment, patient: PacienteAllende
+) -> BestAppointmentFound:
     """Create a test best appointment found"""
     return BestAppointmentFound.objects.create(
         appointment_wanted=find_appointment,
         patient=patient,
-        datetime=timezone.now() + timezone.timedelta(days=1),
+        datetime=timezone.now() + timedelta(days=1),
         duracion_individual=TEST_DURACION_INDIVIDUAL,
         id_plantilla_turno=TEST_PLANTILLA_TURNO_ID,
         id_item_plantilla=TEST_ITEM_PLANTILLA_ID,
@@ -140,7 +146,7 @@ def best_appointment_found(find_appointment, patient):
 
 
 @pytest.fixture
-def device_registration(user):
+def device_registration(user: User) -> DeviceRegistration:
     """Create a test device registration"""
     return DeviceRegistration.objects.create(
         user=user, push_token="test_push_token_123", platform="expo", is_active=True

@@ -13,7 +13,7 @@ class PacienteAllende(models.Model):
     id_plan = models.IntegerField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name} - {self.id_paciente}"
 
     class Meta:
@@ -30,7 +30,7 @@ class Especialidad(models.Model):
     sucursal = models.CharField(max_length=255)
     servicio = models.CharField(max_length=255)
 
-    def from_json(self, json_data):
+    def from_json(self, json_data: dict) -> "Especialidad":
         self.name = json_data["Especialidad"]
         self.id_especialidad = json_data["IdEspecialidad"]
         self.id_servicio = json_data["IdServicio"]
@@ -39,7 +39,7 @@ class Especialidad(models.Model):
         self.servicio = json_data["Servicio"]
         return self
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name} - {self.sucursal}"
 
     class Meta:
@@ -52,7 +52,7 @@ class AppointmentType(models.Model):
     especialidad = models.ForeignKey(Especialidad, on_delete=models.CASCADE)
     id_tipo_prestacion = models.IntegerField(null=True, blank=True)
 
-    def from_json(self, json_data):
+    def from_json(self, json_data: dict) -> "AppointmentType":
         """
         {
             "IdTipoPrestacion": 1,
@@ -67,7 +67,7 @@ class AppointmentType(models.Model):
         self.id_tipo_turno = json_data["Id"]
         return self
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name}"
 
     class Meta:
@@ -84,7 +84,7 @@ class Doctor(models.Model):
     id_tipo_recurso = models.IntegerField()
     especialidad = models.ForeignKey(Especialidad, on_delete=models.CASCADE)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name} - {self.especialidad} - {self.especialidad.sucursal}"
 
     class Meta:
@@ -113,7 +113,7 @@ class FindAppointment(models.Model):
     )
     active = models.BooleanField(default=False)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.doctor} - {self.tipo_de_turno}"
 
     class Meta:
@@ -140,7 +140,7 @@ class BestAppointmentFound(models.Model):
     confirmed = models.BooleanField(default=False)
     confirmed_at = models.DateTimeField(null=True, blank=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.appointment_wanted.doctor.name} - {self.datetime}"
 
     class Meta:
@@ -160,7 +160,7 @@ class DeviceRegistration(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.platform} - {self.push_token[:20]}..."
 
     class Meta:

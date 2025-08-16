@@ -53,6 +53,9 @@ jobs:
     - name: Run Black
       run: |
         black --check --diff .
+    - name: Run MyPy
+      run: |
+        mypy --ignore-missing-imports .
     - name: Run Tests with Coverage
       env:
         PGDATABASE: test_db

@@ -10,7 +10,7 @@ from sanatorio_allende.services.appointment_processor import (
 class TestAppointmentProcessor:
     """Test appointment processor business logic"""
 
-    def test_new_appointment_creates_record(self):
+    def test_new_appointment_creates_record(self) -> None:
         """Test that new appointments trigger creation action"""
         current_time = datetime.datetime.now()
         new_appointment = current_time + datetime.timedelta(days=5)
@@ -24,7 +24,7 @@ class TestAppointmentProcessor:
         assert result.should_notify is True
         assert result.notification_type == NotificationType.NEW
 
-    def test_better_appointment_updates_existing(self):
+    def test_better_appointment_updates_existing(self) -> None:
         """Test that earlier appointments trigger update action"""
         current_time = datetime.datetime.now()
         existing_appointment = current_time + datetime.timedelta(days=10)
@@ -39,7 +39,7 @@ class TestAppointmentProcessor:
         assert result.should_notify is True
         assert result.notification_type == NotificationType.NEW
 
-    def test_worse_appointment_removes_existing(self):
+    def test_worse_appointment_removes_existing(self) -> None:
         """Test that later appointments trigger removal action"""
         current_time = datetime.datetime.now()
         existing_appointment = current_time + datetime.timedelta(days=5)
@@ -54,7 +54,7 @@ class TestAppointmentProcessor:
         assert result.should_notify is True
         assert result.notification_type == NotificationType.LOST
 
-    def test_same_appointment_does_nothing(self):
+    def test_same_appointment_does_nothing(self) -> None:
         """Test that identical appointments trigger no action"""
         current_time = datetime.datetime.now()
         appointment_time = current_time + datetime.timedelta(days=5)
@@ -68,7 +68,7 @@ class TestAppointmentProcessor:
         assert result.should_notify is False
         assert result.notification_type == NotificationType.NONE
 
-    def test_not_interested_appointment_ignored(self):
+    def test_not_interested_appointment_ignored(self) -> None:
         """Test that appointments matching not_interested are ignored"""
         current_time = datetime.datetime.now()
         existing_appointment = current_time + datetime.timedelta(days=5)
@@ -85,7 +85,7 @@ class TestAppointmentProcessor:
         assert result.should_notify is False
         assert result.notification_type == NotificationType.NONE
 
-    def test_not_interested_appointment_different_time_processed(self):
+    def test_not_interested_appointment_different_time_processed(self) -> None:
         """Test that not interested appointments are also removed"""
         current_time = datetime.datetime.now()
         existing_appointment = current_time + datetime.timedelta(days=15)
@@ -102,7 +102,7 @@ class TestAppointmentProcessor:
         assert result.should_notify is True
         assert result.notification_type == NotificationType.LOST
 
-    def test_multiple_not_interested_appointments_handled(self):
+    def test_multiple_not_interested_appointments_handled(self) -> None:
         """Test that multiple not_interested appointments are all checked"""
         current_time = datetime.datetime.now()
         existing_appointment = current_time + datetime.timedelta(days=5)
@@ -123,7 +123,7 @@ class TestAppointmentProcessor:
         assert result.should_notify is False
         assert result.notification_type == NotificationType.NONE
 
-    def test_new_appointment_with_multiple_not_interested_appointments(self):
+    def test_new_appointment_with_multiple_not_interested_appointments(self) -> None:
         """Test that multiple not_interested appointments are all checked for new appointment"""
         current_time = datetime.datetime.now()
         new_appointment = current_time + datetime.timedelta(days=16)
@@ -142,7 +142,7 @@ class TestAppointmentProcessor:
         assert result.should_notify is True
         assert result.notification_type == NotificationType.NEW
 
-    def test_no_new_appointment_removes_existing(self):
+    def test_no_new_appointment_removes_existing(self) -> None:
         """Test that no new appointment removes the existing one"""
         current_time = datetime.datetime.now()
         existing_appointment = current_time + datetime.timedelta(days=5)

@@ -4,6 +4,7 @@ import base64
 import json
 import logging
 from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
 
 import requests
 
@@ -22,20 +23,22 @@ logger = logging.getLogger(__name__)
 
 class Allende:
     def __init__(
-        self, auth_header: str = None, selenium_settings: SeleniumSettings = None
+        self,
+        auth_header: Optional[str] = None,
+        selenium_settings: Optional[SeleniumSettings] = None,
     ):
         self.auth_header = auth_header
         self.selenium_settings = selenium_settings
         self.user_id = None
 
-    def get_user_id(self):
+    def get_user_id(self) -> Optional[str]:
         return self.user_id
 
-    def get_auth_header(self):
+    def get_auth_header(self) -> Optional[str]:
         return self.auth_header
 
     @classmethod
-    def validate_credentials(cls, dni: str, password: str):
+    def validate_credentials(cls, dni: str, password: str) -> bool:
         data = requests.post(
             "https://miportal.sanatorioallende.com/backend/Token",
             data={
@@ -51,9 +54,12 @@ class Allende:
         )
         return data.status_code == HTTP_OK
 
-    def login(self, user: str, password: str):
-        if self.is_authorized(self.auth_header):
+    def login(self, user: str, password: str) -> str:
+        if self.auth_header and self.is_authorized(self.auth_header):
             return self.auth_header
+
+        if not self.selenium_settings:
+            raise Exception("Selenium settings are required for login")
 
         browser = get_browser(
             self.selenium_settings.hostname, self.selenium_settings.port
@@ -95,7 +101,7 @@ class Allende:
 
         return auth_header
 
-    def get_user_data(self):
+    def get_user_data(self) -> Dict[str, Any]:
         if not self.user_id:
             raise Exception("User id not found")
 
@@ -109,7 +115,7 @@ class Allende:
             "IdPlan": data["CoberturaPorDefecto"]["IdPlanMutual"],
         }
 
-    def reservar(self, appointment_data: dict):
+    def reservar(self, appointment_data: dict) -> Dict[str, Any]:
         url = "https://miportal.sanatorioallende.com/backend/api/turnos/Asignar"
 
         response = requests.post(
@@ -119,17 +125,17 @@ class Allende:
         if response.status_code == HTTP_UNAUTHORIZED:
             raise UnauthorizedException()
 
-        return response.json()
+        return response.json()  # type: ignore  # type: ignore
 
     @classmethod
-    def is_authorized(cls, auth_header: str):
+    def is_authorized(cls, auth_header: str) -> bool:
         response = requests.get(
             "https://miportal.sanatorioallende.com/backend/api/GestionDeEspera/Totem/ObtenerOpcionesDelTotemPortal",
             headers={"authorization": auth_header},
         )
         return response.status_code == HTTP_OK
 
-    def search_best_date_appointment(self, doctor_data: dict):
+    def search_best_date_appointment(self, doctor_data: dict) -> Optional[dict]:
         """Searches the best date for an appointment with the given doctor"""
         response = requests.post(
             "https://miportal.sanatorioallende.com/backend/api/DisponibilidadDeTurnos/ObtenerPrimerTurnoAsignableParaPortalWebConParticular",
@@ -142,14 +148,14 @@ class Allende:
 
         appointments = self._get_appointment_dates(response.json())
         if not appointments:
-            return
+            return None
 
         return min(appointments, key=lambda x: x["datetime"])
 
-    def _get_appointment_dates(self, data: list[dict]) -> list[dict]:
+    def _get_appointment_dates(self, data: List[dict]) -> List[dict]:
         """Parses the appointments from the response data to get the appointment dates and additional data"""
         appointments = []
-        for turno in data["PrimerosTurnosDeCadaRecurso"]:
+        for turno in data.get("PrimerosTurnosDeCadaRecurso", []):  # type: ignore
             date = turno["Fecha"].split("T")[0]
             date = datetime.strptime(date, "%Y-%m-%d")
             hora = turno["Hora"]
@@ -173,7 +179,7 @@ class Allende:
 
     def get_available_doctors(
         self, id_especialidad: str, id_servicio: str, id_sucursal: str
-    ):
+    ) -> List[dict]:
         response = requests.get(
             f"https://miportal.sanatorioallende.com/backend/api/recurso/ObtenerTodosDeUnServicioEnSucursalConEspecialidadParaPortalWeb/{id_servicio}/{id_sucursal}/{id_especialidad}/329130/2/1227/66",
             headers={"authorization": self.auth_header},
@@ -195,11 +201,11 @@ class Allende:
                 "ProfesionalQueAtiende": null
             },
         """
-        return response.json()
+        return response.json()  # type: ignore
 
     def get_available_appointment_types(
         self, id_especialidad: str, id_servicio: str, id_sucursal: str
-    ):
+    ) -> List[dict]:
         response = requests.get(
             f"https://miportal.sanatorioallende.com/backend/api/PrestacionMedica/ObtenerPorRecursoEspecialidadServicioSucursalParaPortalWeb/0/0/{id_especialidad}/{id_servicio}/{id_sucursal}",
             headers={"authorization": self.auth_header},
@@ -208,4 +214,4 @@ class Allende:
         if response.status_code == HTTP_UNAUTHORIZED:
             raise UnauthorizedException()
 
-        return response.json()
+        return response.json()  # type: ignore

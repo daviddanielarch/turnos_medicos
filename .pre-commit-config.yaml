@@ -8,6 +8,17 @@ repos:
 
   - repo: local
     hooks:
+      - id: mypy
+        name: MyPy Type Checking
+        entry: mypy
+        language: system
+        args: [--ignore-missing-imports, .]
+        pass_filenames: false
+        always_run: true
+        stages: [commit]
+
+  - repo: local
+    hooks:
       - id: django-tests
         name: Django Tests
         entry: pytest

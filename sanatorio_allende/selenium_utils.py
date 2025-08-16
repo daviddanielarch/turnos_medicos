@@ -5,6 +5,7 @@ import urllib3
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.remote.webdriver import WebDriver
 
 MAX_BROWSER_REQUEST_UPDATE_ATTEMPS = 10
 MAX_BROWSER_RETRY_ATTEMPTS = 10
@@ -17,7 +18,7 @@ class SeleniumSettings:
         self.implicit_wait = implicit_wait
 
 
-def get_browser(hostname: str, port: int) -> webdriver.Chrome:
+def get_browser(hostname: str, port: int) -> WebDriver:
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--disable-gpu")
@@ -54,7 +55,7 @@ def get_browser(hostname: str, port: int) -> webdriver.Chrome:
     )
 
 
-def find_request(browser: webdriver.Chrome, url: str):
+def find_request(browser: WebDriver, url: str) -> dict:
     """Finds a request sent in the browser logs.
 
     This will only allow us to access the request payload (not the response)
@@ -72,9 +73,12 @@ def find_request(browser: webdriver.Chrome, url: str):
                 message = json.loads(log["message"])
                 message = message.get("message", {})
                 if message.get("method") == "Network.requestWillBeSent":
-                    request = message.get("params", {}).get("request", {})
+                    request: dict = message.get("params", {}).get("request", {})
                     if request.get("url", "").endswith(url):
                         return request
 
         time.sleep(5)
         attempts += 1
+
+    # If no request found, return empty dict
+    return {}

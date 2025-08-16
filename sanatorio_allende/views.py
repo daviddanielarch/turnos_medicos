@@ -1,9 +1,9 @@
 import json
-from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import JsonResponse
+from django.contrib.auth.models import User
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -25,7 +25,7 @@ from .models import (
 class LoginView(View):
     """View to serve the Auth0 login template"""
 
-    def get(self, request):
+    def get(self, request: HttpRequest) -> HttpResponse:
         """Render the login template with Auth0 configuration"""
         context = {
             "auth0_domain": settings.AUTH0_DOMAIN,
@@ -39,7 +39,7 @@ class LoginView(View):
 class AuthCallbackView(View):
     """Handle Auth0 callback (redirects back to login page)"""
 
-    def get(self, request):
+    def get(self, request: HttpRequest) -> HttpResponse:
         """Redirect to login page after Auth0 callback"""
         return render(
             request,
@@ -56,7 +56,7 @@ class AuthCallbackView(View):
 class DoctorListView(LoginRequiredMixin, View):
     """Class-based view for listing doctors"""
 
-    def get(self, request):
+    def get(self, request: HttpRequest) -> JsonResponse:
         """Get all doctors with their specialties and locations"""
         doctors = Doctor.objects.select_related("especialidad").all()
 
@@ -78,7 +78,7 @@ class DoctorListView(LoginRequiredMixin, View):
 class AppointmentTypeListView(LoginRequiredMixin, View):
     """Class-based view for listing appointment types for a specific doctor"""
 
-    def get(self, request):
+    def get(self, request: HttpRequest) -> JsonResponse:
         """Get appointment types for a specific doctor"""
         doctor_id = request.GET.get("doctor_id")
         if not doctor_id:
@@ -110,7 +110,7 @@ class AppointmentTypeListView(LoginRequiredMixin, View):
 class FindAppointmentView(LoginRequiredMixin, View):
     """Class-based view for FindAppointment CRUD operations"""
 
-    def get(self, request):
+    def get(self, request: HttpRequest) -> JsonResponse:
         """Get all FindAppointment objects with optional time filtering"""
         # Get optional seconds parameter for filtering recent appointments
         patient_id = request.GET.get("patient_id")
@@ -148,7 +148,7 @@ class FindAppointmentView(LoginRequiredMixin, View):
 
         return JsonResponse({"success": True, "appointments": appointments_data})
 
-    def post(self, request):
+    def post(self, request: HttpRequest) -> JsonResponse:
         """Create a new FindAppointment"""
         try:
             data = json.loads(request.body)
@@ -214,8 +214,10 @@ class FindAppointmentView(LoginRequiredMixin, View):
             }
         )
 
-    def patch(self, request):
+    def patch(self, request: HttpRequest) -> JsonResponse:
         """Update the active status of a FindAppointment"""
+        assert isinstance(request.user, User)
+
         try:
             data = json.loads(request.body)
         except json.JSONDecodeError:
@@ -236,6 +238,7 @@ class FindAppointmentView(LoginRequiredMixin, View):
             )
 
         appointment = get_object_or_404(FindAppointment, id=appointment_id)
+        assert isinstance(appointment.patient, PacienteAllende)
         user_patients = request.user.pacienteallende_set.all().values_list(
             "id", flat=True
         )
@@ -262,7 +265,7 @@ class FindAppointmentView(LoginRequiredMixin, View):
 class BestAppointmentListView(LoginRequiredMixin, View):
     """Class-based view for listing BestAppointmentFound objects"""
 
-    def get(self, request):
+    def get(self, request: HttpRequest) -> JsonResponse:
         """Get all BestAppointmentFound objects (excluding not_interested ones)"""
         patient_id = request.GET.get("patient_id")
         patient = get_object_or_404(PacienteAllende, id=patient_id)
@@ -307,7 +310,7 @@ class BestAppointmentListView(LoginRequiredMixin, View):
 
         return JsonResponse({"success": True, "best_appointments": appointments_data})
 
-    def patch(self, request):
+    def patch(self, request: HttpRequest) -> JsonResponse:
         """Mark an appointment as not interested"""
         try:
             data = json.loads(request.body)
@@ -330,8 +333,7 @@ class BestAppointmentListView(LoginRequiredMixin, View):
 
         try:
             best_appointment = BestAppointmentFound.objects.get(id=appointment_id)
-
-            # Check if the appointment belongs to the current user
+            assert isinstance(best_appointment.patient, PacienteAllende)
             if best_appointment.patient.user != request.user:
                 return JsonResponse(
                     {
@@ -364,8 +366,9 @@ class BestAppointmentListView(LoginRequiredMixin, View):
 class PatientListView(LoginRequiredMixin, View):
     """Class-based view for listing patients"""
 
-    def get(self, request):
+    def get(self, request: HttpRequest) -> JsonResponse:
         """Get all patients"""
+        assert isinstance(request.user, User)
         patients = PacienteAllende.objects.filter(user=request.user)
 
         patients_data = []
@@ -384,8 +387,10 @@ class PatientListView(LoginRequiredMixin, View):
 
         return JsonResponse({"success": True, "patients": patients_data})
 
-    def post(self, request):
+    def post(self, request: HttpRequest) -> JsonResponse:
         """Create a new patient"""
+        assert isinstance(request.user, User)
+
         try:
             data = json.loads(request.body)
         except json.JSONDecodeError:
@@ -441,8 +446,10 @@ class PatientListView(LoginRequiredMixin, View):
             }
         )
 
-    def delete(self, request):
+    def delete(self, request: HttpRequest) -> JsonResponse:
         """Delete a patient"""
+        assert isinstance(request.user, User)
+
         try:
             data = json.loads(request.body)
         except json.JSONDecodeError:
@@ -484,7 +491,7 @@ class PatientListView(LoginRequiredMixin, View):
 class DeviceRegistrationView(LoginRequiredMixin, View):
     """Class-based view for DeviceRegistration operations"""
 
-    def post(self, request):
+    def post(self, request: HttpRequest) -> JsonResponse:
         """Register or update a device for push notifications"""
         try:
             data = json.loads(request.body)
@@ -529,7 +536,7 @@ class DeviceRegistrationView(LoginRequiredMixin, View):
 class ConfirmAppointmentView(LoginRequiredMixin, View):
     """Class-based view for confirming appointments"""
 
-    def post(self, request):
+    def post(self, request: HttpRequest) -> JsonResponse:
         """Confirm an appointment by calling the Allende reservar endpoint"""
         try:
             data = json.loads(request.body)
@@ -549,7 +556,13 @@ class ConfirmAppointmentView(LoginRequiredMixin, View):
             )
 
         patient = appointment.patient
-
+        assert isinstance(patient, PacienteAllende)
+        assert isinstance(patient.id_paciente, str)
+        assert isinstance(patient.id_financiador, int)
+        assert isinstance(patient.id_plan, int)
+        assert isinstance(
+            appointment.appointment_wanted.tipo_de_turno.id_tipo_prestacion, int
+        )
         allende = Allende(auth_header=patient.token)
 
         appointment_data = {
@@ -560,7 +573,9 @@ class ConfirmAppointmentView(LoginRequiredMixin, View):
                 "IdRecurso": appointment.appointment_wanted.doctor.id_recurso,
                 "IdEspecialidad": appointment.appointment_wanted.doctor.especialidad.id_especialidad,
                 "ControlarEdad": False,
-                "IdTipoDeTurno": appointment.appointment_wanted.tipo_de_turno.id_tipo_prestacion,
+                "IdTipoDeTurno": int(
+                    appointment.appointment_wanted.tipo_de_turno.id_tipo_prestacion
+                ),
                 "IdFinanciador": int(patient.id_financiador),
                 "IdTipoRecurso": appointment.appointment_wanted.doctor.id_tipo_recurso,
                 "IdPlan": int(patient.id_plan),

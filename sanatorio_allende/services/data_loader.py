@@ -1,3 +1,5 @@
+from typing import Any, Dict, List, Optional, Tuple
+
 from django.conf import settings
 
 from sanatorio_allende.appointments import Allende
@@ -11,7 +13,9 @@ from sanatorio_allende.services.auth import AllendeAuthService
 
 
 class DataLoader:
-    def load_especialidades(self, especialidades_data):
+    def load_especialidades(
+        self, especialidades_data: List[Dict[str, Any]]
+    ) -> Tuple[int, int, int]:
         created_count = 0
         updated_count = 0
         skipped_count = 0
@@ -52,16 +56,19 @@ class DataLoader:
 
         return created_count, updated_count, skipped_count
 
-    def load_especialidad(self, especialidad: Especialidad):
+    def load_especialidad(self, especialidad: Especialidad) -> None:
         user = PacienteAllende.objects.first()
+        if user is None:
+            raise ValueError("No PacienteAllende found in database")
+
         auth_service = AllendeAuthService(user)
         auth_service.login()
 
         allende = Allende(user.token)
         appointment_types = allende.get_available_appointment_types(
-            especialidad.id_especialidad,
-            especialidad.id_servicio,
-            especialidad.id_sucursal,
+            str(especialidad.id_especialidad),
+            str(especialidad.id_servicio),
+            str(especialidad.id_sucursal),
         )
         AppointmentType.objects.bulk_create(
             [
@@ -77,9 +84,9 @@ class DataLoader:
         )
 
         doctors = allende.get_available_doctors(
-            especialidad.id_especialidad,
-            especialidad.id_servicio,
-            especialidad.id_sucursal,
+            str(especialidad.id_especialidad),
+            str(especialidad.id_servicio),
+            str(especialidad.id_sucursal),
         )
         Doctor.objects.bulk_create(
             [

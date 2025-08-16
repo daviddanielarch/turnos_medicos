@@ -1,97 +1,221 @@
-# Automatización para encontrar turnos médicos en el Sanatorio Allende
+# Turnos Médicos - Medical Appointment System
 
-Este repositorio contiene una automatización para tratar de encontrar un "mejor" turno para un médico en el Sanatorio Allende de Córdoba.
+The main driver behind this system is the fact that sometimes we need to wait for a couple of months in order to get an appointment with our favorite doctor. Since waiting sucks, and it is pretty common for people to cancel their appointments, this system was designed with the idea to be able to get appointments sooner by grabbing appointments cancelled by other patients.
 
-Es normal tener que esperar 1 mes o más para obtener turno con algún médico en particular. La idea principal de esta automatización se basa en que es bastante común que la gente cancele turnos por diversas razones. 
-Utilizando este programa, vamos a poder detectar esas cancelaciones y obtener turnos mucho más rápido.
+## 🏥 Project Overview
 
-El código hace uso de Selenium, por lo que es necesario contar con una instalación de Chrome/Chromium. Para facilitar el proceso, es posible utilizar el navegador en un contenedor Docker. Las definiciones se encuentran en docker-compose.
+This system helps patients find and manage medical appointments at Sanatorio Allende in Córdoba, Argentina. It includes:
 
-## Funcionamiento
+- **Automated Appointment Finder**: Uses Selenium for handling Allende's authentication
+- **Django Backend API**: RESTful API with Auth0 authentication
+- **React Native Mobile App**: Cross-platform mobile application for patients
+- **Push Notifications**: Mobile push notifications for appointment updates
 
-Inicialmente, se envia una notificación de Telegram con la fecha del primer turno disponible.
+## 🏗️ Architecture
 
-Luego, se realiza un chequeo cada 5 minutos y se busca un "mejor" turno para el doctor especificado. 
-
-Cuando el código encuentra un mejor turno, envía una notificación a través de Telegram. 
-También se envia una notificación cuando se pierde el "mejor" turno actual.
-
-Selenium se utiliza para hacer el login y para obtener los datos específicos del doctor para el cual queremos buscar turno. 
-
-El chequeo periódico por un mejor turno se realiza usando una llamada REST API a la API del Sanatorio Allende.
-
-## Requerimientos
-
-* Docker
-* Docker-compose
-* Cuenta de Telegram
-
-## Argumentos
-
-Los argumentos se pueden pasar al programa tanto a través de variables de entorno como de argumentos de línea de consola. 
-
-Los argumentos necesarios son:
-
-* **username**: Nombre de usuario que se utiliza en [https://miportal.sanatorioallende.com/](https://miportal.sanatorioallende.com/)
-* **password**: Contraseña que se utiliza en [https://miportal.sanatorioallende.com/](https://miportal.sanatorioallende.com/)
-* **hostname**: Nombre del host del servidor de Selenium
-* * `chrome-arm` si está usando una computadora arm y corre el script desde docker-compose (appointment-x86)
-* * `chrome-x86` si está usando una computadora x86 y corre el script desde docker-compose (appointment-arm)
-* * `localhost` si está corriendo el script desde su computadora
-* **port**: Puerto del servidor de Selenium
-* * 4444 por defecto, no es necesario cambiarlo.
-* **doctor_name**: Nombre completo del doctor para el cual se busca el turno, tal como aparece en [https://miportal.sanatorioallende.com/](https://miportal.sanatorioallende.com/) al tratar de sacar un turno
-* **telegram_token**: Token de Telegram
-* **telegram_chat_id**: ID del chat de Telegram
-* **place**: Sucursal del Sanatorio Allende ("CERRO" o "NUEVA CBA")
-
-## Cómo correrlo
-
-Correr el script vía docker-compose nos asegura que se levante Chrome en un contenedor Docker que vamos a necesitar para correr la automatización. 
-También es posible levantar el contenedor de Chrome por separado y correr el script de manera independiente.
-
-Para levantar Chrome en x86
 ```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Mobile App    │    │  Django Backend │    │  Automation     │
+│  (React Native) │◄──►│     (API)       │◄──►│   (Selenium)    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                     
+         │                       │                     
+         ▼                       ▼                     
+┌─────────────────┐    ┌─────────────────┐  
+│   Auth0 Auth    │    │  PostgreSQL DB  │  
+└─────────────────┘    └─────────────────┘  
+```
+
+## 🚀 Features
+
+### Core Functionality
+
+- **Automated Appointment Monitoring**: Continuously checks for better appointment slots
+- **Real-time Notifications**: Push notifications for appointment updates
+- **Multi-platform Support**: Web API and mobile app
+- **User Authentication**: Secure Auth0-based authentication
+- **Patient Management**: Multiple patient profiles per user
+
+### Mobile App Features
+
+- **Cross-platform**: iOS and Android support via React Native/Expo
+- **Real-time Updates**: Live appointment status updates
+- **Push Notifications**: Instant alerts for appointment changes
+
+### Backend Features
+
+- **RESTful API**: Comprehensive API for all operations
+- **Database Management**: PostgreSQL with Django ORM
+- **Authentication**: JWT-based Auth0 integration
+- **CORS Support**: Cross-origin resource sharing
+- **Admin Interface**: Django admin for data management
+
+## 📋 Prerequisites
+
+### System Requirements
+
+- **Python 3.8+**
+- **Node.js 18+**
+- **PostgreSQL 15+**
+- **Docker & Docker Compose**
+- **Chrome/Chromium** (for Selenium automation)
+
+### External Services
+
+- **Auth0 Account** (for authentication)
+- **Expo Account** (for mobile app deployment)
+
+## 🛠️ Installation
+
+### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd turnos_medicos
+```
+
+### 2. Backend Setup
+
+#### Install Python Dependencies
+
+```bash
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+#### Database Setup
+
+```bash
+# Start PostgreSQL with Docker
+docker-compose up -d postgres
+
+# Run migrations
+python manage.py migrate
+
+# Create superuser (optional)
+python manage.py createsuperuser
+```
+
+#### Environment Configuration
+
+Create a `.env` file in the root directory:
+
+```bash
+# Database
+PGDATABASE=liftoff
+PGUSER=unicodeveloper
+PGPASSWORD=your_password
+PGHOST=localhost
+PGPORT=5432
+
+# Auth0 Configuration
+AUTH0_DOMAIN=your-tenant.auth0.com
+AUTH0_CLIENT_ID=your-auth0-client-id
+AUTH0_AUDIENCE=https://your-api-identifier
+
+# CORS Configuration
+CORS_ALLOW_ALL_ORIGINS=True
+```
+
+### 3. Mobile App Setup
+
+#### Install Node.js Dependencies
+
+```bash
+cd mobile/allende
+npm install
+```
+
+#### Environment Configuration
+
+Create a `.env` file in `mobile/allende/`:
+
+```bash
+EXPO_PUBLIC_API_HOST=http://localhost:8000
+```
+
+### 4. Selenium Setup (for Automation)
+
+#### Using Docker (Recommended)
+
+```bash
+# For x86 systems
 make run-chrome-x86
-```
 
-Para levantar Chrome en arm
-```
+# For ARM systems (M1/M2 Macs)
 make run-chrome-arm
 ```
 
-### Alternativa 1 (usando argumentos de linea de comando)
-Este ejemplo asume que estamos usando una computadora arm, si no es el caso remplace `appointment-arm` por `appointment-x86`
+#### Manual Setup
 
-Ejemplo:
-```
-docker-compose run appointment-arm /app/find_appointment.py \
---hostname chrome-arm \ 
---port 4444 \
---username <username> \
---password <password> \
---doctor_name "Dr. Juan Perez" \
---telegram_token <token> \
---telegram_id <chat_id> \
---place "CERRO"
-```
+Install Chrome/Chromium and ChromeDriver on your system.
 
-### Alternativa 2 (usando un env file)
-Primero creamos un env file con las variables de entorno necesarias (lo llamaremos .env porque es el nombre que docker-compose espera por defecto)
-```
-USERNAME=''
-PASSWORD=''
-TELEGRAM_TOKEN=''
-DOCTOR_NAME=''
-PLACE='CERRO'
-TELEGRAM_ID=123123123
-HOSTNAME='chrome-arm'
-PORT=4444
+## 🚀 Running the Application
+
+### Backend Development Server
+
+```bash
+# Start the Django development server
+python manage.py runserver
+
+# The API will be available at http://localhost:8000
 ```
 
-Luego, ya podemos correr la automatización( nuevamente remplace `appointment-arm` por `appointment-x86` si no está usando una computadora arm)
+### Mobile App Development
 
-````
-docker-compose run appointment-arm
-````
+```bash
+# Start Expo development server
+cd mobile/allende
+make expo-start
 
+# Or directly with npm
+npm start
+```
+
+## 🧪 Testing
+
+### Backend Tests
+
+```bash
+# Run all tests
+make test
+```
+
+### Code Quality
+
+```bash
+# Format code
+make format
+
+# Run pre-commit hooks
+make precommit-run
+
+# Setup pre-commit (first time)
+make precommit-setup
+```
+
+## 🐳 Docker
+
+### Development
+
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+```
+
+## 📈 Monitoring & Logging
+
+- **Sentry Integration**: Error tracking and monitoring
+- **Logging**: Comprehensive logging throughout the application
+
+## 🚀 Deployments
+
+- **Automated deployments** Deployments are performed automatically on merge to main.
+- **Simple Infrastructure** Code runs on Railway

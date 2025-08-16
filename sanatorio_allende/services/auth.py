@@ -11,13 +11,13 @@ class AllendeAuthService:
     def __init__(self, user: PacienteAllende):
         self.user = user
 
-    def login(self):
+    def login(self) -> str:
         allende = Allende(
             self.user.token,
             SeleniumSettings(
                 hostname=settings.SELENIUM_HOSTNAME,
-                port=settings.SELENIUM_PORT,
-                implicit_wait=settings.SELENIUM_IMPLICIT_WAIT,
+                port=int(settings.SELENIUM_PORT),
+                implicit_wait=int(settings.SELENIUM_IMPLICIT_WAIT),
             ),
         )
 
@@ -49,4 +49,4 @@ class AllendeAuthService:
 
         self.user.save()
 
-        return self.user.token
+        return self.user.token or ""

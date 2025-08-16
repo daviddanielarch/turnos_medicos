@@ -1,10 +1,15 @@
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from typing import Optional
 
 from django.contrib.auth.models import User
 
-from sanatorio_allende.models import FindAppointment, PacienteAllende
+from sanatorio_allende.models import (
+    BestAppointmentFound,
+    FindAppointment,
+    PacienteAllende,
+)
 from sanatorio_allende.repositories.best_appointment_repository import (
     BestAppointmentRepository,
 )
@@ -96,8 +101,11 @@ class AppointmentHandler:
                 )
 
             # For new appointments, check if within desired timeframe
-            if not AppointmentProcessor.is_within_desired_timeframe(
-                new_appointment_datetime, appointment_to_find.desired_timeframe
+            if (
+                appointment_to_find.desired_timeframe is not None
+                and not AppointmentProcessor.is_within_desired_timeframe(
+                    new_appointment_datetime, appointment_to_find.desired_timeframe
+                )
             ):
                 return AppointmentProcessingResult(
                     action=AppointmentActionType.SKIPPED,
@@ -116,7 +124,8 @@ class AppointmentHandler:
             especialidad_name=appointment_to_find.doctor.especialidad.name,
             tipo_de_turno_name=appointment_to_find.tipo_de_turno.name,
             patient_dni=patient.docid,
-            desired_timeframe=appointment_to_find.desired_timeframe,
+            desired_timeframe=appointment_to_find.desired_timeframe
+            or FindAppointment.DEFAULT_DESIRED_TIMEFRAME,
             duracion_individual=new_appointment_data.get("duracion_individual"),
             id_plantilla_turno=new_appointment_data.get("id_plantilla_turno"),
             id_item_plantilla=new_appointment_data.get("id_item_plantilla"),
@@ -144,7 +153,8 @@ class AppointmentHandler:
         """Handle the specific action from comparison result"""
 
         if comparison_result.action == AppointmentAction.CREATE_NEW:
-            # Create new best appointment
+            assert isinstance(comparison_result.new_datetime, datetime)
+
             BestAppointmentRepository.create_best_appointment(
                 appointment,
                 patient,
@@ -160,12 +170,14 @@ class AppointmentHandler:
             )
 
         elif comparison_result.action == AppointmentAction.UPDATE_EXISTING:
-            # Update existing best appointment
+            assert isinstance(comparison_result.new_datetime, datetime)
             best_appointment_so_far = (
                 BestAppointmentRepository.get_current_best_appointment(
                     appointment, patient
                 )
             )
+            assert isinstance(best_appointment_so_far, BestAppointmentFound)
+
             BestAppointmentRepository.update_best_appointment(
                 best_appointment_so_far,
                 comparison_result.new_datetime,
@@ -180,12 +192,12 @@ class AppointmentHandler:
             )
 
         elif comparison_result.action == AppointmentAction.REMOVE_EXISTING:
-            # Remove existing appointment
             best_appointment_so_far = (
                 BestAppointmentRepository.get_current_best_appointment(
                     appointment, patient
                 )
             )
+            assert isinstance(best_appointment_so_far, BestAppointmentFound)
             BestAppointmentRepository.delete_previous_appointments(
                 best_appointment_so_far
             )

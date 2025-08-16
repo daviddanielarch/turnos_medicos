@@ -1,4 +1,5 @@
-from typing import Optional
+from datetime import datetime
+from typing import List, Optional, Tuple
 
 from django.utils import timezone
 
@@ -38,7 +39,7 @@ class BestAppointmentRepository:
     @classmethod
     def get_all_appointments(
         cls, appointment_wanted: FindAppointment, patient: PacienteAllende
-    ) -> list[BestAppointmentFound]:
+    ) -> List[BestAppointmentFound]:
         """
         Get all appointments for a specific appointment wanted and patient
 
@@ -58,7 +59,7 @@ class BestAppointmentRepository:
     @classmethod
     def get_not_interested_appointments(
         cls, appointment_wanted: FindAppointment, patient: PacienteAllende
-    ) -> list[BestAppointmentFound]:
+    ) -> List[BestAppointmentFound]:
         """
         Get all not_interested appointments for a specific appointment wanted and patient
 
@@ -82,11 +83,11 @@ class BestAppointmentRepository:
         cls,
         appointment_wanted: FindAppointment,
         patient: PacienteAllende,
-        appointment_datetime: timezone.datetime,
+        appointment_datetime: datetime,
         not_interested: bool = False,
-        duracion_individual: int = None,
-        id_plantilla_turno: int = None,
-        id_item_plantilla: int = None,
+        duracion_individual: Optional[int] = None,
+        id_plantilla_turno: Optional[int] = None,
+        id_item_plantilla: Optional[int] = None,
     ) -> BestAppointmentFound:
         """
         Create a new BestAppointmentFound record
@@ -117,10 +118,10 @@ class BestAppointmentRepository:
     def update_best_appointment(
         cls,
         best_appointment: BestAppointmentFound,
-        new_datetime: timezone.datetime,
-        duracion_individual: int = None,
-        id_plantilla_turno: int = None,
-        id_item_plantilla: int = None,
+        new_datetime: datetime,
+        duracion_individual: Optional[int] = None,
+        id_plantilla_turno: Optional[int] = None,
+        id_item_plantilla: Optional[int] = None,
     ) -> BestAppointmentFound:
         """
         Update an existing BestAppointmentFound record with new datetime and additional data
@@ -166,8 +167,8 @@ class BestAppointmentRepository:
         cls,
         appointment_wanted: FindAppointment,
         patient: PacienteAllende,
-        appointment_datetime: timezone.datetime,
-    ) -> tuple[BestAppointmentFound, bool]:
+        appointment_datetime: datetime,
+    ) -> Tuple[BestAppointmentFound, bool]:
         """
         Get existing BestAppointmentFound or create new one
 

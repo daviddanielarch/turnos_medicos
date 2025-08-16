@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin, messages
-from django.db.models import Q
-from django.http import JsonResponse
+from django.db.models import Q, QuerySet
+from django.http import HttpRequest, JsonResponse
 from django.urls import path
 
 from sanatorio_allende.services.data_loader import DataLoader
@@ -34,7 +34,7 @@ class FindAppointmentAdmin(admin.ModelAdmin):
     search_fields = ["doctor"]
     list_editable = ["active"]
 
-    def get_urls(self):
+    def get_urls(self) -> list:
         urls = super().get_urls()
         custom_urls = [
             path(
@@ -45,7 +45,7 @@ class FindAppointmentAdmin(admin.ModelAdmin):
         ]
         return custom_urls + urls
 
-    def get_tipos_turno(self, request, doctor_id):
+    def get_tipos_turno(self, request: HttpRequest, doctor_id: int) -> JsonResponse:
         try:
             doctor = Doctor.objects.get(id=doctor_id)
             tipos_turno = AppointmentType.objects.filter(
@@ -95,10 +95,9 @@ class EspecialidadAdmin(admin.ModelAdmin):
     search_fields = ["name"]
     actions = ["load_data_for_especialidad"]
 
-    def load_data_for_especialidad(self, request, queryset):
-        """
-        Admin action to load appointment types and doctors data for selected especialidades
-        """
+    def load_data_for_especialidad(
+        self, request: HttpRequest, queryset: QuerySet
+    ) -> None:
         data_loader = DataLoader()
         success_count = 0
         error_count = 0
@@ -134,7 +133,7 @@ class EspecialidadAdmin(admin.ModelAdmin):
                 messages.WARNING,
             )
 
-    load_data_for_especialidad.short_description = (
+    load_data_for_especialidad.short_description = (  # type: ignore
         "Load appointment types and doctors data"
     )
 
@@ -147,9 +146,9 @@ class DeviceRegistrationAdmin(admin.ModelAdmin):
     readonly_fields = ["created_at", "updated_at"]
     list_editable = ["is_active"]
 
-    def push_token_short(self, obj):
+    def push_token_short(self, obj: DeviceRegistration) -> str:
         return (
             obj.push_token[:30] + "..." if len(obj.push_token) > 30 else obj.push_token
         )
 
-    push_token_short.short_description = "Push Token"
+    push_token_short.short_description = "Push Token"  # type: ignore

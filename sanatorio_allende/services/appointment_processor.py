@@ -1,7 +1,7 @@
 import datetime
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from django.utils import timezone
 
@@ -35,7 +35,6 @@ class AppointmentData:
     duracion_individual: Optional[int] = None
     id_plantilla_turno: Optional[int] = None
     id_item_plantilla: Optional[int] = None
-    hora: Optional[str] = None
 
 
 @dataclass
@@ -43,7 +42,7 @@ class AppointmentComparisonResult:
     """Result of comparing current and new appointment datetimes"""
 
     action: AppointmentAction
-    new_datetime: datetime.datetime
+    new_datetime: Optional[datetime.datetime]
     previous_datetime: Optional[datetime.datetime]
     should_notify: bool
     notification_type: NotificationType
@@ -91,7 +90,7 @@ class AppointmentProcessor:
         cls,
         new_appointment_datetime: Optional[datetime.datetime],
         current_best_datetime: Optional[datetime.datetime],
-        not_interested_datetimes: list[datetime.datetime] = None,
+        not_interested_datetimes: Optional[List[datetime.datetime]] = None,
     ) -> AppointmentComparisonResult:
         """
         Compare new appointment datetime with current best appointment and not_interested appointments
@@ -148,7 +147,11 @@ class AppointmentProcessor:
             )
 
         # New appointment is later than current (worse appointment)
-        if new_appointment_datetime > current_best_datetime:
+        if (
+            new_appointment_datetime is not None
+            and current_best_datetime is not None
+            and new_appointment_datetime > current_best_datetime
+        ):
             return AppointmentComparisonResult(
                 action=AppointmentAction.REMOVE_EXISTING,
                 new_datetime=new_appointment_datetime,
@@ -177,7 +180,6 @@ class AppointmentProcessor:
         duracion_individual: Optional[int] = None,
         id_plantilla_turno: Optional[int] = None,
         id_item_plantilla: Optional[int] = None,
-        hora: Optional[str] = None,
     ) -> AppointmentData:
         """
         Create AppointmentData object with all appointment information
@@ -191,7 +193,6 @@ class AppointmentProcessor:
             duracion_individual: Duration of the individual appointment
             id_plantilla_turno: ID of the appointment template
             id_item_plantilla: ID of the template item
-            hora: Time of the appointment as "HH:MM"
 
         Returns:
             AppointmentData object with all appointment information

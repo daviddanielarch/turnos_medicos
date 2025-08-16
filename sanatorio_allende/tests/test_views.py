@@ -1,4 +1,6 @@
 import json
+from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -34,7 +36,7 @@ class TestDoctorListView:
     """Test cases for DoctorListView"""
 
     @pytest.mark.django_db
-    def test_get_doctors_success(self, client, doctor):
+    def test_get_doctors_success(self, client: Any, doctor: Any) -> None:
         """Test successful GET request to list doctors"""
         url = reverse("sanatorio_allende:api_doctors")
         response = client.get(url)
@@ -48,7 +50,7 @@ class TestDoctorListView:
         assert data["doctors"][0]["location"] == doctor.especialidad.sucursal
 
     @pytest.mark.django_db
-    def test_get_doctors_empty(self, client):
+    def test_get_doctors_empty(self, client: Any) -> None:
         """Test GET request when no doctors exist"""
         url = reverse("sanatorio_allende:api_doctors")
         response = client.get(url)
@@ -63,7 +65,9 @@ class TestAppointmentTypeListView:
     """Test cases for AppointmentTypeListView"""
 
     @pytest.mark.django_db
-    def test_get_appointment_types_success(self, client, doctor, appointment_type):
+    def test_get_appointment_types_success(
+        self, client: Any, doctor: Any, appointment_type: Any
+    ) -> None:
         """Test successful GET request to list appointment types"""
         url = reverse("sanatorio_allende:api_appointment_types")
         response = client.get(url, {"doctor_id": doctor.id})
@@ -83,7 +87,7 @@ class TestAppointmentTypeListView:
         )
 
     @pytest.mark.django_db
-    def test_get_appointment_types_missing_doctor_id(self, client):
+    def test_get_appointment_types_missing_doctor_id(self, client: Any) -> None:
         """Test GET request without doctor_id parameter"""
         url = reverse("sanatorio_allende:api_appointment_types")
         response = client.get(url)
@@ -94,7 +98,7 @@ class TestAppointmentTypeListView:
         assert "doctor_id parameter is required" in data["error"]
 
     @pytest.mark.django_db
-    def test_get_appointment_types_doctor_not_found(self, client):
+    def test_get_appointment_types_doctor_not_found(self, client: Any) -> None:
         """Test GET request with non-existent doctor_id"""
         url = reverse("sanatorio_allende:api_appointment_types")
         response = client.get(url, {"doctor_id": 999})
@@ -102,7 +106,7 @@ class TestAppointmentTypeListView:
         assert response.status_code == 404
 
     @pytest.mark.django_db
-    def test_get_appointment_types_empty(self, client, doctor):
+    def test_get_appointment_types_empty(self, client: Any, doctor: Any) -> None:
         """Test GET request when no appointment types exist for doctor"""
         url = reverse("sanatorio_allende:api_appointment_types")
         response = client.get(url, {"doctor_id": doctor.id})
@@ -117,7 +121,9 @@ class TestFindAppointmentView:
     """Test cases for FindAppointmentView"""
 
     @pytest.mark.django_db
-    def test_get_find_appointments_for_other_user(self, evil_client, find_appointment):
+    def test_get_find_appointments_for_other_user(
+        self, evil_client: Any, find_appointment: Any
+    ) -> None:
         """Test successful GET request to list find appointments"""
         url = reverse("sanatorio_allende:api_find_appointments")
         response = evil_client.get(url, {"patient_id": find_appointment.patient.id})
@@ -125,7 +131,9 @@ class TestFindAppointmentView:
         assert response.status_code == 401
 
     @pytest.mark.django_db
-    def test_get_find_appointments_success(self, client, find_appointment):
+    def test_get_find_appointments_success(
+        self, client: Any, find_appointment: Any
+    ) -> None:
         """Test successful GET request to list find appointments"""
         url = reverse("sanatorio_allende:api_find_appointments")
         response = client.get(url, {"patient_id": find_appointment.patient.id})
@@ -160,8 +168,8 @@ class TestFindAppointmentView:
 
     @pytest.mark.django_db
     def test_post_create_appointment_for_other_user(
-        self, evil_client, doctor, appointment_type, patient
-    ):
+        self, evil_client: Any, doctor: Any, appointment_type: Any, patient: Any
+    ) -> None:
         """Test POST request for other user"""
         url = reverse("sanatorio_allende:api_find_appointments")
         data = {
@@ -177,8 +185,8 @@ class TestFindAppointmentView:
 
     @pytest.mark.django_db
     def test_post_create_appointment_success(
-        self, client, doctor, appointment_type, patient
-    ):
+        self, client: Any, doctor: Any, appointment_type: Any, patient: Any
+    ) -> None:
         """Test successful POST request to create appointment"""
         url = reverse("sanatorio_allende:api_find_appointments")
         data = {
@@ -202,24 +210,24 @@ class TestFindAppointmentView:
         assert created_appointment.desired_timeframe == "anytime"
 
     @pytest.mark.django_db
-    def test_post_create_appointment_missing_parameters(self, client):
+    def test_post_create_appointment_missing_parameters(self, client: Any) -> None:
         """Test POST request with missing parameters"""
         url = reverse("sanatorio_allende:api_find_appointments")
         data = {"doctor_id": 1, "appointment_type_id": 1}  # Missing patient_id
         response = client.post(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 400
-        data = json.loads(response.content)
-        assert data["success"] is False
+        response_data = json.loads(response.content)
+        assert response_data["success"] is False
         assert (
             "doctor_id, appointment_type_id, and patient_id are required"
-            in data["error"]
+            in response_data["error"]
         )
 
     @pytest.mark.django_db
     def test_post_create_appointment_doctor_not_found(
-        self, client, appointment_type, patient
-    ):
+        self, client: Any, appointment_type: Any, patient: Any
+    ) -> None:
         """Test POST request with non-existent doctor"""
         url = reverse("sanatorio_allende:api_find_appointments")
         data = {
@@ -232,7 +240,9 @@ class TestFindAppointmentView:
         assert response.status_code == 404
 
     @pytest.mark.django_db
-    def test_post_create_appointment_type_not_found(self, client, doctor, patient):
+    def test_post_create_appointment_type_not_found(
+        self, client: Any, doctor: Any, patient: Any
+    ) -> None:
         """Test POST request with non-existent appointment type"""
         url = reverse("sanatorio_allende:api_find_appointments")
         data = {
@@ -246,8 +256,8 @@ class TestFindAppointmentView:
 
     @pytest.mark.django_db
     def test_post_create_appointment_patient_not_found(
-        self, client, doctor, appointment_type
-    ):
+        self, client: Any, doctor: Any, appointment_type: Any
+    ) -> None:
         """Test POST request with non-existent patient"""
         url = reverse("sanatorio_allende:api_find_appointments")
         data = {
@@ -261,8 +271,8 @@ class TestFindAppointmentView:
 
     @pytest.mark.django_db
     def test_patch_update_appointment_for_other_user(
-        self, evil_client, find_appointment
-    ):
+        self, evil_client: Any, find_appointment: Any
+    ) -> None:
         """Test PATCH request for other user"""
         url = reverse("sanatorio_allende:api_find_appointments")
         data = {
@@ -277,7 +287,9 @@ class TestFindAppointmentView:
         assert response.status_code == 401
 
     @pytest.mark.django_db
-    def test_patch_update_appointment_status_success(self, client, find_appointment):
+    def test_patch_update_appointment_status_success(
+        self, client: Any, find_appointment: Any
+    ) -> None:
         """Test successful PATCH request to update appointment status"""
         url = reverse("sanatorio_allende:api_find_appointments")
         data = {
@@ -297,19 +309,24 @@ class TestFindAppointmentView:
         assert find_appointment.active is False
 
     @pytest.mark.django_db
-    def test_patch_update_appointment_missing_parameters(self, client):
+    def test_patch_update_appointment_missing_parameters(self, client: Any) -> None:
         """Test PATCH request with missing parameters"""
         url = reverse("sanatorio_allende:api_find_appointments")
         data = {"appointment_id": 1}  # Missing active
         response = client.patch(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 400
-        data = json.loads(response.content)
-        assert data["success"] is False
-        assert "appointment_id and active parameters are required" in data["error"]
+        response_data = json.loads(response.content)
+        assert response_data["success"] is False
+        assert (
+            "appointment_id and active parameters are required"
+            in response_data["error"]
+        )
 
     @pytest.mark.django_db
-    def test_patch_update_appointment_not_found(self, client, patient):
+    def test_patch_update_appointment_not_found(
+        self, client: Any, patient: Any
+    ) -> None:
         """Test PATCH request with non-existent appointment"""
         url = reverse("sanatorio_allende:api_find_appointments")
         data = {
@@ -323,8 +340,8 @@ class TestFindAppointmentView:
 
     @pytest.mark.django_db
     def test_post_create_appointment_with_desired_timeframe(
-        self, client, doctor, appointment_type, patient
-    ):
+        self, client: Any, doctor: Any, appointment_type: Any, patient: Any
+    ) -> None:
         """Test successful POST request to create appointment with desired_timeframe"""
         url = reverse("sanatorio_allende:api_find_appointments")
         data = {
@@ -350,8 +367,8 @@ class TestFindAppointmentView:
 
     @pytest.mark.django_db
     def test_post_update_existing_appointment_change_timeframe(
-        self, client, find_appointment
-    ):
+        self, client: Any, find_appointment: Any
+    ) -> None:
         """Test POST request changes existing appointment's desired_timeframe"""
         # Set initial desired_timeframe
         find_appointment.desired_timeframe = "3 weeks"
@@ -377,8 +394,8 @@ class TestFindAppointmentView:
 
     @pytest.mark.django_db
     def test_post_create_appointment_invalid_timeframe(
-        self, client, doctor, appointment_type, patient
-    ):
+        self, client: Any, doctor: Any, appointment_type: Any, patient: Any
+    ) -> None:
         """Test POST request with invalid desired_timeframe value"""
         url = reverse("sanatorio_allende:api_find_appointments")
         data = {
@@ -402,7 +419,9 @@ class TestBestAppointmentListView:
     """Test cases for BestAppointmentListView"""
 
     @pytest.mark.django_db
-    def test_get_best_appointments_success(self, client, best_appointment_found):
+    def test_get_best_appointments_success(
+        self, client: Any, best_appointment_found: Any
+    ) -> None:
         """Test successful GET request to list best appointments"""
         url = reverse("sanatorio_allende:api_best_appointments")
         response = client.get(url, {"patient_id": best_appointment_found.patient.id})
@@ -429,8 +448,8 @@ class TestBestAppointmentListView:
 
     @pytest.mark.django_db
     def test_get_best_appointments_appointment_for_other_user(
-        self, evil_client, best_appointment_found
-    ):
+        self, evil_client: Any, best_appointment_found: Any
+    ) -> None:
         """Test successful GET request to list best appointments"""
         url = reverse("sanatorio_allende:api_best_appointments")
         response = evil_client.get(
@@ -440,7 +459,7 @@ class TestBestAppointmentListView:
         assert response.status_code == 401
 
     @pytest.mark.django_db
-    def test_get_best_appointments_empty(self, client, patient):
+    def test_get_best_appointments_empty(self, client: Any, patient: Any) -> None:
         """Test GET request when no best appointments exist"""
         url = reverse("sanatorio_allende:api_best_appointments")
         response = client.get(url, {"patient_id": patient.id})
@@ -452,8 +471,8 @@ class TestBestAppointmentListView:
 
     @pytest.mark.django_db
     def test_get_best_appointments_excludes_not_interested(
-        self, client, best_appointment_found
-    ):
+        self, client: Any, best_appointment_found: Any
+    ) -> None:
         """Test GET request excludes appointments marked as not interested"""
         # Mark the appointment as not interested
         best_appointment_found.not_interested = True
@@ -469,21 +488,21 @@ class TestBestAppointmentListView:
 
     @pytest.mark.django_db
     def test_get_best_appointments_includes_interested_and_excludes_not_interested(
-        self, client, find_appointment, patient
-    ):
+        self, client: Any, find_appointment: Any, patient: Any
+    ) -> None:
         """Test GET request includes interested appointments and excludes not interested ones"""
         # Create two appointments - one interested, one not interested
         interested_appointment = BestAppointmentFound.objects.create(
             appointment_wanted=find_appointment,
             patient=patient,
-            datetime=timezone.now() + timezone.timedelta(days=1),
+            datetime=timezone.now() + timedelta(days=1),
             not_interested=False,
         )
 
         not_interested_appointment = BestAppointmentFound.objects.create(
             appointment_wanted=find_appointment,
             patient=patient,
-            datetime=timezone.now() + timezone.timedelta(days=2),
+            datetime=timezone.now() + timedelta(days=2),
             not_interested=True,
         )
 
@@ -491,33 +510,35 @@ class TestBestAppointmentListView:
         response = client.get(url, {"patient_id": patient.id})
 
         assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["success"] is True
-        assert len(data["best_appointments"]) == 1  # Only the interested one
+        response_data = json.loads(response.content)
+        assert response_data["success"] is True
+        assert len(response_data["best_appointments"]) == 1  # Only the interested one
 
         # Verify it's the interested appointment
-        returned_appointment = data["best_appointments"][0]
+        returned_appointment = response_data["best_appointments"][0]
         assert returned_appointment["id"] == interested_appointment.id
 
     @pytest.mark.django_db
-    def test_get_filters_appointments_in_the_past(self, client, best_appointment_found):
+    def test_get_filters_appointments_in_the_past(
+        self, client: Any, best_appointment_found: Any
+    ) -> None:
         """Test GET request filters appointments in the past"""
         # Set the datetime to the past
-        best_appointment_found.datetime = timezone.now() - timezone.timedelta(days=1)
+        best_appointment_found.datetime = timezone.now() - timedelta(days=1)
         best_appointment_found.save()
 
         url = reverse("sanatorio_allende:api_best_appointments")
         response = client.get(url, {"patient_id": best_appointment_found.patient.id})
 
         assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["success"] is True
-        assert len(data["best_appointments"]) == 0
+        response_data = json.loads(response.content)
+        assert response_data["success"] is True
+        assert len(response_data["best_appointments"]) == 0
 
     @pytest.mark.django_db
     def test_patch_mark_appointment_not_interested_success(
-        self, client, best_appointment_found
-    ):
+        self, client: Any, best_appointment_found: Any
+    ) -> None:
         """Test successful PATCH request to mark appointment as not interested"""
         url = reverse("sanatorio_allende:api_best_appointments")
         data = {
@@ -527,9 +548,9 @@ class TestBestAppointmentListView:
         response = client.patch(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["success"] is True
-        assert "Appointment marked as not interested" in data["message"]
+        response_data = json.loads(response.content)
+        assert response_data["success"] is True
+        assert "Appointment marked as not interested" in response_data["message"]
 
         # Verify the appointment was actually updated
         best_appointment_found.refresh_from_db()
@@ -537,8 +558,8 @@ class TestBestAppointmentListView:
 
     @pytest.mark.django_db
     def test_patch_mark_appointment_interested_success(
-        self, client, best_appointment_found
-    ):
+        self, client: Any, best_appointment_found: Any
+    ) -> None:
         """Test successful PATCH request to mark appointment as interested"""
         # First mark as not interested
         best_appointment_found.not_interested = True
@@ -552,9 +573,9 @@ class TestBestAppointmentListView:
         response = client.patch(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["success"] is True
-        assert "Appointment marked as interested" in data["message"]
+        response_data = json.loads(response.content)
+        assert response_data["success"] is True
+        assert "Appointment marked as interested" in response_data["message"]
 
         # Verify the appointment was actually updated
         best_appointment_found.refresh_from_db()
@@ -562,8 +583,8 @@ class TestBestAppointmentListView:
 
     @pytest.mark.django_db
     def test_patch_mark_appointment_not_interested_default_value(
-        self, client, best_appointment_found
-    ):
+        self, client: Any, best_appointment_found: Any
+    ) -> None:
         """Test PATCH request with default not_interested value (True)"""
         url = reverse("sanatorio_allende:api_best_appointments")
         data = {
@@ -573,16 +594,16 @@ class TestBestAppointmentListView:
         response = client.patch(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["success"] is True
-        assert "Appointment marked as not interested" in data["message"]
+        response_data = json.loads(response.content)
+        assert response_data["success"] is True
+        assert "Appointment marked as not interested" in response_data["message"]
 
         # Verify the appointment was actually updated
         best_appointment_found.refresh_from_db()
         assert best_appointment_found.not_interested is True
 
     @pytest.mark.django_db
-    def test_patch_mark_appointment_missing_appointment_id(self, client):
+    def test_patch_mark_appointment_missing_appointment_id(self, client: Any) -> None:
         """Test PATCH request without appointment_id parameter"""
         url = reverse("sanatorio_allende:api_best_appointments")
         data = {
@@ -594,10 +615,10 @@ class TestBestAppointmentListView:
         assert response.status_code == 400
         data = json.loads(response.content)
         assert data["success"] is False
-        assert "appointment_id is required" in data["error"]
+        assert "appointment_id is required" in str(data["error"])
 
     @pytest.mark.django_db
-    def test_patch_mark_appointment_not_found(self, client):
+    def test_patch_mark_appointment_not_found(self, client: Any) -> None:
         """Test PATCH request with non-existent appointment_id"""
         url = reverse("sanatorio_allende:api_best_appointments")
         data = {
@@ -609,12 +630,12 @@ class TestBestAppointmentListView:
         assert response.status_code == 404
         data = json.loads(response.content)
         assert data["success"] is False
-        assert "Appointment not found" in data["error"]
+        assert "Appointment not found" in str(data["error"])
 
     @pytest.mark.django_db
     def test_patch_mark_appointment_for_other_user(
-        self, evil_client, best_appointment_found
-    ):
+        self, evil_client: Any, best_appointment_found: Any
+    ) -> None:
         """Test PATCH request for appointment belonging to another user"""
         url = reverse("sanatorio_allende:api_best_appointments")
         data = {
@@ -636,8 +657,8 @@ class TestBestAppointmentListView:
 
     @pytest.mark.django_db
     def test_patch_mark_appointment_with_patient_no_user(
-        self, client, find_appointment, patient
-    ):
+        self, client: Any, find_appointment: Any, patient: Any
+    ) -> None:
         """Test PATCH request for appointment with patient that has no user"""
         # Create a patient without a user
         patient.user = None
@@ -658,43 +679,45 @@ class TestBestAppointmentListView:
 
         # Should return 401 since patient has no user
         assert response.status_code == 401
-        data = json.loads(response.content)
-        assert data["success"] is False
-        assert "Appointment does not belong to the current user" in data["error"]
+        response_data = json.loads(response.content)
+        assert response_data["success"] is False
+        assert (
+            "Appointment does not belong to the current user" in response_data["error"]
+        )
 
 
 class TestPatientListView:
     """Test cases for PatientListView"""
 
     @pytest.mark.django_db
-    def test_get_patients_success(self, client, patient):
+    def test_get_patients_success(self, client: Any, patient: Any) -> None:
         """Test successful GET request to list patients"""
         url = reverse("sanatorio_allende:api_patients")
         response = client.get(url)
 
         assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["success"] is True
-        assert len(data["patients"]) == 1
-        assert data["patients"][0]["name"] == patient.name
-        assert data["patients"][0]["id_paciente"] == patient.id_paciente
-        assert data["patients"][0]["docid"] == patient.docid
-        assert "updated_at" in data["patients"][0]
+        response_data = json.loads(response.content)
+        assert response_data["success"] is True
+        assert len(response_data["patients"]) == 1
+        assert response_data["patients"][0]["name"] == patient.name
+        assert response_data["patients"][0]["id_paciente"] == patient.id_paciente
+        assert response_data["patients"][0]["docid"] == patient.docid
+        assert "updated_at" in response_data["patients"][0]
 
     @pytest.mark.django_db
-    def test_get_patients_empty(self, client):
+    def test_get_patients_empty(self, client: Any) -> None:
         """Test GET request when no patients exist"""
         url = reverse("sanatorio_allende:api_patients")
         response = client.get(url)
 
         assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["success"] is True
-        assert len(data["patients"]) == 0
+        response_data = json.loads(response.content)
+        assert response_data["success"] is True
+        assert len(response_data["patients"]) == 0
 
     @pytest.mark.django_db
     @patch("sanatorio_allende.appointments.requests.post")
-    def test_post_create_patient_success(self, mock_post, client):
+    def test_post_create_patient_success(self, mock_post: Any, client: Any) -> None:
         """Test successful POST request to create patient"""
         # Mock the requests.post call in Allende.validate_credentials
         mock_response = type("MockResponse", (), {"status_code": 200})()
@@ -710,12 +733,12 @@ class TestPatientListView:
         response = client.post(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["success"] is True
-        assert "Patient created successfully" in data["message"]
-        assert "patient_id" in data
+        response_data = json.loads(response.content)
+        assert response_data["success"] is True
+        assert "Patient created successfully" in response_data["message"]
+        assert "patient_id" in response_data
 
-        created_patient = PacienteAllende.objects.get(id=data["patient_id"])
+        created_patient = PacienteAllende.objects.get(id=response_data["patient_id"])
         assert created_patient.name == "María García"
         assert created_patient.id_paciente is None
         assert created_patient.docid == "87654321"
@@ -734,7 +757,9 @@ class TestPatientListView:
 
     @pytest.mark.django_db
     @patch("sanatorio_allende.appointments.requests.post")
-    def test_post_create_patient_invalid_credentials(self, mock_post, client):
+    def test_post_create_patient_invalid_credentials(
+        self, mock_post: Any, client: Any
+    ) -> None:
         """Test successful POST request to create patient"""
         # Mock the requests.post call in Allende.validate_credentials
         mock_response = type("MockResponse", (), {"status_code": 400})()
@@ -752,20 +777,22 @@ class TestPatientListView:
         assert response.status_code == 400
 
     @pytest.mark.django_db
-    def test_post_create_patient_missing_parameters(self, client):
+    def test_post_create_patient_missing_parameters(self, client: Any) -> None:
         """Test POST request with missing parameters"""
         url = reverse("sanatorio_allende:api_patients")
         data = {"name": "Test Patient"}  # Missing docid and password
         response = client.post(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 400
-        data = json.loads(response.content)
-        assert data["success"] is False
-        assert "name, docid, and password are required" in data["error"]
+        response_data = json.loads(response.content)
+        assert response_data["success"] is False
+        assert "name, docid, and password are required" in response_data["error"]
 
     @pytest.mark.django_db
     @patch("sanatorio_allende.appointments.requests.post")
-    def test_post_create_patient_already_exists(self, mock_post, client, patient):
+    def test_post_create_patient_already_exists(
+        self, mock_post: Any, client: Any, patient: Any
+    ) -> None:
         """Test POST request when patient with same docid already exists"""
         mock_response = type("MockResponse", (), {"status_code": 200})()
         mock_post.return_value = mock_response
@@ -780,52 +807,54 @@ class TestPatientListView:
         response = client.post(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 400
-        data = json.loads(response.content)
-        assert data["success"] is False
-        assert "Patient already exists with this document ID" in data["error"]
+        response_data = json.loads(response.content)
+        assert response_data["success"] is False
+        assert "Patient already exists with this document ID" in response_data["error"]
 
     @pytest.mark.django_db
-    def test_delete_patient_success(self, client, patient):
+    def test_delete_patient_success(self, client: Any, patient: Any) -> None:
         """Test successful DELETE request to delete patient"""
         url = reverse("sanatorio_allende:api_patients")
         data = {"patient_id": patient.id}
         response = client.delete(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["success"] is True
-        assert "Patient deleted successfully" in data["message"]
+        response_data = json.loads(response.content)
+        assert response_data["success"] is True
+        assert "Patient deleted successfully" in response_data["message"]
 
         # Verify the patient was actually deleted
         with pytest.raises(PacienteAllende.DoesNotExist):
             PacienteAllende.objects.get(id=patient.id)
 
     @pytest.mark.django_db
-    def test_delete_patient_missing_patient_id(self, client):
+    def test_delete_patient_missing_patient_id(self, client: Any) -> None:
         """Test DELETE request without patient_id parameter"""
         url = reverse("sanatorio_allende:api_patients")
-        data = {}  # Missing patient_id
+        data: dict = {}  # Missing patient_id
         response = client.delete(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 400
-        data = json.loads(response.content)
-        assert data["success"] is False
-        assert "patient_id is required" in data["error"]
+        response_data = json.loads(response.content)
+        assert response_data["success"] is False
+        assert "patient_id is required" in response_data["error"]
 
     @pytest.mark.django_db
-    def test_delete_patient_not_found(self, client):
+    def test_delete_patient_not_found(self, client: Any) -> None:
         """Test DELETE request with non-existent patient_id"""
         url = reverse("sanatorio_allende:api_patients")
         data = {"patient_id": 999}
         response = client.delete(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 404
-        data = json.loads(response.content)
-        assert data["success"] is False
-        assert "Patient not found" in data["error"]
+        response_data = json.loads(response.content)
+        assert response_data["success"] is False
+        assert "Patient not found" in response_data["error"]
 
     @pytest.mark.django_db
-    def test_delete_patient_for_other_user(self, evil_client, patient):
+    def test_delete_patient_for_other_user(
+        self, evil_client: Any, patient: Any
+    ) -> None:
         """Test DELETE request for patient belonging to another user"""
         url = reverse("sanatorio_allende:api_patients")
         data = {"patient_id": patient.id}
@@ -840,7 +869,7 @@ class TestDeviceRegistrationView:
     """Test cases for DeviceRegistrationView"""
 
     @pytest.mark.django_db
-    def test_post_register_device_new(self, client):
+    def test_post_register_device_new(self, client: Any) -> None:
         """Test successful POST request to register new device"""
         url = reverse("sanatorio_allende:api_register_device")
         data = {
@@ -850,13 +879,15 @@ class TestDeviceRegistrationView:
         response = client.post(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["success"] is True
-        assert "Device registered successfully" in data["message"]
-        assert data["created"] is True
+        response_data = json.loads(response.content)
+        assert response_data["success"] is True
+        assert "Device registered successfully" in response_data["message"]
+        assert response_data["created"] is True
 
     @pytest.mark.django_db
-    def test_post_register_device_existing(self, client, device_registration):
+    def test_post_register_device_existing(
+        self, client: Any, device_registration: Any
+    ) -> None:
         """Test POST request to update existing device"""
         url = reverse("sanatorio_allende:api_register_device")
         data = {
@@ -866,10 +897,10 @@ class TestDeviceRegistrationView:
         response = client.post(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["success"] is True
-        assert "Device registered successfully" in data["message"]
-        assert data["created"] is False
+        response_data = json.loads(response.content)
+        assert response_data["success"] is True
+        assert "Device registered successfully" in response_data["message"]
+        assert response_data["created"] is False
 
         # Verify the device was updated
         device_registration.refresh_from_db()
@@ -877,27 +908,27 @@ class TestDeviceRegistrationView:
         assert device_registration.is_active is True
 
     @pytest.mark.django_db
-    def test_post_register_device_missing_token(self, client):
+    def test_post_register_device_missing_token(self, client: Any) -> None:
         """Test POST request without push_token"""
         url = reverse("sanatorio_allende:api_register_device")
         data = {"platform": "expo"}
         response = client.post(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 400
-        data = json.loads(response.content)
-        assert data["success"] is False
-        assert "push_token is required" in data["error"]
+        response_data = json.loads(response.content)
+        assert response_data["success"] is False
+        assert "push_token is required" in response_data["error"]
 
     @pytest.mark.django_db
-    def test_post_register_device_default_platform(self, client):
+    def test_post_register_device_default_platform(self, client: Any) -> None:
         """Test POST request with default platform"""
         url = reverse("sanatorio_allende:api_register_device")
         data = {"push_token": "test_token_123"}
         response = client.post(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["success"] is True
+        response_data = json.loads(response.content)
+        assert response_data["success"] is True
 
         # Verify default platform was used
         device = DeviceRegistration.objects.get(push_token="test_token_123")
@@ -910,8 +941,8 @@ class TestConfirmAppointmentView:
     @pytest.mark.django_db
     @patch("sanatorio_allende.appointments.requests.post")
     def test_post_confirm_appointment_success(
-        self, mock_post, client, best_appointment_found
-    ):
+        self, mock_post: Any, client: Any, best_appointment_found: Any
+    ) -> None:
         """Test successful POST request to confirm an appointment"""
         mock_response = type(
             "MockResponse",
@@ -928,9 +959,9 @@ class TestConfirmAppointmentView:
         response = client.post(url, json.dumps(data), content_type="application/json")
 
         assert response.status_code == 200
-        data = json.loads(response.content)
-        assert data["success"] is True
-        assert data["message"] == "Appointment confirmed successfully"
+        response_data = json.loads(response.content)
+        assert response_data["success"] is True
+        assert response_data["message"] == "Appointment confirmed successfully"
 
         # Verify the appointment was marked as confirmed
         best_appointment_found.refresh_from_db()
@@ -951,18 +982,18 @@ class TestConfirmAppointmentView:
         )
 
     @pytest.mark.django_db
-    def test_post_confirm_appointment_invalid_json(self, client):
+    def test_post_confirm_appointment_invalid_json(self, client: Any) -> None:
         """Test POST request with invalid JSON"""
         url = reverse("sanatorio_allende:api_confirm_appointment")
         response = client.post(url, "invalid json", content_type="application/json")
 
         assert response.status_code == 400
-        data = json.loads(response.content)
-        assert data["success"] is False
-        assert data["error"] == "Invalid JSON"
+        response_data = json.loads(response.content)
+        assert response_data["success"] is False
+        assert response_data["error"] == "Invalid JSON"
 
     @pytest.mark.django_db
-    def test_post_confirm_appointment_not_found(self, client):
+    def test_post_confirm_appointment_not_found(self, client: Any) -> None:
         """Test POST request with non-existent appointment_id"""
         url = reverse("sanatorio_allende:api_confirm_appointment")
         data = {"appointment_id": 999}
@@ -972,8 +1003,8 @@ class TestConfirmAppointmentView:
 
     @pytest.mark.django_db
     def test_post_confirm_appointment_already_confirmed(
-        self, client, best_appointment_found
-    ):
+        self, client: Any, best_appointment_found: Any
+    ) -> None:
         """Test POST request for an appointment that is already confirmed"""
         # Mark the appointment as already confirmed
         best_appointment_found.confirmed = True
@@ -992,8 +1023,8 @@ class TestConfirmAppointmentView:
     @pytest.mark.django_db
     @patch("sanatorio_allende.appointments.requests.post")
     def test_post_confirm_appointment_unauthorized(
-        self, mock_post, client, best_appointment_found
-    ):
+        self, mock_post: Any, client: Any, best_appointment_found: Any
+    ) -> None:
         """Test POST request when the Allende API returns unauthorized"""
         # Mock the unauthorized response from the Allende API
         from sanatorio_allende.appointments import UnauthorizedException
@@ -1016,8 +1047,8 @@ class TestConfirmAppointmentView:
 
     @pytest.mark.django_db
     def test_post_confirm_appointment_for_other_user(
-        self, evil_client, best_appointment_found
-    ):
+        self, evil_client: Any, best_appointment_found: Any
+    ) -> None:
         """Test POST request for an appointment belonging to another user"""
         url = reverse("sanatorio_allende:api_confirm_appointment")
         data = {"appointment_id": best_appointment_found.id}
@@ -1030,8 +1061,8 @@ class TestConfirmAppointmentView:
     @pytest.mark.django_db
     @patch("sanatorio_allende.appointments.requests.post")
     def test_post_confirm_appointment_verify_appointment_data_structure(
-        self, mock_post, client, best_appointment_found
-    ):
+        self, mock_post: Any, client: Any, best_appointment_found: Any
+    ) -> None:
         """Test that the appointment data structure sent to Allende API is correct"""
         # Mock the successful response from the Allende API
         mock_response = type(

@@ -1,4 +1,6 @@
+import argparse
 import time
+from typing import Any
 
 from django.core.management.base import BaseCommand
 
@@ -8,7 +10,7 @@ from sanatorio_allende.services.push_notifications import PushNotificationServic
 class Command(BaseCommand):
     help = "Test push notification service"
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             "--appointment",
             action="store_true",
@@ -31,7 +33,7 @@ class Command(BaseCommand):
             help="Show detailed receipt logs",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         if options["appointment"]:
             # Send appointment notification
             appointment_data = {
