@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db import connection
 
-from sanatorio_allende.appointments import Allende
+from sanatorio_allende.allende_api import Allende
 from sanatorio_allende.models import FindAppointment, PacienteAllende
 from sanatorio_allende.services.appointment_handler import (
     AppointmentActionType,
