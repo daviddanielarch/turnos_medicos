@@ -278,7 +278,6 @@ class FindAppointmentView(LoginRequiredMixin, View):
             )
 
         appointment = get_object_or_404(FindAppointment, id=appointment_id)
-        assert isinstance(appointment.patient, PacienteAllende)
         user_patients = request.user.pacienteallende_set.all().values_list(
             "id", flat=True
         )
@@ -370,7 +369,6 @@ class BestAppointmentListView(LoginRequiredMixin, View):
 
         try:
             best_appointment = BestAppointmentFound.objects.get(id=appointment_id)
-            assert isinstance(best_appointment.patient, PacienteAllende)
             if best_appointment.patient.user != request.user:
                 return JsonResponse(
                     {
@@ -593,12 +591,9 @@ class ConfirmAppointmentView(LoginRequiredMixin, View):
             )
 
         patient = appointment.patient
-        assert isinstance(patient, PacienteAllende)
         assert isinstance(patient.id_paciente, str)
         assert isinstance(patient.id_financiador, int)
         assert isinstance(patient.id_plan, int)
-        assert isinstance(appointment.appointment_wanted.id_tipo_prestacion, int)
-        assert isinstance(appointment.appointment_wanted.id_prestacion, int)
         allende = Allende(auth_header=patient.token)
 
         appointment_data = {

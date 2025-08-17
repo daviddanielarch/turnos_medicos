@@ -4,14 +4,9 @@ from django.db.models import Q, QuerySet
 from django.http import HttpRequest, JsonResponse
 from django.urls import path
 
-from sanatorio_allende.services.data_loader import DataLoader
-
 from .models import (
-    AppointmentType,
     BestAppointmentFound,
     DeviceRegistration,
-    Doctor,
-    Especialidad,
     FindAppointment,
     PacienteAllende,
 )
@@ -34,28 +29,6 @@ class FindAppointmentAdmin(admin.ModelAdmin):
     search_fields = ["doctor_name"]
     list_editable = ["active"]
 
-    def get_urls(self) -> list:
-        urls = super().get_urls()
-        custom_urls = [
-            path(
-                "get-tipos-turno/<int:doctor_id>/",
-                self.get_tipos_turno,
-                name="get_tipos_turno",
-            ),
-        ]
-        return custom_urls + urls
-
-    def get_tipos_turno(self, request: HttpRequest, doctor_id: int) -> JsonResponse:
-        try:
-            doctor = Doctor.objects.get(id=doctor_id)
-            tipos_turno = AppointmentType.objects.filter(
-                especialidad=doctor.especialidad
-            )
-            data = [{"id": tt.id, "name": tt.name} for tt in tipos_turno]
-            return JsonResponse({"tipos_turno": data})
-        except Doctor.DoesNotExist:
-            return JsonResponse({"tipos_turno": []})
-
 
 @admin.register(BestAppointmentFound)
 class BestAppointmentFoundAdmin(admin.ModelAdmin):
@@ -69,18 +42,6 @@ class PacienteAllendeAdmin(admin.ModelAdmin):
     list_display = ["name", "id_paciente", "id_financiador", "id_plan"]
     list_filter = ["id_paciente", "id_financiador", "id_plan"]
     search_fields = ["id_paciente", "name"]
-
-
-@admin.register(Doctor)
-class DoctorAdmin(admin.ModelAdmin):
-    list_display = [
-        "name",
-        "especialidad",
-        "id_recurso",
-        "id_tipo_recurso",
-    ]
-    list_filter = ["especialidad"]
-    search_fields = ["name"]
 
 
 @admin.register(DeviceRegistration)

@@ -6,11 +6,8 @@ from django.test import Client
 from django.utils import timezone
 
 from sanatorio_allende.models import (
-    AppointmentType,
     BestAppointmentFound,
     DeviceRegistration,
-    Doctor,
-    Especialidad,
     FindAppointment,
     PacienteAllende,
 )
@@ -64,41 +61,6 @@ def evil_client(evil_user: User) -> Client:
     client = Client()
     client.force_login(evil_user)
     return client
-
-
-@pytest.fixture
-def especialidad() -> Especialidad:
-    """Create a test especialidad"""
-    return Especialidad.objects.create(
-        name="Cardiología",
-        id_especialidad=TEST_ESPECIALIDAD_ID,
-        id_servicio=TEST_SERVICIO_ID,
-        id_sucursal=TEST_SUCURSAL_ID,
-        sucursal="Centro",
-        servicio="Cardiología",
-    )
-
-
-@pytest.fixture
-def doctor(especialidad: Especialidad) -> Doctor:
-    """Create a test doctor"""
-    return Doctor.objects.create(
-        name="Dr. Juan Pérez",
-        id_recurso=TEST_RECURSO_ID,
-        id_tipo_recurso=TEST_TIPO_RECURSO_ID,
-        especialidad=especialidad,
-    )
-
-
-@pytest.fixture
-def appointment_type(especialidad: Especialidad) -> AppointmentType:
-    """Create a test appointment type"""
-    return AppointmentType.objects.create(
-        name="CONSULTA",
-        id_tipo_turno=TEST_TIPO_PRESTACION_ID,
-        especialidad=especialidad,
-        id_tipo_prestacion=TEST_TIPO_TURNO_ID,
-    )
 
 
 @pytest.fixture

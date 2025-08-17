@@ -118,10 +118,6 @@ class AppointmentHandler:
             new_appointment_datetime, current_best_datetime, not_interested_datetimes
         )
 
-        assert appointment_to_find.doctor_name is not None
-        assert appointment_to_find.especialidad is not None
-        assert appointment_to_find.nombre_tipo_prestacion is not None
-
         # Create appointment data for notifications and processing
         complete_appointment_data = AppointmentData(
             doctor_name=appointment_to_find.doctor_name,
