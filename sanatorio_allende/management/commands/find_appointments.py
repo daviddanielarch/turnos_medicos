@@ -88,32 +88,31 @@ class Command(BaseCommand):
 
             for appointment_to_find in appointments_to_find:
                 self.stdout.write(
-                    f"Checking appointments for {appointment_to_find.doctor.name} - {appointment_to_find.tipo_de_turno.name}"
+                    f"Checking appointments for {appointment_to_find.doctor_name} - {appointment_to_find.especialidad}"
                 )
 
                 doctor_data = {
                     "IdPaciente": int(patient.id_paciente),
-                    "IdServicio": appointment_to_find.doctor.especialidad.id_servicio,
-                    "IdSucursal": appointment_to_find.doctor.especialidad.id_sucursal,
-                    "IdRecurso": appointment_to_find.doctor.id_recurso,
-                    "IdEspecialidad": appointment_to_find.doctor.especialidad.id_especialidad,
-                    "IdTipoRecurso": appointment_to_find.doctor.id_tipo_recurso,
+                    "IdServicio": appointment_to_find.id_servicio,
+                    "IdSucursal": appointment_to_find.id_sucursal,
+                    "IdRecurso": appointment_to_find.id_recurso,
+                    "IdEspecialidad": appointment_to_find.id_especialidad,
+                    "IdTipoRecurso": appointment_to_find.id_tipo_recurso,
                     "ControlarEdad": False,
                     "IdFinanciador": patient.id_financiador,
                     "IdPlan": patient.id_plan,
                     "Prestaciones": [
                         {
-                            "IdPrestacion": appointment_to_find.tipo_de_turno.id_tipo_turno,
+                            "IdPrestacion": appointment_to_find.id_prestacion,
                             "IdItemSolicitudEstudios": 0,
                         }
                     ],
                 }
-
                 # Search for new appointment
                 new_best_appointment_data = allende.search_best_date_appointment(
                     doctor_data
                 )
-
+                print(new_best_appointment_data)
                 result = AppointmentHandler.process_appointment(
                     appointment_to_find=appointment_to_find,
                     patient=patient,

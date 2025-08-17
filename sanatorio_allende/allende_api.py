@@ -101,6 +101,37 @@ class Allende:
 
         return auth_header
 
+    def get_doctors(self, pattern: str) -> List[dict]:
+        """
+        Response format:
+                {
+            "Especialidades": [],
+            "Profesionales": [
+                {
+                    "IdRecurso": 25643,
+                    "IdTipoRecurso": 1,
+                    "NumeroMatricula": 25643,
+                    "Nombre": "GOBELET JAQUELINA MARICEL",
+                    "IdEspecialidad": 7,
+                    "Especialidad": "GASTROENTEROLOGIA",
+                    "IdServicio": 13,
+                    "Servicio": "GASTROENTEROLOGIA",
+                    "IdSucursal": 2,
+                    "Sucursal": "CERRO"
+                }
+            ]
+        }
+        """
+        response = requests.post(
+            "https://miportal.sanatorioallende.com/backend/api/TurnosBuscadorGenerico/ObtenerEspecialidadServicioProfesionalPorCriterio",
+            headers={"authorization": self.auth_header},
+            json={
+                "Criterio": pattern,
+            },
+        )
+
+        return response.json()  # type: ignore
+
     def get_user_data(self) -> Dict[str, Any]:
         if not self.user_id:
             raise Exception("User id not found")
@@ -206,6 +237,27 @@ class Allende:
     def get_available_appointment_types(
         self, id_especialidad: str, id_servicio: str, id_sucursal: str
     ) -> List[dict]:
+        """
+        Response format:
+        [
+            {
+                "IdTipoPrestacion": 1,
+                "Activo": true,
+                "HabilitadaTelemedicina": false,
+                "Prefacturables": "420101-CONSULTA MEDICA\n",
+                "Id": 5495,
+                "Nombre": "CONSULTA"
+            },
+            {
+                "IdTipoPrestacion": 1,
+                "Activo": true,
+                "HabilitadaTelemedicina": true,
+                "Prefacturables": "420109-TELEMEDICINA\n",
+                "Id": 6605,
+                "Nombre": "CONSULTA TELEMEDICINA"
+            }
+        ]
+        """
         response = requests.get(
             f"https://miportal.sanatorioallende.com/backend/api/PrestacionMedica/ObtenerPorRecursoEspecialidadServicioSucursalParaPortalWeb/0/0/{id_especialidad}/{id_servicio}/{id_sucursal}",
             headers={"authorization": self.auth_header},

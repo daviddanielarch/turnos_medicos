@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import apiService from "../services/apiService";
 
-interface Item {
+interface FindAppointments {
   id: number;
   name: string;
   location: string;
@@ -16,10 +16,12 @@ interface Item {
   enabled: boolean;
   tipo_de_turno: string;
   desired_timeframe: string;
+  doctor_id: number;
+  tipo_de_turno_id: number;
 }
 
 export default function Index() {
-  const [items, setItems] = useState<Item[]>([]);
+  const [items, setItems] = useState<FindAppointments[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());

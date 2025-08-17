@@ -16,7 +16,51 @@ interface FindAppointmentsResponse {
         enabled: boolean;
         tipo_de_turno: string;
         desired_timeframe: string;
+        doctor_id: number;
+        tipo_de_turno_id: number;
     }>;
+}
+
+interface Doctor {
+    IdRecurso: number;
+    IdTipoRecurso: number;
+    NumeroMatricula: number;
+    Nombre: string;
+    IdEspecialidad: number;
+    Especialidad: string;
+    IdServicio: number;
+    Servicio: string;
+    IdSucursal: number;
+    Sucursal: string;
+}
+
+interface DoctorsResponse {
+    Especialidades: any[];
+    Profesionales: Doctor[];
+}
+
+interface AppointmentType {
+    IdTipoPrestacion: number;
+    Activo: boolean;
+    HabilitadaTelemedicina: boolean;
+    Prefacturables: string;
+    Id: number;
+    Nombre: string;
+}
+
+interface AppointmentTypesResponse {
+    appointment_types: AppointmentType[];
+}
+
+interface CreateFindAppointmentResponse {
+    success: boolean;
+    message: string;
+    appointment_id?: number;
+}
+
+interface ConfirmAppointmentResponse {
+    success: boolean;
+    message: string;
 }
 
 export interface Patient {
@@ -156,15 +200,26 @@ class ApiService {
     /**
      * Get all doctors
      */
-    async getDoctors() {
-        return this.get('/api/doctors/');
+    async getDoctors(patient_id: number, pattern?: string) {
+        const params: Record<string, string> = {
+            patient_id: patient_id.toString()
+        };
+        if (pattern) {
+            params.pattern = pattern;
+        }
+        return this.get<{ doctors: DoctorsResponse }>('/api/doctors/', params);
     }
 
     /**
      * Get appointment types for a doctor
      */
-    async getAppointmentTypes(doctorId: number) {
-        return this.get('/api/appointment-types/', { doctor_id: doctorId.toString() });
+    async getAppointmentTypes(patient_id: number, id_especialidad: string, id_servicio: string, id_sucursal: string) {
+        return this.get<AppointmentTypesResponse>('/api/appointment-types/', {
+            patient_id: patient_id.toString(),
+            id_especialidad,
+            id_servicio,
+            id_sucursal
+        });
     }
 
     /**
@@ -184,12 +239,22 @@ class ApiService {
      * Create a new find appointment
      */
     async createFindAppointment(data: {
-        doctor_id: number;
-        appointment_type_id: number;
+        id_servicio: number;
+        id_sucursal: number;
+        id_recurso: number;
+        id_especialidad: number;
+        id_tipo_recurso: number;
+        id_prestacion: number;
+        id_tipo_prestacion: number;
+        nombre_tipo_prestacion: string;
         patient_id: number;
+        doctor_name: string;
+        servicio: string;
+        sucursal: string;
+        especialidad: string;
         desired_timeframe?: string;
     }) {
-        return this.post('/api/find-appointments/', data);
+        return this.post<CreateFindAppointmentResponse>('/api/find-appointments/', data);
     }
 
     /**
@@ -227,7 +292,7 @@ class ApiService {
      * Confirm an appointment
      */
     async confirmAppointment(appointmentId: number) {
-        return this.post('/api/confirm-appointment/', {
+        return this.post<ConfirmAppointmentResponse>('/api/confirm-appointment/', {
             appointment_id: appointmentId,
         });
     }

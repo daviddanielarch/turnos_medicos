@@ -1,8 +1,6 @@
 from typing import Any, Dict, List, Optional, Tuple
 
-from django.conf import settings
-
-from sanatorio_allende.appointments import Allende
+from sanatorio_allende.allende_api import Allende
 from sanatorio_allende.models import (
     AppointmentType,
     Doctor,

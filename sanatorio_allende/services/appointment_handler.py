@@ -109,7 +109,7 @@ class AppointmentHandler:
             ):
                 return AppointmentProcessingResult(
                     action=AppointmentActionType.SKIPPED,
-                    message=f"Appointment {new_appointment_datetime} is outside desired timeframe ({appointment_to_find.desired_timeframe}) for {appointment_to_find.doctor.name} - {appointment_to_find.tipo_de_turno.name}",
+                    message=f"Appointment {new_appointment_datetime} is outside desired timeframe ({appointment_to_find.desired_timeframe}) for {appointment_to_find.doctor_name} - {appointment_to_find.nombre_tipo_prestacion}",
                     notification_sent=False,
                 )
 
@@ -118,11 +118,15 @@ class AppointmentHandler:
             new_appointment_datetime, current_best_datetime, not_interested_datetimes
         )
 
+        assert appointment_to_find.doctor_name is not None
+        assert appointment_to_find.especialidad is not None
+        assert appointment_to_find.nombre_tipo_prestacion is not None
+
         # Create appointment data for notifications and processing
         complete_appointment_data = AppointmentData(
-            doctor_name=appointment_to_find.doctor.name,
-            especialidad_name=appointment_to_find.doctor.especialidad.name,
-            tipo_de_turno_name=appointment_to_find.tipo_de_turno.name,
+            doctor_name=appointment_to_find.doctor_name,
+            especialidad_name=appointment_to_find.especialidad,
+            tipo_de_turno_name=appointment_to_find.nombre_tipo_prestacion,
             patient_dni=patient.docid,
             desired_timeframe=appointment_to_find.desired_timeframe
             or FindAppointment.DEFAULT_DESIRED_TIMEFRAME,
@@ -166,7 +170,7 @@ class AppointmentHandler:
 
             result = AppointmentProcessingResult(
                 action=AppointmentActionType.CREATED,
-                message=f"New best appointment found for {appointment.doctor.name} - {appointment.tipo_de_turno.name}: {comparison_result.new_datetime}",
+                message=f"New best appointment found for {appointment.doctor_name} - {appointment.nombre_tipo_prestacion}: {comparison_result.new_datetime}",
             )
 
         elif comparison_result.action == AppointmentAction.UPDATE_EXISTING:
@@ -188,7 +192,7 @@ class AppointmentHandler:
 
             result = AppointmentProcessingResult(
                 action=AppointmentActionType.UPDATED,
-                message=f"Better appointment found for {appointment.doctor.name} - {appointment.tipo_de_turno.name}: {comparison_result.new_datetime}",
+                message=f"Better appointment found for {appointment.doctor_name} - {appointment.nombre_tipo_prestacion}: {comparison_result.new_datetime}",
             )
 
         elif comparison_result.action == AppointmentAction.REMOVE_EXISTING:
@@ -204,7 +208,7 @@ class AppointmentHandler:
 
             result = AppointmentProcessingResult(
                 action=AppointmentActionType.REMOVED,
-                message=f"Removed worse appointments for {appointment.doctor.name} - {appointment.tipo_de_turno.name}: {comparison_result.previous_datetime}",
+                message=f"Removed worse appointments for {appointment.doctor_name} - {appointment.nombre_tipo_prestacion}: {comparison_result.previous_datetime}",
             )
 
         else:  # DO_NOTHING

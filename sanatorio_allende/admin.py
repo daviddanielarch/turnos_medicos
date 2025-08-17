@@ -29,9 +29,9 @@ class FindAppointmentAdminForm(forms.ModelForm):
 @admin.register(FindAppointment)
 class FindAppointmentAdmin(admin.ModelAdmin):
     form = FindAppointmentAdminForm
-    list_display = ["doctor", "tipo_de_turno", "active"]
-    list_filter = ["doctor", "tipo_de_turno", "active"]
-    search_fields = ["doctor"]
+    list_display = ["doctor_name", "nombre_tipo_prestacion", "active"]
+    list_filter = ["doctor_name", "nombre_tipo_prestacion", "active"]
+    search_fields = ["doctor_name"]
     list_editable = ["active"]
 
     def get_urls(self) -> list:
@@ -81,61 +81,6 @@ class DoctorAdmin(admin.ModelAdmin):
     ]
     list_filter = ["especialidad"]
     search_fields = ["name"]
-
-
-@admin.register(AppointmentType)
-class TipoDeTurnoAdmin(admin.ModelAdmin):
-    list_display = ["name", "id_tipo_turno"]
-    search_fields = ["name"]
-
-
-@admin.register(Especialidad)
-class EspecialidadAdmin(admin.ModelAdmin):
-    list_display = ["name", "sucursal"]
-    search_fields = ["name"]
-    actions = ["load_data_for_especialidad"]
-
-    def load_data_for_especialidad(
-        self, request: HttpRequest, queryset: QuerySet
-    ) -> None:
-        data_loader = DataLoader()
-        success_count = 0
-        error_count = 0
-
-        for especialidad in queryset:
-            try:
-                data_loader.load_especialidad(especialidad)
-                success_count += 1
-                self.message_user(
-                    request,
-                    f"Successfully loaded data for {especialidad.name}",
-                    messages.SUCCESS,
-                )
-            except Exception as e:
-                error_count += 1
-                self.message_user(
-                    request,
-                    f"Error loading data for {especialidad.name}: {str(e)}",
-                    messages.ERROR,
-                )
-
-        if success_count > 0:
-            self.message_user(
-                request,
-                f"Successfully loaded data for {success_count} especialidad(es)",
-                messages.SUCCESS,
-            )
-
-        if error_count > 0:
-            self.message_user(
-                request,
-                f"Failed to load data for {error_count} especialidad(es)",
-                messages.WARNING,
-            )
-
-    load_data_for_especialidad.short_description = (  # type: ignore
-        "Load appointment types and doctors data"
-    )
 
 
 @admin.register(DeviceRegistration)

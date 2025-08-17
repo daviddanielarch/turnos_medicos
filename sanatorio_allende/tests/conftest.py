@@ -25,7 +25,7 @@ TEST_FINANCIADOR_ID = 12345
 TEST_TIPO_RECURSO_ID = 12
 TEST_PLAN_ID = 6
 TEST_PRESTACION_ID = 5495
-TEST_ITEM_SOLICITUD_ESTUDIOS_ID = 0
+TEST_TIPO_PRESTACION_ID = 1
 TEST_DURACION_INDIVIDUAL = 20
 TEST_ITEM_PLANTILLA_ID = 12
 TEST_PLANTILLA_TURNO_ID = 10
@@ -95,7 +95,7 @@ def appointment_type(especialidad: Especialidad) -> AppointmentType:
     """Create a test appointment type"""
     return AppointmentType.objects.create(
         name="CONSULTA",
-        id_tipo_turno=TEST_PRESTACION_ID,
+        id_tipo_turno=TEST_TIPO_PRESTACION_ID,
         especialidad=especialidad,
         id_tipo_prestacion=TEST_TIPO_TURNO_ID,
     )
@@ -117,13 +117,21 @@ def patient(user: User) -> PacienteAllende:
 
 
 @pytest.fixture
-def find_appointment(
-    doctor: Doctor, appointment_type: AppointmentType, patient: PacienteAllende
-) -> FindAppointment:
+def find_appointment(patient: PacienteAllende) -> FindAppointment:
     """Create a test find appointment"""
     return FindAppointment.objects.create(
-        doctor=doctor,
-        tipo_de_turno=appointment_type,
+        doctor_name="Dr. Juan Pérez",
+        id_servicio=TEST_SERVICIO_ID,
+        servicio="Cardiología",
+        id_sucursal=TEST_SUCURSAL_ID,
+        sucursal="Centro",
+        id_especialidad=TEST_ESPECIALIDAD_ID,
+        especialidad="Cardiología",
+        id_recurso=TEST_RECURSO_ID,
+        id_tipo_recurso=TEST_TIPO_RECURSO_ID,
+        id_prestacion=TEST_PRESTACION_ID,
+        id_tipo_prestacion=TEST_TIPO_PRESTACION_ID,
+        nombre_tipo_prestacion="CONSULTA",
         patient=patient,
         desired_timeframe="2 weeks",
         active=True,

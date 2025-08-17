@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,13 +11,11 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
-from sanatorio_allende.appointments import Allende, UnauthorizedException
+from sanatorio_allende.allende_api import Allende, UnauthorizedException
 
 from .models import (
-    AppointmentType,
     BestAppointmentFound,
     DeviceRegistration,
-    Doctor,
     FindAppointment,
     PacienteAllende,
 )
@@ -58,20 +57,21 @@ class DoctorListView(LoginRequiredMixin, View):
 
     def get(self, request: HttpRequest) -> JsonResponse:
         """Get all doctors with their specialties and locations"""
-        doctors = Doctor.objects.select_related("especialidad").all()
-
-        doctors_data = []
-        for doctor in doctors:
-            doctors_data.append(
+        pattern = request.GET.get("pattern", "")
+        patient_id = request.GET.get("patient_id")
+        patient = get_object_or_404(PacienteAllende, id=patient_id)
+        if patient.user != request.user:
+            return JsonResponse(
                 {
-                    "id": doctor.id,
-                    "name": doctor.name,
-                    "especialidad": doctor.especialidad.name,
-                    "location": doctor.especialidad.sucursal,
-                }
+                    "success": False,
+                    "error": "Patient does not belong to the current user",
+                },
+                status=401,
             )
+        allende = Allende(auth_header=patient.token)
+        doctors = allende.get_doctors(pattern=pattern)
 
-        return JsonResponse({"success": True, "doctors": doctors_data})
+        return JsonResponse({"success": True, "doctors": doctors})
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -80,30 +80,41 @@ class AppointmentTypeListView(LoginRequiredMixin, View):
 
     def get(self, request: HttpRequest) -> JsonResponse:
         """Get appointment types for a specific doctor"""
-        doctor_id = request.GET.get("doctor_id")
-        if not doctor_id:
+        patient_id = request.GET.get("patient_id")
+        patient = get_object_or_404(PacienteAllende, id=patient_id)
+        if patient.user != request.user:
             return JsonResponse(
-                {"success": False, "error": "doctor_id parameter is required"},
+                {
+                    "success": False,
+                    "error": "Patient does not belong to the current user",
+                },
+                status=401,
+            )
+
+        allende = Allende(auth_header=patient.token)
+        if (
+            not request.GET.get("id_especialidad")
+            or not request.GET.get("id_servicio")
+            or not request.GET.get("id_sucursal")
+        ):
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "id_especialidad, id_servicio, and id_sucursal are required",
+                },
                 status=400,
             )
+        id_especialidad = request.GET["id_especialidad"]
+        id_servicio = request.GET["id_servicio"]
+        id_sucursal = request.GET["id_sucursal"]
 
-        doctor = get_object_or_404(Doctor, id=doctor_id)
-        appointment_types = AppointmentType.objects.filter(
-            especialidad=doctor.especialidad
+        appointment_types = allende.get_available_appointment_types(
+            id_especialidad=id_especialidad,
+            id_servicio=id_servicio,
+            id_sucursal=id_sucursal,
         )
 
-        types_data = []
-        for apt_type in appointment_types:
-            types_data.append(
-                {
-                    "id": apt_type.id,
-                    "name": apt_type.name,
-                    "description": f"{apt_type.name} appointment",
-                    "id_tipo_turno": apt_type.id_tipo_turno,
-                }
-            )
-
-        return JsonResponse({"success": True, "appointment_types": types_data})
+        return JsonResponse({"success": True, "appointment_types": appointment_types})
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -124,24 +135,20 @@ class FindAppointmentView(LoginRequiredMixin, View):
                 status=401,
             )
 
-        find_appointments = FindAppointment.objects.select_related(
-            "doctor",
-            "doctor__especialidad",
-            "tipo_de_turno",
-        ).filter(patient=patient)
+        find_appointments = FindAppointment.objects.filter(patient=patient)
 
         appointments_data = []
         for appointment in find_appointments:
             appointments_data.append(
                 {
                     "id": appointment.id,
-                    "name": appointment.doctor.name,
-                    "especialidad": appointment.doctor.especialidad.name,
-                    "location": appointment.doctor.especialidad.sucursal,
+                    "name": appointment.doctor_name,
+                    "especialidad": appointment.especialidad,
+                    "location": appointment.sucursal,
                     "enabled": appointment.active,
-                    "tipo_de_turno": appointment.tipo_de_turno.name,
-                    "doctor_id": appointment.doctor.id,
-                    "tipo_de_turno_id": appointment.tipo_de_turno.id,
+                    "tipo_de_turno": appointment.nombre_tipo_prestacion,
+                    "doctor_id": appointment.id_recurso,
+                    "tipo_de_turno_id": appointment.id_tipo_prestacion,
                     "desired_timeframe": appointment.desired_timeframe,
                 }
             )
@@ -157,25 +164,44 @@ class FindAppointmentView(LoginRequiredMixin, View):
                 {"success": False, "error": "Invalid JSON"},
                 status=400,
             )
+        id_servicio = data.get("id_servicio")
+        id_sucursal = data.get("id_sucursal")
+        id_recurso = data.get("id_recurso")
+        id_especialidad = data.get("id_especialidad")
+        id_tipo_recurso = data.get("id_tipo_recurso")
+        id_prestacion = data.get("id_prestacion")
+        id_tipo_prestacion = data.get("id_tipo_prestacion")
+        nombre_tipo_prestacion = data.get("nombre_tipo_prestacion")
 
-        doctor_id = data.get("doctor_id")
-        appointment_type_id = data.get("appointment_type_id")
-        patient_id = data.get("patient_id")
-        desired_timeframe = data.get(
-            "desired_timeframe", FindAppointment.DEFAULT_DESIRED_TIMEFRAME
-        )
-
-        if not doctor_id or not appointment_type_id or not patient_id:
+        if (
+            not id_servicio
+            or not id_sucursal
+            or not id_recurso
+            or not id_especialidad
+            or not id_tipo_recurso
+            or not id_prestacion
+            or not id_tipo_prestacion
+            or not nombre_tipo_prestacion
+        ):
             return JsonResponse(
                 {
                     "success": False,
-                    "error": "doctor_id, appointment_type_id, and patient_id are required",
+                    "error": "id_servicio, id_sucursal, id_recurso, id_especialidad, id_tipo_recurso, id_prestacion, id_tipo_prestacion, and nombre_tipo_prestacion are required",
                 },
                 status=400,
             )
 
-        doctor = get_object_or_404(Doctor, id=doctor_id)
-        appointment_type = get_object_or_404(AppointmentType, id=appointment_type_id)
+        patient_id = data.get("patient_id")
+        patient = get_object_or_404(PacienteAllende, id=patient_id)
+
+        doctor_name = data.get("doctor_name")
+        servicio = data.get("servicio")
+        sucursal = data.get("sucursal")
+        especialidad = data.get("especialidad")
+        desired_timeframe = data.get(
+            "desired_timeframe", FindAppointment.DEFAULT_DESIRED_TIMEFRAME
+        )
+
         patient = get_object_or_404(PacienteAllende, id=patient_id)
         if patient.user != request.user:
             return JsonResponse(
@@ -187,7 +213,11 @@ class FindAppointmentView(LoginRequiredMixin, View):
             )
 
         existing_appointment = FindAppointment.objects.filter(
-            doctor=doctor, tipo_de_turno=appointment_type, patient=patient
+            patient=patient,
+            id_servicio=id_servicio,
+            id_sucursal=id_sucursal,
+            id_recurso=id_recurso,
+            id_especialidad=id_especialidad,
         ).first()
 
         if existing_appointment:
@@ -199,8 +229,18 @@ class FindAppointmentView(LoginRequiredMixin, View):
 
         # Create new appointment
         appointment = FindAppointment.objects.create(
-            doctor=doctor,
-            tipo_de_turno=appointment_type,
+            doctor_name=doctor_name,
+            id_servicio=id_servicio,
+            servicio=servicio,
+            id_sucursal=id_sucursal,
+            sucursal=sucursal,
+            id_especialidad=id_especialidad,
+            especialidad=especialidad,
+            id_recurso=id_recurso,
+            id_tipo_recurso=id_tipo_recurso,
+            id_prestacion=id_prestacion,
+            id_tipo_prestacion=id_tipo_prestacion,
+            nombre_tipo_prestacion=nombre_tipo_prestacion,
             patient=patient,
             active=True,
             desired_timeframe=desired_timeframe,
@@ -280,9 +320,6 @@ class BestAppointmentListView(LoginRequiredMixin, View):
 
         best_appointments = BestAppointmentFound.objects.select_related(
             "appointment_wanted",
-            "appointment_wanted__doctor",
-            "appointment_wanted__doctor__especialidad",
-            "appointment_wanted__tipo_de_turno",
         ).filter(patient=patient, not_interested=False, datetime__gte=timezone.now())
 
         appointments_data = []
@@ -291,10 +328,10 @@ class BestAppointmentListView(LoginRequiredMixin, View):
             appointments_data.append(
                 {
                     "id": best_appointment.id,
-                    "doctor_name": appointment.doctor.name,
-                    "especialidad": appointment.doctor.especialidad.name,
-                    "location": appointment.doctor.especialidad.sucursal,
-                    "tipo_de_turno": appointment.tipo_de_turno.name,
+                    "doctor_name": appointment.doctor_name,
+                    "especialidad": appointment.especialidad,
+                    "location": appointment.sucursal,
+                    "tipo_de_turno": appointment.nombre_tipo_prestacion,
                     "best_datetime": best_appointment.datetime.isoformat(),
                     "duracion_individual": best_appointment.duracion_individual,
                     "id_plantilla_turno": best_appointment.id_plantilla_turno,
@@ -560,38 +597,35 @@ class ConfirmAppointmentView(LoginRequiredMixin, View):
         assert isinstance(patient.id_paciente, str)
         assert isinstance(patient.id_financiador, int)
         assert isinstance(patient.id_plan, int)
-        assert isinstance(
-            appointment.appointment_wanted.tipo_de_turno.id_tipo_prestacion, int
-        )
+        assert isinstance(appointment.appointment_wanted.id_tipo_prestacion, int)
+        assert isinstance(appointment.appointment_wanted.id_prestacion, int)
         allende = Allende(auth_header=patient.token)
 
         appointment_data = {
             "CriterioBusquedaDto": {
                 "IdPaciente": int(patient.id_paciente),
-                "IdServicio": appointment.appointment_wanted.doctor.especialidad.id_servicio,
-                "IdSucursal": appointment.appointment_wanted.doctor.especialidad.id_sucursal,
-                "IdRecurso": appointment.appointment_wanted.doctor.id_recurso,
-                "IdEspecialidad": appointment.appointment_wanted.doctor.especialidad.id_especialidad,
+                "IdServicio": appointment.appointment_wanted.id_servicio,
+                "IdSucursal": appointment.appointment_wanted.id_sucursal,
+                "IdRecurso": appointment.appointment_wanted.id_recurso,
+                "IdEspecialidad": appointment.appointment_wanted.id_especialidad,
                 "ControlarEdad": False,
-                "IdTipoDeTurno": int(
-                    appointment.appointment_wanted.tipo_de_turno.id_tipo_prestacion
-                ),
+                "IdTipoDeTurno": appointment.appointment_wanted.id_tipo_prestacion,
                 "IdFinanciador": int(patient.id_financiador),
-                "IdTipoRecurso": appointment.appointment_wanted.doctor.id_tipo_recurso,
+                "IdTipoRecurso": appointment.appointment_wanted.id_tipo_recurso,
                 "IdPlan": int(patient.id_plan),
                 "Prestaciones": [
                     {
-                        "IdPrestacion": appointment.appointment_wanted.tipo_de_turno.id_tipo_turno,
+                        "IdPrestacion": appointment.appointment_wanted.id_prestacion,
                         "IdItemSolicitudEstudios": 0,
                     }
                 ],
             },
             "TurnoElegidoDto": {
                 "Fecha": appointment.datetime.strftime("%Y-%m-%dT00:00:00"),
-                "Hora": appointment.datetime.strftime("%H:%M"),
+                "Hora": (appointment.datetime - timedelta(hours=3)).strftime("%H:%M"),
                 "IdItemDePlantilla": appointment.id_item_plantilla,
                 "IdPlantillaTurno": appointment.id_plantilla_turno,
-                "IdSucursal": appointment.appointment_wanted.doctor.especialidad.id_sucursal,
+                "IdSucursal": appointment.appointment_wanted.id_sucursal,
                 "DuracionIndividual": appointment.duracion_individual,
                 "RequisitoAdministrativoAlOtorgar": "DNI\nCredencial Financiador\n AUTORIZACION: Con autorización online",
             },
@@ -600,7 +634,17 @@ class ConfirmAppointmentView(LoginRequiredMixin, View):
 
         try:
             result = allende.reservar(appointment_data)
-            id_turno = result.get("Entidad", {}).get("Id")
+            entidad = result.get("Entidad")
+            if entidad is None:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "No se pudo obtener el ID del turno",
+                    },
+                    status=400,
+                )
+
+            id_turno = entidad.get("Id")
             if not id_turno:
                 print(result)
                 return JsonResponse(

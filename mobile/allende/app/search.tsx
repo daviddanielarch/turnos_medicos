@@ -1,25 +1,30 @@
 import CustomHeader from "@/src/components/CustomHeader";
 import { COLORS } from "@/src/constants/constants";
-import { useAuth0Context } from "@/src/contexts/Auth0Context";
 import { usePatientContext } from "@/src/contexts/PatientContext";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import apiService from "../services/apiService";
 
-interface Item {
-    id: number;
-    name: string;
-    location: string;
-    especialidad: string;
+interface Doctor {
+    IdRecurso: number;
+    IdTipoRecurso: number;
+    NumeroMatricula: number;
+    Nombre: string;
+    IdEspecialidad: number;
+    Especialidad: string;
+    IdServicio: number;
+    Servicio: string;
+    IdSucursal: number;
+    Sucursal: string;
 }
 
 interface ServiceOption {
     id: string;
     name: string;
-    description: string;
-    id_tipo_turno: number;
+    IdTipoPrestacion: number;
+    Nombre: string;
 }
 
 interface TimeframeOption {
@@ -36,50 +41,44 @@ const TIMEFRAME_OPTIONS: TimeframeOption[] = [
 
 export default function Search() {
     const [searchText, setSearchText] = useState("");
-    const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+    const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
     const [selectedService, setSelectedService] = useState<ServiceOption | null>(null);
     const [selectedTimeframe, setSelectedTimeframe] = useState<TimeframeOption>(TIMEFRAME_OPTIONS[0]);
     const [showDropdown, setShowDropdown] = useState(false);
     const [showServiceDropdown, setShowServiceDropdown] = useState(false);
     const [showTimeframeDropdown, setShowTimeframeDropdown] = useState(false);
-    const [filteredItems, setFilteredItems] = useState<Item[]>([]);
-    const [allItems, setAllItems] = useState<Item[]>([]);
+    const [filteredDoctors, setFilteredDoctors] = useState<Doctor[]>([]);
     const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([]);
     const [loading, setLoading] = useState(false);
     const [loadingServices, setLoadingServices] = useState(false);
-    const { isAuthenticated } = useAuth0Context();
     const { selectedPatient } = usePatientContext();
 
-    useEffect(() => {
-        if (isAuthenticated) {
-            fetchDoctors();
+
+    const fetchAppointmentTypes = async (doctor: Doctor) => {
+        if (!selectedPatient) {
+            Alert.alert('Error', 'No patient selected. Please select a patient first.');
+            return;
         }
-    }, [isAuthenticated]);
 
-    const fetchDoctors = async () => {
-        setLoading(true);
-        try {
-            const response = await apiService.getDoctors();
-
-            if (response.success && response.data) {
-                setAllItems((response.data as any).doctors);
-            } else {
-                console.error('Failed to fetch doctors:', response.error);
-            }
-        } catch (error) {
-            console.error('Error fetching doctors:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchAppointmentTypes = async (doctorId: number) => {
         setLoadingServices(true);
         try {
-            const response = await apiService.getAppointmentTypes(doctorId);
+            const response = await apiService.getAppointmentTypes(
+                selectedPatient.id,
+                doctor.IdEspecialidad.toString(),
+                doctor.IdServicio.toString(),
+                doctor.IdSucursal.toString()
+            );
 
             if (response.success && response.data) {
-                setServiceOptions((response.data as any).appointment_types);
+                const appointmentTypes = response.data.appointment_types;
+                // Transform the response to match our interface
+                const transformedTypes = appointmentTypes.map((type) => ({
+                    id: type.Id.toString(),
+                    name: type.Nombre,
+                    IdTipoPrestacion: type.IdTipoPrestacion,
+                    Nombre: type.Nombre,
+                }));
+                setServiceOptions(transformedTypes);
             } else {
                 console.error('Failed to fetch appointment types:', response.error);
             }
@@ -90,27 +89,47 @@ export default function Search() {
         }
     };
 
-    const handleSearch = (text: string) => {
+    const handleSearch = async (text: string) => {
         setSearchText(text);
         if (text.trim() === "") {
-            setFilteredItems([]);
+            setFilteredDoctors([]);
         } else {
-            const filtered = allItems.filter(item =>
-                item.name.toLowerCase().includes(text.toLowerCase()) ||
-                item.location.toLowerCase().includes(text.toLowerCase()) ||
-                item.especialidad.toLowerCase().includes(text.toLowerCase())
-            );
-            setFilteredItems(filtered);
+            if (!selectedPatient) {
+                Alert.alert('Error', 'No patient selected. Please select a patient first.');
+                return;
+            }
+
+            setLoading(true);
+            try {
+                const response = await apiService.getDoctors(selectedPatient.id, text.trim());
+
+                if (response.success && response.data) {
+                    const doctorsData = response.data.doctors;
+                    if (doctorsData && doctorsData.Profesionales) {
+                        setFilteredDoctors(doctorsData.Profesionales);
+                    } else {
+                        setFilteredDoctors([]);
+                    }
+                } else {
+                    console.error('Failed to search doctors:', response.error);
+                    setFilteredDoctors([]);
+                }
+            } catch (error) {
+                console.error('Error searching doctors:', error);
+                setFilteredDoctors([]);
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
-    const selectItem = (item: Item) => {
-        setSelectedItem(item);
-        setSearchText(item.name);
-        setFilteredItems([]);
+    const selectDoctor = (doctor: Doctor) => {
+        setSelectedDoctor(doctor);
+        setSearchText(doctor.Nombre);
+        setFilteredDoctors([]);
         setShowDropdown(false);
         setSelectedService(null);
-        fetchAppointmentTypes(item.id);
+        fetchAppointmentTypes(doctor);
     };
 
     const selectService = (service: ServiceOption) => {
@@ -124,16 +143,16 @@ export default function Search() {
     };
 
     const clearSelection = () => {
-        setSelectedItem(null);
+        setSelectedDoctor(null);
         setSelectedService(null);
         setSelectedTimeframe(TIMEFRAME_OPTIONS[0]);
         setSearchText("");
-        setFilteredItems([]);
+        setFilteredDoctors([]);
         setServiceOptions([]);
     };
 
     const handleAdd = async () => {
-        if (selectedItem && selectedService) {
+        if (selectedDoctor && selectedService) {
             if (!selectedPatient) {
                 Alert.alert('Error', 'No patient selected. Please select a patient first.');
                 return;
@@ -146,9 +165,19 @@ export default function Search() {
 
             try {
                 const response = await apiService.createFindAppointment({
-                    doctor_id: selectedItem.id,
-                    appointment_type_id: parseInt(selectedService.id),
+                    id_servicio: selectedDoctor.IdServicio,
+                    id_sucursal: selectedDoctor.IdSucursal,
+                    id_recurso: selectedDoctor.IdRecurso,
+                    id_especialidad: selectedDoctor.IdEspecialidad,
+                    id_tipo_recurso: selectedDoctor.IdTipoRecurso,
+                    id_prestacion: parseInt(selectedService.id),
+                    id_tipo_prestacion: selectedService.IdTipoPrestacion,
+                    nombre_tipo_prestacion: selectedService.Nombre,
                     patient_id: selectedPatient.id,
+                    doctor_name: selectedDoctor.Nombre,
+                    servicio: selectedDoctor.Servicio,
+                    sucursal: selectedDoctor.Sucursal,
+                    especialidad: selectedDoctor.Especialidad,
                     desired_timeframe: selectedTimeframe.value
                 });
 
@@ -239,7 +268,7 @@ export default function Search() {
                 )}
 
                 {/* Search Results Dropdown */}
-                {showDropdown && filteredItems.length > 0 && !loading && (
+                {showDropdown && filteredDoctors.length > 0 && !loading && (
                     <View style={{
                         backgroundColor: 'white',
                         borderRadius: 16,
@@ -254,32 +283,32 @@ export default function Search() {
                         borderColor: '#e5e7eb',
                     }}>
                         <ScrollView showsVerticalScrollIndicator={false}>
-                            {filteredItems.map((item, index) => (
+                            {filteredDoctors.map((doctor, index) => (
                                 <TouchableOpacity
-                                    key={item.id}
+                                    key={doctor.IdRecurso}
                                     style={{
                                         paddingVertical: 16,
                                         paddingHorizontal: 20,
-                                        borderBottomWidth: index === filteredItems.length - 1 ? 0 : 1,
+                                        borderBottomWidth: index === filteredDoctors.length - 1 ? 0 : 1,
                                         borderBottomColor: '#f3f4f6',
                                     }}
-                                    onPress={() => selectItem(item)}
+                                    onPress={() => selectDoctor(doctor)}
                                 >
                                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                         <View style={{ flex: 1 }}>
                                             <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 4 }}>
-                                                {item.name}
+                                                {doctor.Nombre}
                                             </Text>
                                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                 <Ionicons name="star-outline" size={14} color="#6b7280" style={{ marginRight: 4 }} />
                                                 <Text style={{ fontSize: 14, color: '#6b7280' }}>
-                                                    {item.especialidad}
+                                                    {doctor.Especialidad}
                                                 </Text>
                                             </View>
                                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                 <Ionicons name="location" size={14} color="#6b7280" style={{ marginRight: 4 }} />
                                                 <Text style={{ fontSize: 14, color: '#6b7280' }}>
-                                                    {item.location}
+                                                    {doctor.Sucursal}
                                                 </Text>
                                             </View>
                                         </View>
@@ -292,7 +321,7 @@ export default function Search() {
                 )}
 
                 {/* No Results Message */}
-                {showDropdown && filteredItems.length === 0 && searchText.trim() !== "" && !loading && (
+                {showDropdown && filteredDoctors.length === 0 && searchText.trim() !== "" && !loading && (
                     <View style={{
                         backgroundColor: 'white',
                         borderRadius: 16,
@@ -316,7 +345,7 @@ export default function Search() {
                 )}
 
                 {/* Selected Item Display */}
-                {selectedItem && (
+                {selectedDoctor && (
                     <View style={{
                         backgroundColor: 'white',
                         borderRadius: 16,
@@ -343,18 +372,24 @@ export default function Search() {
                             marginBottom: 16,
                         }}>
                             <Text style={{ fontSize: 18, fontWeight: '600', color: '#111827', marginBottom: 6 }}>
-                                {selectedItem.name}
+                                {selectedDoctor.Nombre}
                             </Text>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <Ionicons name="star-outline" size={14} color="#6b7280" style={{ marginRight: 4 }} />
                                 <Text style={{ fontSize: 14, color: '#6b7280' }}>
-                                    {selectedItem.especialidad}
+                                    {selectedDoctor.Especialidad}
+                                </Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Ionicons name="medical" size={14} color="#6b7280" style={{ marginRight: 4 }} />
+                                <Text style={{ fontSize: 14, color: '#6b7280' }}>
+                                    {selectedDoctor.Servicio}
                                 </Text>
                             </View>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <Ionicons name="location" size={16} color="#6b7280" style={{ marginRight: 6 }} />
                                 <Text style={{ fontSize: 15, color: '#6b7280' }}>
-                                    {selectedItem.location}
+                                    {selectedDoctor.Sucursal}
                                 </Text>
                             </View>
                         </View>
@@ -446,9 +481,6 @@ export default function Search() {
                                         >
                                             <Text style={{ fontSize: 16, fontWeight: '500', color: '#111827', marginBottom: 2 }}>
                                                 {service.name}
-                                            </Text>
-                                            <Text style={{ fontSize: 14, color: '#6b7280' }}>
-                                                {service.description}
                                             </Text>
                                         </TouchableOpacity>
                                     ))}

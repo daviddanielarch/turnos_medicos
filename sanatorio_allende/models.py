@@ -97,8 +97,20 @@ class FindAppointment(models.Model):
     patient = models.ForeignKey(
         PacienteAllende, on_delete=models.CASCADE, null=True, blank=True
     )
-    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
-    tipo_de_turno = models.ForeignKey(AppointmentType, on_delete=models.CASCADE)
+    doctor_name = models.CharField(max_length=255, db_index=True, null=True, blank=True)
+    id_servicio = models.IntegerField(null=True, blank=True)
+    servicio = models.CharField(max_length=255, null=True, blank=True)
+    id_sucursal = models.IntegerField(null=True, blank=True)
+    sucursal = models.CharField(max_length=255, null=True, blank=True)
+    id_especialidad = models.IntegerField(null=True, blank=True)
+    especialidad = models.CharField(max_length=255, null=True, blank=True)
+    id_recurso = models.IntegerField(null=True, blank=True)
+    id_tipo_recurso = models.IntegerField(null=True, blank=True)
+
+    id_prestacion = models.IntegerField(null=True, blank=True)
+    id_tipo_prestacion = models.IntegerField(null=True, blank=True)
+    nombre_tipo_prestacion = models.CharField(max_length=255, null=True, blank=True)
+
     desired_timeframe = models.CharField(
         max_length=255,
         null=True,
@@ -114,12 +126,12 @@ class FindAppointment(models.Model):
     active = models.BooleanField(default=False)
 
     def __str__(self) -> str:
-        return f"{self.doctor} - {self.tipo_de_turno}"
+        return f"{self.doctor_name} - {self.especialidad}"
 
     class Meta:
         verbose_name = "Find Appointment"
         verbose_name_plural = "Find Appointments"
-        ordering = ["doctor"]
+        ordering = ["doctor_name"]
 
 
 class BestAppointmentFound(models.Model):
@@ -141,7 +153,7 @@ class BestAppointmentFound(models.Model):
     confirmed_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self) -> str:
-        return f"{self.appointment_wanted.doctor.name} - {self.datetime}"
+        return f"{self.appointment_wanted.doctor_name} - {self.datetime}"
 
     class Meta:
         # Allow multiple BestAppointmentFound per FindAppointment

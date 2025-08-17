@@ -2,7 +2,7 @@ import time
 
 from django.conf import settings
 
-from sanatorio_allende.appointments import Allende
+from sanatorio_allende.allende_api import Allende
 from sanatorio_allende.models import PacienteAllende
 from sanatorio_allende.selenium_utils import SeleniumSettings
 
