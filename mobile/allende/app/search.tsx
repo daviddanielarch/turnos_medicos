@@ -3,7 +3,7 @@ import { COLORS } from "@/src/constants/constants";
 import { usePatientContext } from "@/src/contexts/PatientContext";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import apiService from "../services/apiService";
 
@@ -51,7 +51,24 @@ export default function Search() {
     const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([]);
     const [loading, setLoading] = useState(false);
     const [loadingServices, setLoadingServices] = useState(false);
+    const abortControllerRef = useRef<AbortController | null>(null);
+    const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const { selectedPatient } = usePatientContext();
+
+    // Cleanup function to clear timeout and abort requests
+    const cleanup = useCallback(() => {
+        if (debounceTimeoutRef.current) {
+            clearTimeout(debounceTimeoutRef.current);
+        }
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+    }, []);
+
+    // Cleanup on unmount
+    React.useEffect(() => {
+        return cleanup;
+    }, [cleanup]);
 
 
     const fetchAppointmentTypes = async (doctor: Doctor) => {
@@ -89,39 +106,80 @@ export default function Search() {
         }
     };
 
-    const handleSearch = async (text: string) => {
-        setSearchText(text);
-        if (text.trim() === "") {
-            setFilteredDoctors([]);
-        } else {
-            if (!selectedPatient) {
-                Alert.alert('Error', 'No patient selected. Please select a patient first.');
+    const performSearch = useCallback(async (searchTerm: string) => {
+        if (!selectedPatient) {
+            Alert.alert('Error', 'No patient selected. Please select a patient first.');
+            return;
+        }
+
+        // Cancel any ongoing request
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+
+        // Create new abort controller for this request
+        abortControllerRef.current = new AbortController();
+
+        setLoading(true);
+        try {
+            const response = await apiService.getDoctors(selectedPatient.id, searchTerm);
+
+            if (response.success && response.data) {
+                const doctorsData = response.data.doctors;
+
+                if (doctorsData && doctorsData.Profesionales) {
+                    setFilteredDoctors(doctorsData.Profesionales);
+                    setShowDropdown(true);
+                } else {
+                    setFilteredDoctors([]);
+                    setShowDropdown(false);
+                }
+            } else {
+                console.error('Failed to search doctors:', response.error);
+                setFilteredDoctors([]);
+                setShowDropdown(false);
+            }
+        } catch (error) {
+            // Don't show error if request was aborted
+            if (error instanceof Error && error.name === 'AbortError') {
+                console.log('Request was aborted');
                 return;
             }
-
-            setLoading(true);
-            try {
-                const response = await apiService.getDoctors(selectedPatient.id, text.trim());
-
-                if (response.success && response.data) {
-                    const doctorsData = response.data.doctors;
-                    if (doctorsData && doctorsData.Profesionales) {
-                        setFilteredDoctors(doctorsData.Profesionales);
-                    } else {
-                        setFilteredDoctors([]);
-                    }
-                } else {
-                    console.error('Failed to search doctors:', response.error);
-                    setFilteredDoctors([]);
-                }
-            } catch (error) {
-                console.error('Error searching doctors:', error);
-                setFilteredDoctors([]);
-            } finally {
-                setLoading(false);
-            }
+            console.error('Error searching doctors:', error);
+            setFilteredDoctors([]);
+            setShowDropdown(false);
+        } finally {
+            setLoading(false);
         }
-    };
+    }, [selectedPatient]);
+
+    const handleSearch = useCallback((text: string) => {
+        setSearchText(text);
+
+        // Clear results if text is empty
+        if (text.trim() === "") {
+            setFilteredDoctors([]);
+            setShowDropdown(false);
+            return;
+        }
+
+        // Only trigger search after 4 characters
+        if (text.trim().length < 4) {
+            setFilteredDoctors([]);
+            setShowDropdown(false);
+            return;
+        }
+
+        // Clear previous debounce timeout
+        if (debounceTimeoutRef.current) {
+            clearTimeout(debounceTimeoutRef.current);
+        }
+
+        // Debounce the search - wait 300ms after user stops typing
+        debounceTimeoutRef.current = setTimeout(() => {
+            performSearch(text.trim());
+        }, 300);
+    }, [performSearch]);
 
     const selectDoctor = (doctor: Doctor) => {
         setSelectedDoctor(doctor);
@@ -236,7 +294,12 @@ export default function Search() {
                         placeholderTextColor="#9ca3af"
                         value={searchText}
                         onChangeText={handleSearch}
-                        onFocus={() => setShowDropdown(true)}
+                        onFocus={() => {
+                            // Only show dropdown if there are results or if user is typing
+                            if (filteredDoctors.length > 0 || searchText.trim().length >= 4) {
+                                setShowDropdown(true);
+                            }
+                        }}
                         underlineColorAndroid="transparent"
                     />
                     {searchText.length > 0 && (
@@ -285,7 +348,7 @@ export default function Search() {
                         <ScrollView showsVerticalScrollIndicator={false}>
                             {filteredDoctors.map((doctor, index) => (
                                 <TouchableOpacity
-                                    key={doctor.IdRecurso}
+                                    key={`${doctor.IdRecurso}-${doctor.IdEspecialidad}-${doctor.IdServicio}-${doctor.IdSucursal}`}
                                     style={{
                                         paddingVertical: 16,
                                         paddingHorizontal: 20,
@@ -321,7 +384,7 @@ export default function Search() {
                 )}
 
                 {/* No Results Message */}
-                {showDropdown && filteredDoctors.length === 0 && searchText.trim() !== "" && !loading && (
+                {showDropdown && filteredDoctors.length === 0 && searchText.trim().length >= 4 && !loading && (
                     <View style={{
                         backgroundColor: 'white',
                         borderRadius: 16,
