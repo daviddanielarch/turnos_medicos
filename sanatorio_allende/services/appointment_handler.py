@@ -224,6 +224,7 @@ class AppointmentHandler:
                 if comparison_result.action == AppointmentAction.REMOVE_EXISTING
                 else comparison_result.new_datetime
             )
+            assert isinstance(notification_datetime, datetime)
             push_result = AppointmentNotificationService.send_appointment_notification(
                 appointment_data,
                 notification_datetime,

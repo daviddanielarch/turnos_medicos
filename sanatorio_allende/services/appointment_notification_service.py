@@ -1,3 +1,4 @@
+import datetime
 from typing import Any, Dict
 
 from django.contrib.auth.models import User
@@ -16,7 +17,7 @@ class AppointmentNotificationService:
     def send_appointment_notification(
         cls,
         appointment_data: AppointmentData,
-        appointment_datetime: Any,  # datetime object
+        appointment_datetime: datetime.datetime,
         notification_type: NotificationType,
         user: User,
     ) -> Dict[str, Any]:

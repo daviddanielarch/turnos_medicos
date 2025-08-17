@@ -3,7 +3,7 @@
 import base64
 import json
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import requests
@@ -198,7 +198,7 @@ class Allende:
 
             # Extract additional appointment data
             appointment_data = {
-                "datetime": date_and_time.replace(tzinfo=timezone(timedelta(hours=-3))),
+                "datetime": date_and_time,
                 "duracion_individual": turno.get("DuracionIndividual"),
                 "id_plantilla_turno": turno.get("IdPlantillaTurno"),
                 "id_item_plantilla": turno.get("IdItemDePlantilla"),
