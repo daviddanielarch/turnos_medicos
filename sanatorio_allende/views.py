@@ -1,5 +1,4 @@
 import json
-from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -617,7 +616,7 @@ class ConfirmAppointmentView(LoginRequiredMixin, View):
             },
             "TurnoElegidoDto": {
                 "Fecha": appointment.datetime.strftime("%Y-%m-%dT00:00:00"),
-                "Hora": (appointment.datetime - timedelta(hours=3)).strftime("%H:%M"),
+                "Hora": appointment.datetime.strftime("%H:%M"),
                 "IdItemDePlantilla": appointment.id_item_plantilla,
                 "IdPlantillaTurno": appointment.id_plantilla_turno,
                 "IdSucursal": appointment.appointment_wanted.id_sucursal,

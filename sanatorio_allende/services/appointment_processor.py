@@ -221,9 +221,7 @@ class AppointmentProcessor:
         Returns:
             Formatted datetime string
         """
-        return (appointment_datetime - datetime.timedelta(hours=3)).strftime(
-            "%d/%m/%Y %H:%M"
-        )
+        return appointment_datetime.strftime("%d/%m/%Y %H:%M")
 
     @classmethod
     def create_notification_data(

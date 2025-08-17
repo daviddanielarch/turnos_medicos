@@ -1250,9 +1250,7 @@ class TestConfirmAppointmentView:
             },
             "TurnoElegidoDto": {
                 "Fecha": best_appointment_found.datetime.strftime("%Y-%m-%dT00:00:00"),
-                "Hora": (best_appointment_found.datetime - timedelta(hours=3)).strftime(
-                    "%H:%M"
-                ),
+                "Hora": best_appointment_found.datetime.strftime("%H:%M"),
                 "IdItemDePlantilla": TEST_ITEM_PLANTILLA_ID,
                 "IdPlantillaTurno": TEST_PLANTILLA_TURNO_ID,
                 "IdSucursal": TEST_SUCURSAL_ID,
