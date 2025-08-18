@@ -143,7 +143,14 @@ class BestAppointmentRepository:
             best_appointment.id_plantilla_turno = id_plantilla_turno
         if id_item_plantilla is not None:
             best_appointment.id_item_plantilla = id_item_plantilla
-        best_appointment.save()
+        best_appointment.save(
+            update_fields=[
+                "datetime",
+                "duracion_individual",
+                "id_plantilla_turno",
+                "id_item_plantilla",
+            ]
+        )
         return best_appointment
 
     @classmethod

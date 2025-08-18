@@ -221,7 +221,7 @@ class FindAppointmentView(LoginRequiredMixin, View):
 
         if existing_appointment:
             existing_appointment.desired_timeframe = desired_timeframe
-            existing_appointment.save()
+            existing_appointment.save(update_fields=["desired_timeframe"])
             return JsonResponse(
                 {"success": True, "message": "Appointment updated successfully"}
             )
@@ -289,7 +289,7 @@ class FindAppointmentView(LoginRequiredMixin, View):
                 status=401,
             )
         appointment.active = active
-        appointment.save()
+        appointment.save(update_fields=["active"])
 
         return JsonResponse(
             {
