@@ -1,7 +1,7 @@
 import time
-from datetime import datetime
 
 from django.conf import settings
+from django.utils import timezone
 
 from sanatorio_allende.allende_api import Allende
 from sanatorio_allende.models import PacienteAllende
@@ -26,7 +26,7 @@ class AllendeAuthService:
             if not Allende.is_authorized(self.patient.token):
                 token_issue_time = self.patient.updated_at
                 token_issue_delta_minutes = (
-                    datetime.now() - token_issue_time
+                    timezone.now() - token_issue_time
                 ).total_seconds() / 60
                 print(f"Token duration: {token_issue_delta_minutes} minutes")
 
