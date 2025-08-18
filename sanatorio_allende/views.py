@@ -615,8 +615,10 @@ class ConfirmAppointmentView(LoginRequiredMixin, View):
                 ],
             },
             "TurnoElegidoDto": {
-                "Fecha": appointment.datetime.strftime("%Y-%m-%dT00:00:00"),
-                "Hora": appointment.datetime.strftime("%H:%M"),
+                "Fecha": timezone.localtime(appointment.datetime).strftime(
+                    "%Y-%m-%dT00:00:00"
+                ),
+                "Hora": timezone.localtime(appointment.datetime).strftime("%H:%M"),
                 "IdItemDePlantilla": appointment.id_item_plantilla,
                 "IdPlantillaTurno": appointment.id_plantilla_turno,
                 "IdSucursal": appointment.appointment_wanted.id_sucursal,

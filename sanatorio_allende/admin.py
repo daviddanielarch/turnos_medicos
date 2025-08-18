@@ -1,8 +1,5 @@
 from django import forms
-from django.contrib import admin, messages
-from django.db.models import Q, QuerySet
-from django.http import HttpRequest, JsonResponse
-from django.urls import path
+from django.contrib import admin
 
 from .models import (
     BestAppointmentFound,

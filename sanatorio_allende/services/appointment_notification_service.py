@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 
 from sanatorio_allende.services.appointment_processor import (
     AppointmentData,
+    AppointmentProcessor,
     NotificationType,
 )
 from sanatorio_allende.services.push_notifications import PushNotificationService
@@ -33,10 +34,6 @@ class AppointmentNotificationService:
         Returns:
             Dictionary with notification result
         """
-        from sanatorio_allende.services.appointment_processor import (
-            AppointmentProcessor,
-        )
-
         # Format datetime for display
         datetime_str = AppointmentProcessor.format_appointment_datetime(
             appointment_datetime

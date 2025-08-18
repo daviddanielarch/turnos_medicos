@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Optional
 
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 from sanatorio_allende.models import (
     BestAppointmentFound,
@@ -220,7 +221,8 @@ class AppointmentHandler:
                 if comparison_result.action == AppointmentAction.REMOVE_EXISTING
                 else comparison_result.new_datetime
             )
-            assert isinstance(notification_datetime, datetime)
+
+            notification_datetime = timezone.localtime(notification_datetime)
             push_result = AppointmentNotificationService.send_appointment_notification(
                 appointment_data,
                 notification_datetime,
