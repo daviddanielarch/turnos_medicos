@@ -56,6 +56,8 @@ class AllendeAuthService:
             self.patient.id_financiador = user_data["IdFinanciador"]
             self.patient.id_plan = user_data["IdPlan"]
 
-        self.patient.save()
+        self.patient.save(
+            update_fields=["token", "id_paciente", "id_financiador", "id_plan"]
+        )
 
         return self.patient.token or ""
