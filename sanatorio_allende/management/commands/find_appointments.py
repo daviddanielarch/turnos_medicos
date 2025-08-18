@@ -112,7 +112,6 @@ class Command(BaseCommand):
                 new_best_appointment_data = allende.search_best_date_appointment(
                     doctor_data
                 )
-                print(new_best_appointment_data)
                 result = AppointmentHandler.process_appointment(
                     appointment_to_find=appointment_to_find,
                     patient=patient,
