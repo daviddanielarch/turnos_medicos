@@ -28,6 +28,18 @@ class CancelAppointmentResponse:
     IdEntidadValidada: int
 
 
+@dataclass
+class UserData:
+    id_financiador: str
+    id_plan: str
+
+
+@dataclass
+class BookAppointmentResponse:
+    id_turno: Optional[int]
+    data: Optional[dict]
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -142,7 +154,7 @@ class Allende:
 
         return response.json()  # type: ignore
 
-    def get_user_data(self) -> Dict[str, Any]:
+    def get_user_data(self) -> UserData:
         if not self.user_id:
             raise Exception("User id not found")
 
@@ -151,12 +163,12 @@ class Allende:
             headers={"authorization": self.auth_header},
         )
         data = response.json()
-        return {
-            "IdFinanciador": data["CoberturaPorDefecto"]["IdMutual"],
-            "IdPlan": data["CoberturaPorDefecto"]["IdPlanMutual"],
-        }
+        return UserData(
+            id_financiador=data["CoberturaPorDefecto"]["IdMutual"],
+            id_plan=data["CoberturaPorDefecto"]["IdPlanMutual"],
+        )
 
-    def reservar(self, appointment_data: dict) -> Dict[str, Any]:
+    def book_appointment(self, appointment_data: dict) -> BookAppointmentResponse:
         url = "https://miportal.sanatorioallende.com/backend/api/turnos/Asignar"
 
         response = requests.post(
@@ -166,7 +178,12 @@ class Allende:
         if response.status_code == HTTP_UNAUTHORIZED:
             raise UnauthorizedException()
 
-        return response.json()  # type: ignore  # type: ignore
+        data = response.json()
+
+        return BookAppointmentResponse(
+            id_turno=data.get("Entidad", {}).get("Id"),
+            data=data,
+        )
 
     def cancel_appointment(self, appointment_id: int) -> CancelAppointmentResponse:
         """
@@ -252,32 +269,6 @@ class Allende:
             appointments.append(appointment_data)
 
         return appointments
-
-    def get_available_doctors(
-        self, id_especialidad: str, id_servicio: str, id_sucursal: str
-    ) -> List[dict]:
-        response = requests.get(
-            f"https://miportal.sanatorioallende.com/backend/api/recurso/ObtenerTodosDeUnServicioEnSucursalConEspecialidadParaPortalWeb/{id_servicio}/{id_sucursal}/{id_especialidad}/329130/2/1227/66",
-            headers={"authorization": self.auth_header},
-        )
-
-        if response.status_code == HTTP_UNAUTHORIZED:
-            raise UnauthorizedException()
-
-        """
-        Response is a list of this:
-            {
-                "Id": 23463,
-                "IdTipoRecurso": 1,
-                "TipoRecurso": "Profesional",
-                "Nombre": "BARRERA ROSANA FABIANA",
-                "Atiende": true,
-                "VisiblePortalWeb": true,
-                "Matricula": 23463,
-                "ProfesionalQueAtiende": null
-            },
-        """
-        return response.json()  # type: ignore
 
     def get_available_appointment_types(
         self, id_especialidad: str, id_servicio: str, id_sucursal: str

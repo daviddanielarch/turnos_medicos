@@ -629,10 +629,9 @@ class AppointmentView(LoginRequiredMixin, View):
         }
 
         try:
-            result = allende.reservar(appointment_data)
-            print(result)
-            entidad = result.get("Entidad")
-            if entidad is None:
+            result = allende.book_appointment(appointment_data)
+            if result.id_turno is None:
+                print(result.data)
                 return JsonResponse(
                     {
                         "success": False,
@@ -641,18 +640,7 @@ class AppointmentView(LoginRequiredMixin, View):
                     status=400,
                 )
 
-            id_turno = entidad.get("Id")
-            if not id_turno:
-                print(result)
-                return JsonResponse(
-                    {
-                        "success": False,
-                        "error": "No se pudo obtener el ID del turno",
-                    },
-                    status=400,
-                )
-
-            appointment.confirmed_id_turno = id_turno
+            appointment.confirmed_id_turno = result.id_turno
             appointment.confirmed = True
             appointment.confirmed_at = timezone.now()
             appointment.save()
