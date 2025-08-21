@@ -138,7 +138,7 @@ class TestAppointmentHandler:
 
     @pytest.mark.django_db
     @patch("sanatorio_allende.services.push_notifications.requests.post")
-    def test_process_appointment_removes_existing_when_worse(
+    def test_process_appointment_updates_existing_when_worse(
         self,
         mock_post: Any,
         find_appointment: Any,
@@ -146,7 +146,7 @@ class TestAppointmentHandler:
         user: Any,
         device_registration: Any,
     ) -> None:
-        """Test that worse appointments remove existing ones"""
+        """Test that worse appointments update existing one"""
         # Mock successful push notification response
         mock_response = type("MockResponse", (), {"status_code": 200})()
         mock_response.json = lambda: [{"status": "ok", "id": "test_receipt_id"}]
@@ -166,9 +166,9 @@ class TestAppointmentHandler:
         # Process appointment (worse time)
         appointment_data = {
             "datetime": worse_time,
-            "duracion_individual": TEST_DURACION_INDIVIDUAL,
-            "id_plantilla_turno": TEST_ID_PLANTILLA_TURNO,
-            "id_item_plantilla": TEST_ID_ITEM_PLANTILLA,
+            "duracion_individual": 25,
+            "id_plantilla_turno": 100,
+            "id_item_plantilla": 299,
         }
 
         result = AppointmentHandler.process_appointment(
@@ -179,13 +179,17 @@ class TestAppointmentHandler:
         )
 
         # Verify result
-        assert result.action == AppointmentActionType.REMOVED
+        assert result.action == AppointmentActionType.UPDATED
         assert result.notification_sent is True
-        assert "Removed worse appointments" in result.message
+        assert "Better appointment found" in result.message
 
-        # Verify database was updated - appointment should be deleted
-        with pytest.raises(BestAppointmentFound.DoesNotExist):
-            BestAppointmentFound.objects.get(id=existing_appointment.id)
+        # Verify database was updated
+        existing_appointment.refresh_from_db()
+        assert existing_appointment.datetime == worse_time
+        # Verify additional appointment data is updated correctly
+        assert existing_appointment.duracion_individual == 25
+        assert existing_appointment.id_plantilla_turno == 100
+        assert existing_appointment.id_item_plantilla == 299
 
     @pytest.mark.django_db
     @patch("sanatorio_allende.services.push_notifications.requests.post")
@@ -320,7 +324,6 @@ class TestAppointmentHandler:
         # Verify result
         assert result.action == AppointmentActionType.SKIPPED
         assert result.notification_sent is False
-        assert "outside desired timeframe" in result.message
 
         # Verify no appointment was created
         assert not BestAppointmentFound.objects.filter(

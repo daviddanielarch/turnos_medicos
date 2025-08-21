@@ -45,6 +45,11 @@ class AppointmentNotificationService:
                 f"¡Nuevo turno! - {appointment_data.patient_dni} - "
                 f"{appointment_data.doctor_name} - {datetime_str}"
             )
+        elif notification_type == NotificationType.UPDATED:
+            push_title = (
+                f"Turno actualizado - {appointment_data.patient_dni} - "
+                f"{appointment_data.doctor_name} - {datetime_str}"
+            )
         else:
             push_title = (
                 f"Turno perdido - {appointment_data.patient_dni} - "

@@ -20,6 +20,7 @@ class NotificationType(Enum):
 
     NEW = "new"
     LOST = "lost"
+    UPDATED = "updated"
     NONE = "none"
 
 
@@ -103,12 +104,21 @@ class AppointmentProcessor:
         Returns:
             AppointmentComparisonResult with comparison details
         """
-        # If no new appointment found, remove the existing one
-        if new_appointment_datetime is None and current_best_datetime is not None:
+        if new_appointment_datetime is None and current_best_datetime is None:
+            return AppointmentComparisonResult(
+                action=AppointmentAction.DO_NOTHING,
+                new_datetime=None,
+                previous_datetime=None,
+                should_notify=False,
+                notification_type=NotificationType.NONE,
+            )
+
+        # If no new appointment found, remove the existing ones
+        if new_appointment_datetime is None:
             return AppointmentComparisonResult(
                 action=AppointmentAction.REMOVE_EXISTING,
                 new_datetime=None,
-                previous_datetime=current_best_datetime,
+                previous_datetime=None,
                 should_notify=True,
                 notification_type=NotificationType.LOST,
             )
@@ -146,27 +156,14 @@ class AppointmentProcessor:
                 notification_type=NotificationType.NONE,
             )
 
+        # New appointment is earlier than current (better appointment) or
         # New appointment is later than current (worse appointment)
-        if (
-            new_appointment_datetime is not None
-            and current_best_datetime is not None
-            and new_appointment_datetime > current_best_datetime
-        ):
-            return AppointmentComparisonResult(
-                action=AppointmentAction.REMOVE_EXISTING,
-                new_datetime=new_appointment_datetime,
-                previous_datetime=current_best_datetime,
-                should_notify=True,
-                notification_type=NotificationType.LOST,
-            )
-
-        # New appointment is earlier than current (better appointment)
         return AppointmentComparisonResult(
             action=AppointmentAction.UPDATE_EXISTING,
             new_datetime=new_appointment_datetime,
             previous_datetime=current_best_datetime,
             should_notify=True,
-            notification_type=NotificationType.NEW,
+            notification_type=NotificationType.UPDATED,
         )
 
     @classmethod

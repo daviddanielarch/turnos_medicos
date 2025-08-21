@@ -708,6 +708,7 @@ class AppointmentView(LoginRequiredMixin, View):
             appointment.confirmed_id_turno = None
             appointment.confirmed_at = None
             appointment.save()
+
             return JsonResponse(
                 {"success": True, "message": "Appointment cancelled successfully"}
             )

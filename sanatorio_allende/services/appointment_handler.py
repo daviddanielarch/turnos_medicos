@@ -101,18 +101,13 @@ class AppointmentHandler:
                     notification_sent=False,
                 )
 
-            # For new appointments, check if within desired timeframe
-            if (
-                appointment_to_find.desired_timeframe is not None
-                and not AppointmentProcessor.is_within_desired_timeframe(
-                    new_appointment_datetime, appointment_to_find.desired_timeframe
-                )
-            ):
-                return AppointmentProcessingResult(
-                    action=AppointmentActionType.SKIPPED,
-                    message=f"Appointment {new_appointment_datetime} is outside desired timeframe ({appointment_to_find.desired_timeframe}) for {appointment_to_find.doctor_name} - {appointment_to_find.nombre_tipo_prestacion}",
-                    notification_sent=False,
-                )
+        if (
+            appointment_to_find.desired_timeframe is not None
+            and not AppointmentProcessor.is_within_desired_timeframe(
+                new_appointment_datetime, appointment_to_find.desired_timeframe
+            )
+        ):
+            new_appointment_datetime = None
 
         # Compare appointments
         comparison_result = AppointmentProcessor.compare_appointments(
@@ -146,7 +141,7 @@ class AppointmentHandler:
     def _handle_action(
         cls,
         comparison_result: AppointmentComparisonResult,
-        appointment: FindAppointment,
+        appointment_to_find: FindAppointment,
         patient: PacienteAllende,
         appointment_data: AppointmentData,
         user: User,
@@ -157,7 +152,7 @@ class AppointmentHandler:
             assert isinstance(comparison_result.new_datetime, datetime)
 
             BestAppointmentRepository.create_best_appointment(
-                appointment,
+                appointment_to_find,
                 patient,
                 comparison_result.new_datetime,
                 duracion_individual=appointment_data.duracion_individual,
@@ -167,14 +162,14 @@ class AppointmentHandler:
 
             result = AppointmentProcessingResult(
                 action=AppointmentActionType.CREATED,
-                message=f"New best appointment found for {appointment.doctor_name} - {appointment.nombre_tipo_prestacion}: {comparison_result.new_datetime}",
+                message=f"New best appointment found for {appointment_to_find.doctor_name} - {appointment_to_find.nombre_tipo_prestacion}: {comparison_result.new_datetime}",
             )
 
         elif comparison_result.action == AppointmentAction.UPDATE_EXISTING:
             assert isinstance(comparison_result.new_datetime, datetime)
             best_appointment_so_far = (
                 BestAppointmentRepository.get_current_best_appointment(
-                    appointment, patient
+                    appointment_to_find, patient
                 )
             )
             assert isinstance(best_appointment_so_far, BestAppointmentFound)
@@ -189,23 +184,23 @@ class AppointmentHandler:
 
             result = AppointmentProcessingResult(
                 action=AppointmentActionType.UPDATED,
-                message=f"Better appointment found for {appointment.doctor_name} - {appointment.nombre_tipo_prestacion}: {comparison_result.new_datetime}",
+                message=f"Better appointment found for {appointment_to_find.doctor_name} - {appointment_to_find.nombre_tipo_prestacion}: {comparison_result.new_datetime}",
             )
 
         elif comparison_result.action == AppointmentAction.REMOVE_EXISTING:
             best_appointment_so_far = (
                 BestAppointmentRepository.get_current_best_appointment(
-                    appointment, patient
+                    appointment_to_find, patient
                 )
             )
-            assert isinstance(best_appointment_so_far, BestAppointmentFound)
+
+            assert best_appointment_so_far is not None
             BestAppointmentRepository.delete_previous_appointments(
                 best_appointment_so_far
             )
-
             result = AppointmentProcessingResult(
                 action=AppointmentActionType.REMOVED,
-                message=f"Removed worse appointments for {appointment.doctor_name} - {appointment.nombre_tipo_prestacion}: {comparison_result.previous_datetime}",
+                message=f"Removed worse appointments for {appointment_to_find.doctor_name} - {appointment_to_find.nombre_tipo_prestacion}: {comparison_result.previous_datetime}",
             )
 
         else:  # DO_NOTHING

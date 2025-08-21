@@ -37,22 +37,7 @@ class TestAppointmentProcessor:
 
         assert result.action == AppointmentAction.UPDATE_EXISTING
         assert result.should_notify is True
-        assert result.notification_type == NotificationType.NEW
-
-    def test_worse_appointment_removes_existing(self) -> None:
-        """Test that later appointments trigger removal action"""
-        current_time = datetime.datetime.now()
-        existing_appointment = current_time + datetime.timedelta(days=5)
-        worse_appointment = current_time + datetime.timedelta(days=10)
-
-        result = AppointmentProcessor.compare_appointments(
-            new_appointment_datetime=worse_appointment,
-            current_best_datetime=existing_appointment,
-        )
-
-        assert result.action == AppointmentAction.REMOVE_EXISTING
-        assert result.should_notify is True
-        assert result.notification_type == NotificationType.LOST
+        assert result.notification_type == NotificationType.UPDATED
 
     def test_same_appointment_does_nothing(self) -> None:
         """Test that identical appointments trigger no action"""
@@ -85,8 +70,8 @@ class TestAppointmentProcessor:
         assert result.should_notify is False
         assert result.notification_type == NotificationType.NONE
 
-    def test_not_interested_appointment_different_time_processed(self) -> None:
-        """Test that not interested appointments are also removed"""
+    def test_not_interested_appointment_updates_existing_anyways(self) -> None:
+        """Test that not interested appointments don't have any effect on the existing appointment update process"""
         current_time = datetime.datetime.now()
         existing_appointment = current_time + datetime.timedelta(days=15)
         not_interested_time = current_time + datetime.timedelta(days=10)
@@ -98,9 +83,9 @@ class TestAppointmentProcessor:
             not_interested_datetimes=[not_interested_time],
         )
 
-        assert result.action == AppointmentAction.REMOVE_EXISTING
+        assert result.action == AppointmentAction.UPDATE_EXISTING
         assert result.should_notify is True
-        assert result.notification_type == NotificationType.LOST
+        assert result.notification_type == NotificationType.UPDATED
 
     def test_multiple_not_interested_appointments_handled(self) -> None:
         """Test that multiple not_interested appointments are all checked"""
