@@ -630,6 +630,7 @@ class AppointmentView(LoginRequiredMixin, View):
 
         try:
             result = allende.reservar(appointment_data)
+            print(result)
             entidad = result.get("Entidad")
             if entidad is None:
                 return JsonResponse(
@@ -703,6 +704,10 @@ class AppointmentView(LoginRequiredMixin, View):
                     status=400,
                 )
 
+            appointment.confirmed = False
+            appointment.confirmed_id_turno = None
+            appointment.confirmed_at = None
+            appointment.save()
             return JsonResponse(
                 {"success": True, "message": "Appointment cancelled successfully"}
             )

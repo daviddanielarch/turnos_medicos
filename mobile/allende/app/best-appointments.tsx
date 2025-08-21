@@ -25,6 +25,7 @@ export default function BestAppointments() {
     const [refreshing, setRefreshing] = useState(false);
     const [processingAppointment, setProcessingAppointment] = useState<number | null>(null);
     const [confirmingAppointment, setConfirmingAppointment] = useState<number | null>(null);
+    const [cancelingAppointment, setCancelingAppointment] = useState<number | null>(null);
     const { isAuthenticated } = useAuth0Context();
     const { selectedPatient } = usePatientContext();
 
@@ -58,11 +59,11 @@ export default function BestAppointments() {
                 setBestAppointments((response.data as any).best_appointments);
             } else {
                 console.error('Failed to fetch best appointments:', response.error);
-                Alert.alert('Error', 'Failed to load best appointments');
+                Alert.alert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
             }
         } catch (error) {
             console.error('Error fetching best appointments:', error);
-            Alert.alert('Error', 'Network error while loading best appointments');
+            Alert.alert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
         } finally {
             setLoading(false);
         }
@@ -98,7 +99,6 @@ export default function BestAppointments() {
             const response = await apiService.confirmAppointment(appointmentId);
 
             if (response.success) {
-                // Update the appointment in local state to mark it as confirmed
                 setBestAppointments(prev => prev.map(appointment =>
                     appointment.id === appointmentId
                         ? { ...appointment, confirmed: true, confirmed_at: new Date().toISOString() }
@@ -106,13 +106,33 @@ export default function BestAppointments() {
                 ));
             } else {
                 console.error('Failed to confirm appointment:', response.error);
-                Alert.alert('Error', 'Failed to confirm appointment');
+                Alert.alert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
             }
         } catch (error) {
             console.error('Error confirming appointment:', error);
-            Alert.alert('Error', 'Network error while confirming appointment');
+            Alert.alert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
         } finally {
             setConfirmingAppointment(null);
+        }
+    };
+
+    const handleCancelAppointment = async (appointmentId: number) => {
+        setCancelingAppointment(appointmentId);
+        try {
+            const response = await apiService.cancelAppointment(appointmentId);
+
+            if (response.success) {
+                // Remove the appointment from the local state
+                setBestAppointments(prev => prev.filter(appointment => appointment.id !== appointmentId));
+            } else {
+                console.error('Failed to cancel appointment:', response.error);
+                Alert.alert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
+            }
+        } catch (error) {
+            console.error('Error canceling appointment:', error);
+            Alert.alert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
+        } finally {
+            setCancelingAppointment(null);
         }
     };
 
@@ -247,7 +267,7 @@ export default function BestAppointments() {
                                 )}
                             </View>
 
-                            {!appointment.confirmed && (
+                            {!appointment.confirmed ? (
                                 <TouchableOpacity
                                     style={[
                                         styles.notInterestedButton,
@@ -262,6 +282,24 @@ export default function BestAppointments() {
                                         <>
                                             <Ionicons name="close-circle-outline" size={16} color="#ef4444" />
                                             <Text style={styles.notInterestedButtonText}>No me interesa</Text>
+                                        </>
+                                    )}
+                                </TouchableOpacity>
+                            ) : (
+                                <TouchableOpacity
+                                    style={[
+                                        styles.cancelButton,
+                                        cancelingAppointment === appointment.id && styles.cancelButtonDisabled
+                                    ]}
+                                    onPress={() => handleCancelAppointment(appointment.id)}
+                                    disabled={cancelingAppointment === appointment.id}
+                                >
+                                    {cancelingAppointment === appointment.id ? (
+                                        <ActivityIndicator size="small" color="#dc2626" />
+                                    ) : (
+                                        <>
+                                            <Ionicons name="close-circle" size={16} color="#dc2626" />
+                                            <Text style={styles.cancelButtonText}>Cancelar</Text>
                                         </>
                                     )}
                                 </TouchableOpacity>
@@ -421,6 +459,25 @@ const styles = {
         marginLeft: 4,
         fontSize: 12,
         color: 'white',
+        fontWeight: '500' as const,
+    },
+    cancelButton: {
+        flexDirection: 'row' as const,
+        alignItems: 'center' as const,
+        backgroundColor: '#fef2f2',
+        borderWidth: 1,
+        borderColor: '#fecaca',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 6,
+    },
+    cancelButtonDisabled: {
+        opacity: 0.6,
+    },
+    cancelButtonText: {
+        marginLeft: 4,
+        fontSize: 12,
+        color: '#dc2626',
         fontWeight: '500' as const,
     },
 }; 

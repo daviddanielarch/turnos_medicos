@@ -1306,6 +1306,12 @@ class TestAppointmentViewDelete:
         assert response_data["success"] is True
         assert response_data["message"] == "Appointment cancelled successfully"
 
+        # Verify the appointment was marked as not confirmed
+        best_appointment_found.refresh_from_db()
+        assert best_appointment_found.confirmed is False
+        assert best_appointment_found.confirmed_at is None
+        assert best_appointment_found.confirmed_id_turno is None
+
         # Verify the correct data was sent to the Allende API
         mock_post.assert_called_once()
         call_args = mock_post.call_args

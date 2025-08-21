@@ -292,7 +292,16 @@ class ApiService {
      * Confirm an appointment
      */
     async confirmAppointment(appointmentId: number) {
-        return this.post<ConfirmAppointmentResponse>('/api/confirm-appointment/', {
+        return this.post<ConfirmAppointmentResponse>('/api/appointment/', {
+            appointment_id: appointmentId,
+        });
+    }
+
+    /**
+     * Cancel a confirmed appointment
+     */
+    async cancelAppointment(appointmentId: number) {
+        return this.delete<ConfirmAppointmentResponse>('/api/appointment/', {
             appointment_id: appointmentId,
         });
     }
