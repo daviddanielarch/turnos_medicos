@@ -10,6 +10,7 @@ A React Native mobile application for booking medical appointments at Sanatorio 
 - **Push Notifications**: Receive notifications for appointment updates
 - **Authentication**: Secure login with Auth0 integration
 - **Offline Support**: Background task management for appointment monitoring
+- **Expo Updates**:  Remote updates without having to reinstall or upgrade the app from the App Store
 
 ## Prerequisites
 
@@ -44,8 +45,6 @@ The app connects to the Django backend API. Configure the API host in one of the
 3. **Default Fallback**: If neither is configured, it defaults to the production API
 
 ### Auth0 Authentication Setup
-
-This app uses Auth0 for authentication. Follow the detailed setup guide in [AUTH_SETUP.md](./AUTH_SETUP.md) to configure:
 
 - Auth0 tenant and application
 - Mobile app configuration
