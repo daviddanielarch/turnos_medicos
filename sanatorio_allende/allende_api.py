@@ -3,6 +3,7 @@
 import base64
 import json
 import logging
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
@@ -16,6 +17,15 @@ HTTP_UNAUTHORIZED = 401
 
 class UnauthorizedException(Exception):
     pass
+
+
+@dataclass
+class CancelAppointmentResponse:
+    IsOk: bool
+    Message: str
+    HasWarnings: bool
+    WarningMessage: str
+    IdEntidadValidada: int
 
 
 logger = logging.getLogger(__name__)
@@ -157,6 +167,41 @@ class Allende:
             raise UnauthorizedException()
 
         return response.json()  # type: ignore  # type: ignore
+
+    def cancel_appointment(self, appointment_id: int) -> CancelAppointmentResponse:
+        """
+        Response format:
+        {
+            "IsOk": true,
+            "Message": "",
+            "HasWarnings": false,
+            "WarningMessage": "",
+            "IdEntidadValidada": 0
+        }
+        """
+        url = "https://miportal.sanatorioallende.com/backend/api/turnos/CancelarTurno"
+
+        data = {
+            "IdTurno": appointment_id,
+            "Observaciones": "Cancela paciente desde el portal",
+            "IdMotivoDeAnulacionTurno": 1,
+        }
+        response = requests.post(
+            url, headers={"authorization": self.auth_header}, json=data
+        )
+
+        if response.status_code == HTTP_UNAUTHORIZED:
+            raise UnauthorizedException()
+
+        data = response.json()
+
+        return CancelAppointmentResponse(
+            IsOk=data.get("IsOk", False),  # type: ignore
+            Message=data.get("Message", ""),  # type: ignore
+            HasWarnings=data.get("HasWarnings", False),  # type: ignore
+            WarningMessage=data.get("WarningMessage", ""),  # type: ignore
+            IdEntidadValidada=data.get("IdEntidadValidada", 0),  # type: ignore
+        )
 
     @classmethod
     def is_authorized(cls, auth_header: str) -> bool:

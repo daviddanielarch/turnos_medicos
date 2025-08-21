@@ -1097,7 +1097,7 @@ class TestConfirmAppointmentView:
         )()
         mock_post.return_value = mock_response
 
-        url = reverse("sanatorio_allende:api_confirm_appointment")
+        url = reverse("sanatorio_allende:api_appointment")
         data = {"appointment_id": best_appointment_found.id}
         response = client.post(url, json.dumps(data), content_type="application/json")
 
@@ -1127,7 +1127,7 @@ class TestConfirmAppointmentView:
     @pytest.mark.django_db
     def test_post_confirm_appointment_invalid_json(self, client: Any) -> None:
         """Test POST request with invalid JSON"""
-        url = reverse("sanatorio_allende:api_confirm_appointment")
+        url = reverse("sanatorio_allende:api_appointment")
         response = client.post(url, "invalid json", content_type="application/json")
 
         assert response.status_code == 400
@@ -1138,7 +1138,7 @@ class TestConfirmAppointmentView:
     @pytest.mark.django_db
     def test_post_confirm_appointment_not_found(self, client: Any) -> None:
         """Test POST request with non-existent appointment_id"""
-        url = reverse("sanatorio_allende:api_confirm_appointment")
+        url = reverse("sanatorio_allende:api_appointment")
         data = {"appointment_id": 999}
         response = client.post(url, json.dumps(data), content_type="application/json")
 
@@ -1154,7 +1154,7 @@ class TestConfirmAppointmentView:
         best_appointment_found.confirmed_at = timezone.now()
         best_appointment_found.save()
 
-        url = reverse("sanatorio_allende:api_confirm_appointment")
+        url = reverse("sanatorio_allende:api_appointment")
         data = {"appointment_id": best_appointment_found.id}
         response = client.post(url, json.dumps(data), content_type="application/json")
 
@@ -1174,7 +1174,7 @@ class TestConfirmAppointmentView:
 
         mock_post.side_effect = UnauthorizedException()
 
-        url = reverse("sanatorio_allende:api_confirm_appointment")
+        url = reverse("sanatorio_allende:api_appointment")
         data = {"appointment_id": best_appointment_found.id}
         response = client.post(url, json.dumps(data), content_type="application/json")
 
@@ -1193,7 +1193,7 @@ class TestConfirmAppointmentView:
         self, evil_client: Any, best_appointment_found: Any
     ) -> None:
         """Test POST request for an appointment belonging to another user"""
-        url = reverse("sanatorio_allende:api_confirm_appointment")
+        url = reverse("sanatorio_allende:api_appointment")
         data = {"appointment_id": best_appointment_found.id}
         response = evil_client.post(
             url, json.dumps(data), content_type="application/json"
@@ -1218,7 +1218,7 @@ class TestConfirmAppointmentView:
         )()
         mock_post.return_value = mock_response
 
-        url = reverse("sanatorio_allende:api_confirm_appointment")
+        url = reverse("sanatorio_allende:api_appointment")
         data = {"appointment_id": best_appointment_found.id}
         response = client.post(url, json.dumps(data), content_type="application/json")
 
@@ -1263,3 +1263,199 @@ class TestConfirmAppointmentView:
             },
             "Observaciones": None,
         }
+
+
+class TestAppointmentViewDelete:
+    """Test cases for AppointmentView delete endpoint"""
+
+    @pytest.mark.django_db
+    @patch("sanatorio_allende.allende_api.requests.post")
+    def test_delete_appointment_success(
+        self, mock_post: Any, client: Any, best_appointment_found: Any
+    ) -> None:
+        """Test successful DELETE request to cancel an appointment"""
+        # Mark the appointment as confirmed first
+        best_appointment_found.confirmed = True
+        best_appointment_found.confirmed_at = timezone.now()
+        best_appointment_found.confirmed_id_turno = "12345"
+        best_appointment_found.save()
+
+        # Mock the successful response from the Allende API
+        mock_response = type(
+            "MockResponse",
+            (),
+            {
+                "status_code": 200,
+                "json": lambda self: {
+                    "IsOk": True,
+                    "Message": "Turno cancelado exitosamente",
+                    "HasWarnings": False,
+                    "WarningMessage": "",
+                    "IdEntidadValidada": 0,
+                },
+            },
+        )()
+        mock_post.return_value = mock_response
+
+        url = reverse("sanatorio_allende:api_appointment")
+        data = {"appointment_id": best_appointment_found.id}
+        response = client.delete(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 200
+        response_data = json.loads(response.content)
+        assert response_data["success"] is True
+        assert response_data["message"] == "Appointment cancelled successfully"
+
+        # Verify the correct data was sent to the Allende API
+        mock_post.assert_called_once()
+        call_args = mock_post.call_args
+        assert (
+            call_args[0][0]
+            == "https://miportal.sanatorioallende.com/backend/api/turnos/CancelarTurno"
+        )
+        assert (
+            call_args[1]["headers"]["authorization"]
+            == best_appointment_found.patient.token
+        )
+        assert call_args[1]["json"]["IdTurno"] == 12345
+
+    @pytest.mark.django_db
+    def test_delete_appointment_invalid_json(self, client: Any) -> None:
+        """Test DELETE request with invalid JSON"""
+        url = reverse("sanatorio_allende:api_appointment")
+        response = client.delete(url, "invalid json", content_type="application/json")
+
+        assert response.status_code == 400
+        response_data = json.loads(response.content)
+        assert response_data["success"] is False
+        assert response_data["error"] == "Invalid JSON"
+
+    @pytest.mark.django_db
+    def test_delete_appointment_not_found(self, client: Any) -> None:
+        """Test DELETE request with non-existent appointment_id"""
+        url = reverse("sanatorio_allende:api_appointment")
+        data = {"appointment_id": 999}
+        response = client.delete(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 404
+
+    @pytest.mark.django_db
+    def test_delete_appointment_not_confirmed(
+        self, client: Any, best_appointment_found: Any
+    ) -> None:
+        """Test DELETE request for an appointment that is not confirmed"""
+        url = reverse("sanatorio_allende:api_appointment")
+        data = {"appointment_id": best_appointment_found.id}
+        response = client.delete(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 400
+        data = json.loads(response.content)
+        assert data["success"] is False
+        assert data["error"] == "Appointment is not confirmed"
+
+    @pytest.mark.django_db
+    def test_delete_appointment_for_other_user(
+        self, evil_client: Any, best_appointment_found: Any
+    ) -> None:
+        """Test DELETE request for an appointment belonging to another user"""
+        # Mark the appointment as confirmed first
+        best_appointment_found.confirmed = True
+        best_appointment_found.confirmed_at = timezone.now()
+        best_appointment_found.confirmed_id_turno = "12345"
+        best_appointment_found.save()
+
+        url = reverse("sanatorio_allende:api_appointment")
+        data = {"appointment_id": best_appointment_found.id}
+        response = evil_client.delete(
+            url, json.dumps(data), content_type="application/json"
+        )
+
+        assert response.status_code == 401
+
+    @pytest.mark.django_db
+    @patch("sanatorio_allende.allende_api.requests.post")
+    def test_delete_appointment_unauthorized(
+        self, mock_post: Any, client: Any, best_appointment_found: Any
+    ) -> None:
+        """Test DELETE request when the Allende API returns unauthorized"""
+        # Mark the appointment as confirmed first
+        best_appointment_found.confirmed = True
+        best_appointment_found.confirmed_at = timezone.now()
+        best_appointment_found.confirmed_id_turno = "12345"
+        best_appointment_found.save()
+
+        # Mock the unauthorized response from the Allende API
+        from sanatorio_allende.allende_api import UnauthorizedException
+
+        mock_post.side_effect = UnauthorizedException()
+
+        url = reverse("sanatorio_allende:api_appointment")
+        data = {"appointment_id": best_appointment_found.id}
+        response = client.delete(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 401
+        data = json.loads(response.content)
+        assert data["success"] is False
+        assert data["error"] == "Unauthorized - please re-authenticate"
+
+    @pytest.mark.django_db
+    @patch("sanatorio_allende.allende_api.requests.post")
+    def test_delete_appointment_api_error(
+        self, mock_post: Any, client: Any, best_appointment_found: Any
+    ) -> None:
+        """Test DELETE request when the Allende API returns an error"""
+        # Mark the appointment as confirmed first
+        best_appointment_found.confirmed = True
+        best_appointment_found.confirmed_at = timezone.now()
+        best_appointment_found.confirmed_id_turno = "12345"
+        best_appointment_found.save()
+
+        # Mock the error response from the Allende API
+        mock_response = type(
+            "MockResponse",
+            (),
+            {
+                "status_code": 200,
+                "json": lambda self: {
+                    "IsOk": False,
+                    "Message": "No se puede cancelar el turno",
+                    "HasWarnings": False,
+                    "WarningMessage": "",
+                    "IdEntidadValidada": 0,
+                },
+            },
+        )()
+        mock_post.return_value = mock_response
+
+        url = reverse("sanatorio_allende:api_appointment")
+        data = {"appointment_id": best_appointment_found.id}
+        response = client.delete(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 400
+        data = json.loads(response.content)
+        assert data["success"] is False
+        assert data["error"] == "No se puede cancelar el turno"
+
+    @pytest.mark.django_db
+    @patch("sanatorio_allende.allende_api.requests.post")
+    def test_delete_appointment_exception(
+        self, mock_post: Any, client: Any, best_appointment_found: Any
+    ) -> None:
+        """Test DELETE request when the Allende API raises an exception"""
+        # Mark the appointment as confirmed first
+        best_appointment_found.confirmed = True
+        best_appointment_found.confirmed_at = timezone.now()
+        best_appointment_found.confirmed_id_turno = "12345"
+        best_appointment_found.save()
+
+        # Mock an exception from the Allende API
+        mock_post.side_effect = Exception("Network error")
+
+        url = reverse("sanatorio_allende:api_appointment")
+        data = {"appointment_id": best_appointment_found.id}
+        response = client.delete(url, json.dumps(data), content_type="application/json")
+
+        assert response.status_code == 400
+        data = json.loads(response.content)
+        assert data["success"] is False
+        assert data["error"] == "Network error"

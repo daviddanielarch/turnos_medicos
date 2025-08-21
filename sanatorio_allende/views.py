@@ -378,7 +378,7 @@ class BestAppointmentListView(LoginRequiredMixin, View):
                 )
 
             best_appointment.not_interested = not_interested
-            best_appointment.save()
+            best_appointment.save(update_fields=["not_interested"])
 
             return JsonResponse(
                 {
@@ -555,7 +555,7 @@ class DeviceRegistrationView(LoginRequiredMixin, View):
         if not created:
             device.platform = platform
             device.is_active = True
-            device.save()
+            device.save(update_fields=["platform", "is_active"])
 
         return JsonResponse(
             {
@@ -567,7 +567,7 @@ class DeviceRegistrationView(LoginRequiredMixin, View):
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class ConfirmAppointmentView(LoginRequiredMixin, View):
+class AppointmentView(LoginRequiredMixin, View):
     """Class-based view for confirming appointments"""
 
     def post(self, request: HttpRequest) -> JsonResponse:
@@ -667,4 +667,58 @@ class ConfirmAppointmentView(LoginRequiredMixin, View):
                     "error": "Unauthorized - please re-authenticate",
                 },
                 status=401,
+            )
+
+    def delete(self, request: HttpRequest) -> JsonResponse:
+        """Cancel an appointment by calling the Allende cancel_appointment endpoint"""
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {"success": False, "error": "Invalid JSON"},
+                status=400,
+            )
+
+        appointment_id = data.get("appointment_id")
+        appointment = get_object_or_404(BestAppointmentFound, id=appointment_id)
+
+        if not appointment.confirmed:
+            return JsonResponse(
+                {"success": False, "error": "Appointment is not confirmed"},
+                status=400,
+            )
+
+        patient = appointment.patient
+        assert isinstance(patient.id_paciente, str)
+        assert isinstance(patient.id_financiador, int)
+        assert isinstance(patient.id_plan, int)
+        assert isinstance(appointment.confirmed_id_turno, int)
+        allende = Allende(auth_header=patient.token)
+
+        try:
+            response = allende.cancel_appointment(appointment.confirmed_id_turno)
+            if not response.IsOk:
+                return JsonResponse(
+                    {"success": False, "error": response.Message},
+                    status=400,
+                )
+
+            return JsonResponse(
+                {"success": True, "message": "Appointment cancelled successfully"}
+            )
+        except UnauthorizedException:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Unauthorized - please re-authenticate",
+                },
+                status=401,
+            )
+        except Exception as e:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": str(e),
+                },
+                status=400,
             )

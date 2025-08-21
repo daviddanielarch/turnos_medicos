@@ -29,9 +29,9 @@ urlpatterns = [
         name="api_best_appointments",
     ),
     path(
-        "api/confirm-appointment/",
-        views.ConfirmAppointmentView.as_view(),
-        name="api_confirm_appointment",
+        "api/appointment/",
+        views.AppointmentView.as_view(),
+        name="api_appointment",
     ),
     path(
         "api/device-registrations/",
