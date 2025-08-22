@@ -1,4 +1,5 @@
-import json
+import logging
+import traceback
 from typing import Any, Dict, Optional
 
 import requests
@@ -71,9 +72,8 @@ class Auth0Middleware(MiddlewareMixin):
             login(request, user)
             return None
         except Exception as e:
-            return JsonResponse(
-                {"error": f"Token validation failed: {str(e)}"}, status=401
-            )
+            logging.error(traceback.format_exc())
+            return JsonResponse({"error": f"Token validation failed."}, status=401)
 
     def _should_skip_auth(self, path: str) -> bool:
         """

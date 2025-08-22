@@ -1,5 +1,6 @@
 import json
 
+import requests
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
@@ -68,9 +69,25 @@ class DoctorListView(LoginRequiredMixin, View):
                 status=401,
             )
         allende = Allende(auth_header=patient.token)
-        doctors = allende.get_doctors(pattern=pattern)
-
-        return JsonResponse({"success": True, "doctors": doctors})
+        try:
+            doctors = allende.get_doctors(pattern=pattern)
+            return JsonResponse({"success": True, "doctors": doctors})
+        except UnauthorizedException:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Unauthorized - please re-authenticate",
+                },
+                status=401,
+            )
+        except requests.RequestException as e:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Network error - please try again later",
+                },
+                status=503,
+            )
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -107,13 +124,31 @@ class AppointmentTypeListView(LoginRequiredMixin, View):
         id_servicio = request.GET["id_servicio"]
         id_sucursal = request.GET["id_sucursal"]
 
-        appointment_types = allende.get_available_appointment_types(
-            id_especialidad=id_especialidad,
-            id_servicio=id_servicio,
-            id_sucursal=id_sucursal,
-        )
-
-        return JsonResponse({"success": True, "appointment_types": appointment_types})
+        try:
+            appointment_types = allende.get_available_appointment_types(
+                id_especialidad=id_especialidad,
+                id_servicio=id_servicio,
+                id_sucursal=id_sucursal,
+            )
+            return JsonResponse(
+                {"success": True, "appointment_types": appointment_types}
+            )
+        except UnauthorizedException:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Unauthorized - please re-authenticate",
+                },
+                status=401,
+            )
+        except requests.RequestException as e:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Network error - please try again later",
+                },
+                status=503,
+            )
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -657,6 +692,14 @@ class AppointmentView(LoginRequiredMixin, View):
                 },
                 status=401,
             )
+        except requests.RequestException as e:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Network error - please try again later",
+                },
+                status=503,
+            )
 
     def delete(self, request: HttpRequest) -> JsonResponse:
         """Cancel an appointment by calling the Allende cancel_appointment endpoint"""
@@ -708,11 +751,11 @@ class AppointmentView(LoginRequiredMixin, View):
                 },
                 status=401,
             )
-        except Exception as e:
+        except requests.RequestException as e:
             return JsonResponse(
                 {
                     "success": False,
-                    "error": str(e),
+                    "error": "Network error - please try again later",
                 },
-                status=400,
+                status=503,
             )

@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+import requests
 from conftest import (
     TEST_CONFIRMED_ID_TURNO,
     TEST_DURACION_INDIVIDUAL,
@@ -1455,13 +1456,13 @@ class TestAppointmentViewDelete:
         best_appointment_found.save()
 
         # Mock an exception from the Allende API
-        mock_post.side_effect = Exception("Network error")
+        mock_post.side_effect = requests.RequestException("Network error")
 
         url = reverse("sanatorio_allende:api_appointment")
         data = {"appointment_id": best_appointment_found.id}
         response = client.delete(url, json.dumps(data), content_type="application/json")
 
-        assert response.status_code == 400
+        assert response.status_code == 503
         data = json.loads(response.content)
         assert data["success"] is False
-        assert data["error"] == "Network error"
+        assert data["error"] == "Network error - please try again later"
