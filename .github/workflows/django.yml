@@ -76,6 +76,7 @@ jobs:
   deploy-backend:
     needs: tests
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     container: ghcr.io/railwayapp/cli:latest
     env:
       SVC_ID: 7e97f93e-eb52-46f6-932d-18efc47da0cc
@@ -87,6 +88,7 @@ jobs:
   deploy-appointment-finder:
     needs: tests
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     container: ghcr.io/railwayapp/cli:latest
     env:
       SVC_ID: a5278526-db38-4528-a829-f00d35372a4d
