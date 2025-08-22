@@ -64,7 +64,6 @@ class AppointmentProcessor:
         cls,
         appointment_datetime: datetime.datetime,
         desired_timeframe: str,
-        current_time: Optional[datetime.datetime] = None,
     ) -> bool:
         """
         Check if appointment datetime is within the desired timeframe
@@ -72,13 +71,11 @@ class AppointmentProcessor:
         Args:
             appointment_datetime: The appointment datetime to check
             desired_timeframe: The desired timeframe string
-            current_time: Current time (defaults to now if None)
 
         Returns:
             True if appointment is within desired timeframe, False otherwise
         """
-        if current_time is None:
-            current_time = timezone.make_aware(datetime.datetime.now())
+        current_time = timezone.make_aware(datetime.datetime.now())
 
         boundary = cls.TIMEFRAME_BOUNDARIES.get(desired_timeframe)
         if boundary is None:

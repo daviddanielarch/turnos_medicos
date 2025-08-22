@@ -102,7 +102,8 @@ class AppointmentHandler:
                 )
 
         if (
-            appointment_to_find.desired_timeframe is not None
+            new_appointment_datetime is not None
+            and appointment_to_find.desired_timeframe is not None
             and not AppointmentProcessor.is_within_desired_timeframe(
                 new_appointment_datetime, appointment_to_find.desired_timeframe
             )
