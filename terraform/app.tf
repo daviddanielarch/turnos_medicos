@@ -1,7 +1,7 @@
 resource "railway_service" "app" {
   name        = "turnos-medicos"
   project_id  = railway_project.allende-turnos.id
-  config_path = "configs/turnos_medicos.json"
+  config_path = "terraform/configs/turnos_medicos.json"
 
   lifecycle {
     ignore_changes = [

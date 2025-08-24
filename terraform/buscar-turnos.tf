@@ -2,7 +2,7 @@ resource "railway_service" "buscar_turnos" {
   name          = "Buscar turnos"
   project_id    = railway_project.allende-turnos.id
   cron_schedule = "*/5 * * * *"
-  config_path   = "configs/buscar_turnos.json"
+  config_path   = "terraform/configs/buscar_turnos.json"
 
   lifecycle {
     ignore_changes = [
