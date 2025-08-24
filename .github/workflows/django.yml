@@ -17,10 +17,27 @@ on:
       - 'requirements*.txt'
       - 'pyproject.toml'
       - '.github/workflows/django.yml'
+  workflow_dispatch:
+    inputs:
+      run_tests:
+        description: 'Run tests'
+        required: true
+        default: true
+        type: boolean
+      run_deploy_backend:
+        description: 'Deploy backend'
+        required: true
+        default: false
+        type: boolean
+      run_deploy_appointment_finder:
+        description: 'Deploy appointment finder'
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   tests:
-
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.run_tests }}
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
@@ -78,7 +95,7 @@ jobs:
   deploy-backend:
     needs: tests
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.run_deploy_backend) }}
     container: ghcr.io/railwayapp/cli:latest
     env:
       SVC_ID: 7e97f93e-eb52-46f6-932d-18efc47da0cc
@@ -90,7 +107,7 @@ jobs:
   deploy-appointment-finder:
     needs: tests
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.run_deploy_appointment_finder) }}
     container: ghcr.io/railwayapp/cli:latest
     env:
       SVC_ID: a5278526-db38-4528-a829-f00d35372a4d
