@@ -59,7 +59,13 @@ class DoctorListView(LoginRequiredMixin, View):
         """Get all doctors with their specialties and locations"""
         pattern = request.GET.get("pattern", "")
         patient_id = request.GET.get("patient_id")
-        patient = get_object_or_404(PacienteAllende, id=patient_id)
+        # Optimized: Use select_related to fetch user in one query
+        patient = get_object_or_404(
+            PacienteAllende.objects.select_related("user").only(
+                "id", "user__id", "token"
+            ),
+            id=patient_id,
+        )
         if patient.user != request.user:
             return JsonResponse(
                 {
@@ -97,7 +103,13 @@ class AppointmentTypeListView(LoginRequiredMixin, View):
     def get(self, request: HttpRequest) -> JsonResponse:
         """Get appointment types for a specific doctor"""
         patient_id = request.GET.get("patient_id")
-        patient = get_object_or_404(PacienteAllende, id=patient_id)
+        # Optimized: Use select_related to fetch user in one query
+        patient = get_object_or_404(
+            PacienteAllende.objects.select_related("user").only(
+                "id", "user__id", "token"
+            ),
+            id=patient_id,
+        )
         if patient.user != request.user:
             return JsonResponse(
                 {
@@ -159,7 +171,11 @@ class FindAppointmentView(LoginRequiredMixin, View):
         """Get all FindAppointment objects with optional time filtering"""
         # Get optional seconds parameter for filtering recent appointments
         patient_id = request.GET.get("patient_id")
-        patient = get_object_or_404(PacienteAllende, id=patient_id)
+        # Optimized: Use select_related to fetch user in one query
+        patient = get_object_or_404(
+            PacienteAllende.objects.select_related("user").only("id", "user__id"),
+            id=patient_id,
+        )
         if patient.user != request.user:
             return JsonResponse(
                 {
@@ -169,7 +185,18 @@ class FindAppointmentView(LoginRequiredMixin, View):
                 status=401,
             )
 
-        find_appointments = FindAppointment.objects.filter(patient=patient)
+        # Optimized: Fetch all required fields in one query
+        find_appointments = FindAppointment.objects.filter(patient=patient).only(
+            "id",
+            "doctor_name",
+            "especialidad",
+            "sucursal",
+            "active",
+            "nombre_tipo_prestacion",
+            "id_recurso",
+            "id_tipo_prestacion",
+            "desired_timeframe",
+        )
 
         appointments_data = []
         for appointment in find_appointments:
@@ -226,7 +253,11 @@ class FindAppointmentView(LoginRequiredMixin, View):
             )
 
         patient_id = data.get("patient_id")
-        patient = get_object_or_404(PacienteAllende, id=patient_id)
+        # Optimized: Use select_related to fetch user in one query
+        patient = get_object_or_404(
+            PacienteAllende.objects.select_related("user").only("id", "user__id"),
+            id=patient_id,
+        )
 
         doctor_name = data.get("doctor_name")
         servicio = data.get("servicio")
@@ -236,7 +267,6 @@ class FindAppointmentView(LoginRequiredMixin, View):
             "desired_timeframe", FindAppointment.DEFAULT_DESIRED_TIMEFRAME
         )
 
-        patient = get_object_or_404(PacienteAllende, id=patient_id)
         if patient.user != request.user:
             return JsonResponse(
                 {
@@ -246,45 +276,40 @@ class FindAppointmentView(LoginRequiredMixin, View):
                 status=401,
             )
 
-        existing_appointment = FindAppointment.objects.filter(
+        # Optimized: Use get_or_create to avoid duplicate queries
+        existing_appointment, created = FindAppointment.objects.get_or_create(
             patient=patient,
             id_servicio=id_servicio,
             id_sucursal=id_sucursal,
             id_recurso=id_recurso,
             id_especialidad=id_especialidad,
-        ).first()
+            defaults={
+                "doctor_name": doctor_name,
+                "servicio": servicio,
+                "sucursal": sucursal,
+                "especialidad": especialidad,
+                "id_tipo_recurso": id_tipo_recurso,
+                "id_prestacion": id_prestacion,
+                "id_tipo_prestacion": id_tipo_prestacion,
+                "nombre_tipo_prestacion": nombre_tipo_prestacion,
+                "active": True,
+                "desired_timeframe": desired_timeframe,
+            },
+        )
 
-        if existing_appointment:
+        if not created:
+            # Update only the desired_timeframe field
             existing_appointment.desired_timeframe = desired_timeframe
             existing_appointment.save(update_fields=["desired_timeframe"])
             return JsonResponse(
                 {"success": True, "message": "Appointment updated successfully"}
             )
 
-        # Create new appointment
-        appointment = FindAppointment.objects.create(
-            doctor_name=doctor_name,
-            id_servicio=id_servicio,
-            servicio=servicio,
-            id_sucursal=id_sucursal,
-            sucursal=sucursal,
-            id_especialidad=id_especialidad,
-            especialidad=especialidad,
-            id_recurso=id_recurso,
-            id_tipo_recurso=id_tipo_recurso,
-            id_prestacion=id_prestacion,
-            id_tipo_prestacion=id_tipo_prestacion,
-            nombre_tipo_prestacion=nombre_tipo_prestacion,
-            patient=patient,
-            active=True,
-            desired_timeframe=desired_timeframe,
-        )
-
         return JsonResponse(
             {
                 "success": True,
                 "message": "Appointment created successfully",
-                "appointment_id": appointment.id,
+                "appointment_id": existing_appointment.id,
             }
         )
 
@@ -311,11 +336,15 @@ class FindAppointmentView(LoginRequiredMixin, View):
                 status=400,
             )
 
-        appointment = get_object_or_404(FindAppointment, id=appointment_id)
-        user_patients = request.user.pacienteallende_set.all().values_list(
-            "id", flat=True
+        # Optimized: Use select_related to fetch patient and user in one query
+        appointment = get_object_or_404(
+            FindAppointment.objects.select_related("patient__user").only(
+                "id", "patient__id", "patient__user__id"
+            ),
+            id=appointment_id,
         )
-        if appointment.patient.id not in user_patients:
+
+        if appointment.patient.user != request.user:
             return JsonResponse(
                 {
                     "success": False,
@@ -341,7 +370,10 @@ class BestAppointmentListView(LoginRequiredMixin, View):
     def get(self, request: HttpRequest) -> JsonResponse:
         """Get all BestAppointmentFound objects (excluding not_interested ones)"""
         patient_id = request.GET.get("patient_id")
-        patient = get_object_or_404(PacienteAllende, id=patient_id)
+        patient = get_object_or_404(
+            PacienteAllende.objects.select_related("user").only("id", "user__id"),
+            id=patient_id,
+        )
         if patient.user != request.user:
             return JsonResponse(
                 {
@@ -351,9 +383,28 @@ class BestAppointmentListView(LoginRequiredMixin, View):
                 status=401,
             )
 
-        best_appointments = BestAppointmentFound.objects.select_related(
-            "appointment_wanted",
-        ).filter(patient=patient, not_interested=False, datetime__gte=timezone.now())
+        # Optimized: Use select_related and only() to fetch specific fields efficiently
+        best_appointments = (
+            BestAppointmentFound.objects.select_related(
+                "appointment_wanted",
+            )
+            .filter(
+                patient=patient.id, not_interested=False, datetime__gte=timezone.now()
+            )
+            .only(
+                "id",
+                "datetime",
+                "duracion_individual",
+                "id_plantilla_turno",
+                "id_item_plantilla",
+                "confirmed",
+                "confirmed_at",
+                "appointment_wanted__doctor_name",
+                "appointment_wanted__especialidad",
+                "appointment_wanted__sucursal",
+                "appointment_wanted__nombre_tipo_prestacion",
+            )
+        )
 
         appointments_data = []
         for best_appointment in best_appointments:
@@ -402,7 +453,11 @@ class BestAppointmentListView(LoginRequiredMixin, View):
             )
 
         try:
-            best_appointment = BestAppointmentFound.objects.get(id=appointment_id)
+            best_appointment = (
+                BestAppointmentFound.objects.select_related("patient__user")
+                .only("id", "patient__user__id")
+                .get(id=appointment_id)
+            )
             if best_appointment.patient.user != request.user:
                 return JsonResponse(
                     {
@@ -438,7 +493,10 @@ class PatientListView(LoginRequiredMixin, View):
     def get(self, request: HttpRequest) -> JsonResponse:
         """Get all patients"""
         assert isinstance(request.user, User)
-        patients = PacienteAllende.objects.filter(user=request.user)
+        # Optimized: Use only() to fetch specific fields
+        patients = PacienteAllende.objects.filter(user=request.user).only(
+            "id", "name", "id_paciente", "docid", "updated_at"
+        )
 
         patients_data = []
         for patient in patients:
@@ -489,9 +547,17 @@ class PatientListView(LoginRequiredMixin, View):
                 status=400,
             )
 
-        # Check if patient already exists with the same docid
-        existing_patient = PacienteAllende.objects.filter(docid=docid).first()
-        if existing_patient:
+        # Optimized: Use get_or_create to avoid duplicate queries
+        existing_patient, created = PacienteAllende.objects.get_or_create(
+            docid=docid,
+            defaults={
+                "user": request.user,
+                "name": name,
+                "password": password,
+            },
+        )
+
+        if not created:
             return JsonResponse(
                 {
                     "success": False,
@@ -500,18 +566,11 @@ class PatientListView(LoginRequiredMixin, View):
                 status=400,
             )
 
-        patient = PacienteAllende.objects.create(
-            user=request.user,
-            name=name,
-            docid=docid,
-            password=password,
-        )
-
         return JsonResponse(
             {
                 "success": True,
                 "message": "Patient created successfully",
-                "patient_id": patient.id,
+                "patient_id": existing_patient.id,
             }
         )
 
@@ -538,7 +597,12 @@ class PatientListView(LoginRequiredMixin, View):
             )
 
         try:
-            patient = PacienteAllende.objects.get(id=patient_id, user=request.user)
+            # Optimized: Use only() to fetch specific fields
+            patient = (
+                PacienteAllende.objects.filter(id=patient_id, user=request.user)
+                .only("id")
+                .get()
+            )
             patient.delete()
             return JsonResponse(
                 {
@@ -578,6 +642,7 @@ class DeviceRegistrationView(LoginRequiredMixin, View):
                 status=400,
             )
 
+        # Optimized: Use get_or_create to avoid duplicate queries
         device, created = DeviceRegistration.objects.get_or_create(
             push_token=push_token,
             defaults={
@@ -588,6 +653,7 @@ class DeviceRegistrationView(LoginRequiredMixin, View):
         )
 
         if not created:
+            # Optimized: Update only specific fields
             device.platform = platform
             device.is_active = True
             device.save(update_fields=["platform", "is_active"])
@@ -616,7 +682,29 @@ class AppointmentView(LoginRequiredMixin, View):
             )
 
         appointment_id = data.get("appointment_id")
-        appointment = get_object_or_404(BestAppointmentFound, id=appointment_id)
+        # Optimized: Use select_related to fetch patient and appointment_wanted in one query
+        appointment = get_object_or_404(
+            BestAppointmentFound.objects.select_related(
+                "patient", "appointment_wanted"
+            ).only(
+                "id",
+                "confirmed",
+                "confirmed_id_turno",
+                "confirmed_at",
+                "patient__id_paciente",
+                "patient__id_financiador",
+                "patient__id_plan",
+                "patient__token",
+                "appointment_wanted__id_servicio",
+                "appointment_wanted__id_sucursal",
+                "appointment_wanted__id_recurso",
+                "appointment_wanted__id_especialidad",
+                "appointment_wanted__id_tipo_prestacion",
+                "appointment_wanted__id_tipo_recurso",
+                "appointment_wanted__id_prestacion",
+            ),
+            id=appointment_id,
+        )
 
         if appointment.confirmed:
             return JsonResponse(
@@ -675,10 +763,13 @@ class AppointmentView(LoginRequiredMixin, View):
                     status=400,
                 )
 
+            # Optimized: Update only specific fields
             appointment.confirmed_id_turno = result.id_turno
             appointment.confirmed = True
             appointment.confirmed_at = timezone.now()
-            appointment.save()
+            appointment.save(
+                update_fields=["confirmed_id_turno", "confirmed", "confirmed_at"]
+            )
 
             return JsonResponse(
                 {"success": True, "message": "Appointment confirmed successfully"}
@@ -712,7 +803,20 @@ class AppointmentView(LoginRequiredMixin, View):
             )
 
         appointment_id = data.get("appointment_id")
-        appointment = get_object_or_404(BestAppointmentFound, id=appointment_id)
+        # Optimized: Use select_related to fetch patient in one query
+        appointment = get_object_or_404(
+            BestAppointmentFound.objects.select_related("patient").only(
+                "id",
+                "confirmed",
+                "confirmed_id_turno",
+                "confirmed_at",
+                "patient__id_paciente",
+                "patient__id_financiador",
+                "patient__id_plan",
+                "patient__token",
+            ),
+            id=appointment_id,
+        )
 
         if not appointment.confirmed:
             return JsonResponse(
@@ -735,10 +839,13 @@ class AppointmentView(LoginRequiredMixin, View):
                     status=400,
                 )
 
+            # Optimized: Update only specific fields
             appointment.confirmed = False
             appointment.confirmed_id_turno = None
             appointment.confirmed_at = None
-            appointment.save()
+            appointment.save(
+                update_fields=["confirmed", "confirmed_id_turno", "confirmed_at"]
+            )
 
             return JsonResponse(
                 {"success": True, "message": "Appointment cancelled successfully"}
