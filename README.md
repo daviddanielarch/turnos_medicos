@@ -218,4 +218,4 @@ docker-compose logs -f
 ## 🚀 Deployments
 
 - **Automated deployments** Deployments are performed automatically on merge to main.
-- **Simple Infrastructure** Code runs on Railway
+- **Simple Infrastructure** Code runs on Railway (backend, appointment finder cron and the web frontend)

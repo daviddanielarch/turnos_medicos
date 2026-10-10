@@ -4,7 +4,7 @@ import { PatientProvider } from "@/src/contexts/PatientContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { useEffect } from "react";
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 import LoginScreen from "../auth/login";
 import pushNotificationService from "../services/pushNotificationService";
 import { UpdateService } from "../services/updateService";
@@ -13,6 +13,11 @@ function AppContent() {
   const { isAuthenticated, user, error, getCredentials } = useAuth0Context();
 
   useEffect(() => {
+    // OTA updates only apply to the native app; the web app is redeployed instead
+    if (Platform.OS === 'web') {
+      return;
+    }
+
     // Check for updates when app starts
     const checkForUpdates = async () => {
       try {
@@ -39,6 +44,11 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
+    // Push notifications are only supported on the native app
+    if (Platform.OS === 'web') {
+      return;
+    }
+
     // Only set up push notifications if user is authenticated
     if (!isAuthenticated) {
       console.log('[App] User not authenticated, skipping push notification setup');

@@ -122,3 +122,23 @@ services/
    ```bash
    npx eas build --platform android
    ```
+
+### Web
+
+The same app is published as a static web app on Railway (service `turnos-medicos-web`).
+
+1. **Build locally**:
+   ```bash
+   npx expo export --platform web
+   ```
+
+2. **Deploy**: merging changes under `mobile/allende/` to `main` runs `.github/workflows/frontend.yml`,
+   which deploys with `railway up mobile/allende --path-as-root`. Railway builds the `Dockerfile`
+   (Expo export + Caddy serving `dist/`).
+
+Notes:
+- `EXPO_PUBLIC_*` variables (`EXPO_PUBLIC_API_HOST`, `EXPO_PUBLIC_AUTH0_WEB_CLIENT_ID`) are inlined at build time,
+  so they must be set as Railway service variables before building.
+- On web, login uses `@auth0/auth0-react` (`src/contexts/Auth0Context.web.tsx`). The web URL must be added to the
+  Auth0 application's Allowed Callback URLs, Allowed Logout URLs and Allowed Web Origins.
+- Push notifications and OTA updates are disabled on web.

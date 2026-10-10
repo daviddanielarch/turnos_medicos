@@ -3,8 +3,9 @@ import { useAuth0Context } from '@/src/contexts/Auth0Context';
 import { usePatientContext } from '@/src/contexts/PatientContext';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import secureStorage from '../../services/secureStorage';
+import { showAlert } from '@/src/utils/alert';
 
 interface CustomHeaderProps {
     title?: string;
@@ -35,7 +36,7 @@ export default function CustomHeader({
     };
 
     const handleLogout = async () => {
-        Alert.alert(
+        showAlert(
             'Cerrar Sesión',
             '¿Estás seguro de que quieres cerrar sesión?',
             [
@@ -54,7 +55,7 @@ export default function CustomHeader({
                             await clearSession();
                         } catch (error) {
                             console.error('Logout error:', error);
-                            Alert.alert(
+                            showAlert(
                                 'Error de Cierre de Sesión',
                                 'Ocurrió un error durante el cierre de sesión. Por favor, inténtalo de nuevo.',
                                 [{ text: 'OK' }]

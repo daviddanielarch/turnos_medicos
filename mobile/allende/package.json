@@ -11,6 +11,7 @@
         "lint": "expo lint"
     },
     "dependencies": {
+        "@auth0/auth0-react": "^2.28.2",
         "@expo/vector-icons": "^14.1.0",
         "@react-navigation/bottom-tabs": "^7.3.10",
         "@react-navigation/elements": "^2.3.8",

@@ -4,8 +4,9 @@ import { usePatientContext } from "@/src/contexts/PatientContext";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import apiService from "../services/apiService";
+import { showAlert } from "@/src/utils/alert";
 
 interface Doctor {
     IdRecurso: number;
@@ -73,7 +74,7 @@ export default function Search() {
 
     const fetchAppointmentTypes = async (doctor: Doctor) => {
         if (!selectedPatient) {
-            Alert.alert('Error', 'No patient selected. Please select a patient first.');
+            showAlert('Error', 'No patient selected. Please select a patient first.');
             return;
         }
 
@@ -108,7 +109,7 @@ export default function Search() {
 
     const performSearch = useCallback(async (searchTerm: string) => {
         if (!selectedPatient) {
-            Alert.alert('Error', 'No patient selected. Please select a patient first.');
+            showAlert('Error', 'No patient selected. Please select a patient first.');
             return;
         }
 
@@ -212,12 +213,12 @@ export default function Search() {
     const handleAdd = async () => {
         if (selectedDoctor && selectedService) {
             if (!selectedPatient) {
-                Alert.alert('Error', 'No patient selected. Please select a patient first.');
+                showAlert('Error', 'No patient selected. Please select a patient first.');
                 return;
             }
 
             if (!selectedPatient.id) {
-                Alert.alert('Error', 'Selected patient has no valid ID.');
+                showAlert('Error', 'Selected patient has no valid ID.');
                 return;
             }
 
@@ -245,11 +246,11 @@ export default function Search() {
                     router.push("/");
                 } else {
                     console.error('Failed to create appointment:', response.error);
-                    Alert.alert('Error', response.error || 'Failed to create appointment');
+                    showAlert('Error', response.error || 'Failed to create appointment');
                 }
             } catch (error) {
                 console.error('Error creating appointment:', error);
-                Alert.alert('Error', 'Network error while creating appointment');
+                showAlert('Error', 'Network error while creating appointment');
             }
         }
     };

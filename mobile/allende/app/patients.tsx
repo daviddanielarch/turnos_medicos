@@ -6,7 +6,6 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     FlatList,
     Modal,
     RefreshControl,
@@ -18,6 +17,7 @@ import {
     View,
 } from 'react-native';
 import apiService, { Patient } from '../services/apiService';
+import { showAlert } from '@/src/utils/alert';
 
 export default function PatientsScreen() {
     const [patients, setPatients] = useState<Patient[]>([]);
@@ -53,11 +53,11 @@ export default function PatientsScreen() {
                 setPatients(response.data.patients);
             } else {
                 console.error('Failed to load patients:', response.error);
-                Alert.alert('Error', 'No se pudieron cargar los pacientes');
+                showAlert('Error', 'No se pudieron cargar los pacientes');
             }
         } catch (error) {
             console.error('Error loading patients:', error);
-            Alert.alert('Error', 'Error al cargar los pacientes');
+            showAlert('Error', 'Error al cargar los pacientes');
         } finally {
             setLoading(false);
         }
@@ -71,7 +71,7 @@ export default function PatientsScreen() {
 
     const handleAddPatient = async () => {
         if (!formData.name || !formData.docid || !formData.password) {
-            Alert.alert('Error', 'Por favor completa todos los campos requeridos');
+            showAlert('Error', 'Por favor completa todos los campos requeridos');
             return;
         }
 
@@ -80,28 +80,28 @@ export default function PatientsScreen() {
             const response = await apiService.createPatient(formData);
 
             if (response.success) {
-                Alert.alert('Éxito', 'Paciente agregado correctamente');
+                showAlert('Éxito', 'Paciente agregado correctamente');
                 setShowAddModal(false);
                 resetForm();
                 loadPatients();
             } else {
                 // Check for specific "Invalid credentials" error
                 if (response.error === 'Invalid credentials') {
-                    Alert.alert('Credenciales invalidas', 'Revisa la contraseña y el DNI');
+                    showAlert('Credenciales invalidas', 'Revisa la contraseña y el DNI');
                 } else {
-                    Alert.alert('Error', response.error || 'Error al agregar paciente');
+                    showAlert('Error', response.error || 'Error al agregar paciente');
                 }
             }
         } catch (error) {
             console.error('Error adding patient:', error);
-            Alert.alert('Error', 'Error al agregar paciente');
+            showAlert('Error', 'Error al agregar paciente');
         } finally {
             setSubmitting(false);
         }
     };
 
     const handleDeletePatient = (patient: Patient) => {
-        Alert.alert(
+        showAlert(
             'Eliminar Paciente',
             `¿Estás seguro de que quieres eliminar a ${patient.name}?`,
             [
@@ -115,18 +115,18 @@ export default function PatientsScreen() {
                             const response = await apiService.deletePatient(patient.id);
 
                             if (response.success) {
-                                Alert.alert('Éxito', 'Paciente eliminado correctamente');
+                                showAlert('Éxito', 'Paciente eliminado correctamente');
                                 // If the deleted patient was selected, clear the selection
                                 if (selectedPatient?.id === patient.id) {
                                     await setSelectedPatient(null);
                                 }
                                 loadPatients();
                             } else {
-                                Alert.alert('Error', response.error || 'Error al eliminar paciente');
+                                showAlert('Error', response.error || 'Error al eliminar paciente');
                             }
                         } catch (error) {
                             console.error('Error deleting patient:', error);
-                            Alert.alert('Error', 'Error al eliminar paciente');
+                            showAlert('Error', 'Error al eliminar paciente');
                         } finally {
                             setDeletingPatientId(null);
                         }

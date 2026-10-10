@@ -2,6 +2,8 @@
 export const AUTH0_CONFIG = {
     domain: 'daviddanielarch.auth0.com',
     clientId: '8IYHXBrV3fqEEfFsupCZNfXc8ikTS8CB',
+    // The web build can use a separate Auth0 "Single Page Application" client
+    webClientId: process.env.EXPO_PUBLIC_AUTH0_WEB_CLIENT_ID || '8IYHXBrV3fqEEfFsupCZNfXc8ikTS8CB',
     audience: 'https://daviddanielarch.auth0.com/api/v2/',
     scope: 'openid profile email',
 } as const;
