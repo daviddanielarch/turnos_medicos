@@ -138,6 +138,31 @@ class TestDoctorListView:
         assert "doctors" in data
         assert len(data["doctors"]["Profesionales"]) == 0
 
+    @pytest.mark.django_db
+    @patch("sanatorio_allende.allende_api.requests.post")
+    def test_get_doctors_expired_allende_token(
+        self, mock_post: Any, client: Any, patient: PacienteAllende
+    ) -> None:
+        """Allende answers 401 with an empty body when the patient token expired"""
+        mock_response = type(
+            "MockResponse",
+            (),
+            {
+                "status_code": 401,
+                "json": lambda self: (_ for _ in ()).throw(
+                    requests.exceptions.JSONDecodeError("Expecting value", "", 0)
+                ),
+            },
+        )()
+        mock_post.return_value = mock_response
+
+        url = reverse("sanatorio_allende:api_doctors")
+        response = client.get(url, {"patient_id": patient.id, "pattern": "barrer"})
+
+        assert response.status_code == 401
+        data = json.loads(response.content)
+        assert data["success"] is False
+
 
 class TestAppointmentTypeListView:
     """Test cases for AppointmentTypeListView"""
@@ -864,7 +889,14 @@ class TestPatientListView:
     def test_post_create_patient_success(self, mock_post: Any, client: Any) -> None:
         """Test successful POST request to create patient"""
         # Mock the requests.post call in Allende.validate_credentials
-        mock_response = type("MockResponse", (), {"status_code": 200})()
+        mock_response = type(
+            "MockResponse",
+            (),
+            {
+                "status_code": 200,
+                "json": lambda self: {"Access_token": "token", "Error": ""},
+            },
+        )()
         mock_post.return_value = mock_response
 
         url = reverse("sanatorio_allende:api_patients")
@@ -893,10 +925,10 @@ class TestPatientListView:
         call_args = mock_post.call_args
         assert call_args[0][0] == "https://miportal.sanatorioallende.com/backend/Token"
         assert (
-            call_args[1]["data"]["NumeroDocumento"] == "ODc2NTQzMjE="
+            call_args[1]["json"]["NumeroDocumento"] == "ODc2NTQzMjE="
         )  # base64 encoded docid
         assert (
-            call_args[1]["data"]["Password"] == "dGVzdHBhc3M0NTY="
+            call_args[1]["json"]["Password"] == "dGVzdHBhc3M0NTY="
         )  # base64 encoded password
 
     @pytest.mark.django_db
@@ -938,7 +970,14 @@ class TestPatientListView:
         self, mock_post: Any, client: Any, patient: Any
     ) -> None:
         """Test POST request when patient with same docid already exists"""
-        mock_response = type("MockResponse", (), {"status_code": 200})()
+        mock_response = type(
+            "MockResponse",
+            (),
+            {
+                "status_code": 200,
+                "json": lambda self: {"Access_token": "token", "Error": ""},
+            },
+        )()
         mock_post.return_value = mock_response
 
         url = reverse("sanatorio_allende:api_patients")

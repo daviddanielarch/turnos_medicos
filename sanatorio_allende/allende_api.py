@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import base64
-import json
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -9,10 +8,15 @@ from typing import Any, Dict, List, Optional
 
 import requests
 
-from sanatorio_allende.selenium_utils import SeleniumSettings, find_request, get_browser
-
 HTTP_OK = 200
 HTTP_UNAUTHORIZED = 401
+
+TOKEN_URL = "https://miportal.sanatorioallende.com/backend/Token"
+API_URL = "https://miportal.sanatorioallende.com/backend/api/"
+# Public OAuth client credentials of the patient portal (embedded in its web bundle)
+PORTAL_CLIENT_AUTHORIZATION = "Basic " + base64.b64encode(
+    b"AppSA:7SeGvoNkZze03n6L"
+).decode("utf-8")
 
 
 class UnauthorizedException(Exception):
@@ -44,14 +48,9 @@ logger = logging.getLogger(__name__)
 
 
 class Allende:
-    def __init__(
-        self,
-        auth_header: Optional[str] = None,
-        selenium_settings: Optional[SeleniumSettings] = None,
-    ):
+    def __init__(self, auth_header: Optional[str] = None):
         self.auth_header = auth_header
-        self.selenium_settings = selenium_settings
-        self.user_id = None
+        self.user_id: Optional[str] = None
 
     def get_user_id(self) -> Optional[str]:
         return self.user_id
@@ -59,69 +58,62 @@ class Allende:
     def get_auth_header(self) -> Optional[str]:
         return self.auth_header
 
+    @staticmethod
+    def _b64(value: str) -> str:
+        return base64.b64encode(value.encode("utf-8")).decode("utf-8")
+
     @classmethod
-    def validate_credentials(cls, dni: str, password: str) -> bool:
-        data = requests.post(
-            "https://miportal.sanatorioallende.com/backend/Token",
-            data={
-                "UserName": "",
-                "Password": base64.b64encode(password.encode("utf-8")).decode("utf-8"),
-                "NumeroDocumento": base64.b64encode(dni.encode("utf-8")).decode(
-                    "utf-8"
-                ),
+    def _request_access_token(cls, dni: str, password: str) -> Optional[str]:
+        """Log in the same way the patient portal does and return the access token"""
+        response = requests.post(
+            TOKEN_URL,
+            headers={"Authorization": PORTAL_CLIENT_AUTHORIZATION},
+            json={
                 "IdTipoDocumento": 1,
-                "Sistema": base64.b64encode(b"app-portal-paciente").decode("utf-8"),
+                "NumeroDocumento": cls._b64(dni),
+                "Password": cls._b64(password),
+                "Sistema": cls._b64("app-portal-paciente"),
+                "Grant_type": "password",
+                "Id": 0,
+                "ChangePassword": False,
+                "IsAnonymous": False,
+                "SolicitarReCaptcha": False,
                 "ReCaptcha": "",
             },
         )
-        return data.status_code == HTTP_OK
+        if response.status_code != HTTP_OK:
+            return None
+
+        data = response.json()
+        if data.get("Error"):
+            return None
+        access_token: Optional[str] = data.get("Access_token")
+        return access_token
+
+    @classmethod
+    def validate_credentials(cls, dni: str, password: str) -> bool:
+        return cls._request_access_token(dni, password) is not None
 
     def login(self, user: str, password: str) -> str:
         if self.auth_header and self.is_authorized(self.auth_header):
             return self.auth_header
 
-        if not self.selenium_settings:
-            raise Exception("Selenium settings are required for login")
+        access_token = self._request_access_token(user, password)
+        if not access_token:
+            raise Exception("Check username or password")
+        self.auth_header = f"Bearer {access_token}"
 
-        browser = get_browser(
-            self.selenium_settings.hostname, self.selenium_settings.port
+        response = requests.get(
+            f"{API_URL}Usuario/GetInfoSeguridadCurrentUser/",
+            headers={"authorization": self.auth_header},
         )
-        browser.implicitly_wait(self.selenium_settings.implicit_wait)
+        response.raise_for_status()
+        user_id = response.json().get("IdPaciente")
+        if not user_id:
+            raise Exception("Could not get user id")
+        self.user_id = str(user_id)
 
-        try:
-            # Open the login page URL
-            browser.get("https://miportal.sanatorioallende.com/auth/loginPortal")
-
-            # Find the email and password fields
-            email_field = browser.find_element("name", "inputNroDocumento")
-            password_field = browser.find_element("name", "inputPassword")
-
-            # Enter the email and password
-            email_field.send_keys(user)
-            password_field.send_keys(password)
-
-            # Find the login button and click it
-            login_button = browser.find_element("xpath", "//button[@type='submit']")
-            login_button.click()
-
-            request = find_request(browser, "ObtenerTurnosParaPortalPorFiltro")
-            auth_header = request.get("headers", {}).get("Authorization")
-            # get the user id from the request
-
-            self.user_id = json.loads(request.get("postData", {})).get("IdPaciente")
-            if not self.user_id:
-                raise Exception("Could not get user id")
-
-            self.auth_header = auth_header
-
-            if not auth_header:
-                raise Exception("Check username or password")
-
-        finally:
-            browser.close()
-            browser.quit()
-
-        return auth_header
+        return self.auth_header
 
     def get_doctors(self, pattern: str) -> List[dict]:
         """
@@ -151,6 +143,9 @@ class Allende:
                 "Criterio": pattern,
             },
         )
+
+        if response.status_code == HTTP_UNAUTHORIZED:
+            raise UnauthorizedException()
 
         return response.json()  # type: ignore
 
