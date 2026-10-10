@@ -71,11 +71,17 @@ class Command(BaseCommand):
         self.stdout.write("Starting appointment search...")
 
         for patient in PacienteAllende.objects.all():
+            # A login failure for one patient must not stop the search for the rest
+            try:
+                AllendeAuthService(patient).login()
+            except Exception as e:
+                self.stdout.write(
+                    self.style.ERROR(f"Skipping patient {patient.id}: {str(e)}")
+                )
+                continue
+
             assert isinstance(patient.id_paciente, str)
             assert isinstance(patient.user, User)
-
-            auth_service = AllendeAuthService(patient)
-            auth_service.login()
 
             allende = Allende(patient.token)
             appointments_to_find = FindAppointment.objects.filter(

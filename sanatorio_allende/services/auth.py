@@ -1,11 +1,9 @@
 import time
 
-from django.conf import settings
 from django.utils import timezone
 
 from sanatorio_allende.allende_api import Allende
 from sanatorio_allende.models import PacienteAllende
-from sanatorio_allende.selenium_utils import SeleniumSettings
 
 
 class AllendeAuthService:
@@ -13,14 +11,7 @@ class AllendeAuthService:
         self.patient = patient
 
     def login(self) -> str:
-        allende = Allende(
-            self.patient.token,
-            SeleniumSettings(
-                hostname=settings.SELENIUM_HOSTNAME,
-                port=int(settings.SELENIUM_PORT),
-                implicit_wait=int(settings.SELENIUM_IMPLICIT_WAIT),
-            ),
-        )
+        allende = Allende(self.patient.token)
 
         if self.patient.token:
             if not Allende.is_authorized(self.patient.token):
