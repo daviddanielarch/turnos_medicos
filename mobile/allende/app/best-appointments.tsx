@@ -5,8 +5,9 @@ import { usePatientContext } from "@/src/contexts/PatientContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import apiService from "../services/apiService";
+import { showAlert } from "@/src/utils/alert";
 
 interface BestAppointment {
     id: number;
@@ -59,11 +60,11 @@ export default function BestAppointments() {
                 setBestAppointments((response.data as any).best_appointments);
             } else {
                 console.error('Failed to fetch best appointments:', response.error);
-                Alert.alert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
+                showAlert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
             }
         } catch (error) {
             console.error('Error fetching best appointments:', error);
-            Alert.alert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
+            showAlert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
         } finally {
             setLoading(false);
         }
@@ -106,11 +107,11 @@ export default function BestAppointments() {
                 ));
             } else {
                 console.error('Failed to confirm appointment:', response.error);
-                Alert.alert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
+                showAlert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
             }
         } catch (error) {
             console.error('Error confirming appointment:', error);
-            Alert.alert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
+            showAlert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
         } finally {
             setConfirmingAppointment(null);
         }
@@ -126,11 +127,11 @@ export default function BestAppointments() {
                 setBestAppointments(prev => prev.filter(appointment => appointment.id !== appointmentId));
             } else {
                 console.error('Failed to cancel appointment:', response.error);
-                Alert.alert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
+                showAlert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
             }
         } catch (error) {
             console.error('Error canceling appointment:', error);
-            Alert.alert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
+            showAlert('Error', 'Hubo un problema con la conexión. Intenta nuevamente.');
         } finally {
             setCancelingAppointment(null);
         }

@@ -1,5 +1,15 @@
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import { Patient } from './apiService';
+
+// expo-secure-store has no web implementation, so fall back to localStorage there
+const store = Platform.OS === 'web'
+    ? {
+        setItemAsync: async (key: string, value: string) => localStorage.setItem(key, value),
+        getItemAsync: async (key: string) => localStorage.getItem(key),
+        deleteItemAsync: async (key: string) => localStorage.removeItem(key),
+    }
+    : SecureStore;
 
 const STORAGE_KEYS = {
     SELECTED_PATIENT: 'selected_patient',
@@ -21,7 +31,7 @@ class SecureStorageServiceImpl implements SecureStorageService {
             }
 
             const patientData = JSON.stringify(patient);
-            await SecureStore.setItemAsync(STORAGE_KEYS.SELECTED_PATIENT, patientData);
+            await store.setItemAsync(STORAGE_KEYS.SELECTED_PATIENT, patientData);
             console.log('[SecureStorage] Selected patient saved successfully:', patient.name);
         } catch (error) {
             console.error('[SecureStorage] Error saving selected patient:', error);
@@ -31,7 +41,7 @@ class SecureStorageServiceImpl implements SecureStorageService {
 
     async getSelectedPatient(): Promise<Patient | null> {
         try {
-            const patientData = await SecureStore.getItemAsync(STORAGE_KEYS.SELECTED_PATIENT);
+            const patientData = await store.getItemAsync(STORAGE_KEYS.SELECTED_PATIENT);
             if (patientData) {
                 const patient = JSON.parse(patientData) as Patient;
 
@@ -60,7 +70,7 @@ class SecureStorageServiceImpl implements SecureStorageService {
 
     async clearSelectedPatient(): Promise<void> {
         try {
-            await SecureStore.deleteItemAsync(STORAGE_KEYS.SELECTED_PATIENT);
+            await store.deleteItemAsync(STORAGE_KEYS.SELECTED_PATIENT);
             console.log('[SecureStorage] Selected patient cleared successfully');
         } catch (error) {
             console.error('[SecureStorage] Error clearing selected patient:', error);
@@ -70,7 +80,7 @@ class SecureStorageServiceImpl implements SecureStorageService {
 
     async clearAllData(): Promise<void> {
         try {
-            await SecureStore.deleteItemAsync(STORAGE_KEYS.SELECTED_PATIENT);
+            await store.deleteItemAsync(STORAGE_KEYS.SELECTED_PATIENT);
             console.log('[SecureStorage] All data cleared successfully');
         } catch (error) {
             console.error('[SecureStorage] Error clearing all data:', error);

@@ -5,7 +5,6 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     KeyboardAvoidingView,
     Platform,
     SafeAreaView,
@@ -14,6 +13,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { showAlert } from '@/src/utils/alert';
 
 const LoginScreen: React.FC = () => {
     const { authorize, error } = useAuth0Context();
@@ -28,7 +28,7 @@ const LoginScreen: React.FC = () => {
             });
         } catch (err) {
             console.error('Login error:', err);
-            Alert.alert(
+            showAlert(
                 'Error de inicio de sesión',
                 'No se pudo iniciar sesión. Por favor, inténtalo de nuevo.',
                 [{ text: 'OK' }]

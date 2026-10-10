@@ -27,8 +27,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         ]
     },
     web: {
+        name: "Turnos Médicos",
         bundler: "metro",
-        output: "static",
+        output: "single",
         favicon: "./assets/images/favicon.png"
     },
     plugins: [
