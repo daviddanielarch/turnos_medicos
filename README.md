@@ -6,7 +6,7 @@ The main driver behind this system is the fact that sometimes we need to wait fo
 
 This system helps patients find and manage medical appointments at Sanatorio Allende in Córdoba, Argentina. It includes:
 
-- **Automated Appointment Finder**: Uses Selenium for handling Allende's authentication
+- **Automated Appointment Finder**: Polls Allende's patient portal API for freed-up appointment slots
 - **Django Backend API**: RESTful API with Auth0 authentication
 - **React Native Mobile App**: Cross-platform mobile application for patients
 - **Push Notifications**: Mobile push notifications for appointment updates
@@ -15,8 +15,8 @@ This system helps patients find and manage medical appointments at Sanatorio All
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Mobile App    │    │  Django Backend │    │  Automation     │
-│  (React Native) │◄──►│     (API)       │◄──►│   (Selenium)    │
+│   Mobile App    │    │  Django Backend │    │  Allende Portal │
+│  (React Native) │◄──►│     (API)       │◄──►│      (API)      │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                       │                     
          │                       │                     
@@ -58,7 +58,6 @@ This system helps patients find and manage medical appointments at Sanatorio All
 - **Node.js 18+**
 - **PostgreSQL 15+**
 - **Docker & Docker Compose**
-- **Chrome/Chromium** (for Selenium automation)
 
 ### External Services
 
@@ -137,22 +136,6 @@ Create a `.env` file in `mobile/allende/`:
 ```bash
 EXPO_PUBLIC_API_HOST=http://localhost:8000
 ```
-
-### 4. Selenium Setup (for Automation)
-
-#### Using Docker (Recommended)
-
-```bash
-# For x86 systems
-make run-chrome-x86
-
-# For ARM systems (M1/M2 Macs)
-make run-chrome-arm
-```
-
-#### Manual Setup
-
-Install Chrome/Chromium and ChromeDriver on your system.
 
 ## 🚀 Running the Application
 
