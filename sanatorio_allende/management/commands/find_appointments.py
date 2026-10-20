@@ -13,6 +13,11 @@ from sanatorio_allende.services.appointment_handler import (
 )
 from sanatorio_allende.services.auth import AllendeAuthService
 
+# Allende requires this to identify the calling system. Without it the API still
+# answers 200 with an empty result set and no validation messages, so the search
+# silently finds nothing instead of failing.
+ALLENDE_CLIENT_SYSTEM_ID = 2
+
 
 class Command(BaseCommand):
     help = "Find medical appointments"
@@ -105,6 +110,7 @@ class Command(BaseCommand):
                     "IdEspecialidad": appointment_to_find.id_especialidad,
                     "IdTipoRecurso": appointment_to_find.id_tipo_recurso,
                     "ControlarEdad": False,
+                    "IdSistemaCliente": ALLENDE_CLIENT_SYSTEM_ID,
                     "IdFinanciador": patient.id_financiador,
                     "IdPlan": patient.id_plan,
                     "Prestaciones": [
