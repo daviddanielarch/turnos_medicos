@@ -21,6 +21,7 @@ from conftest import (
     TEST_TIPO_PRESTACION_ID,
     TEST_TIPO_RECURSO_ID,
     TEST_TIPO_TURNO_ID,
+    FakeAllende,
 )
 from django.urls import reverse
 from django.utils import timezone
@@ -137,31 +138,6 @@ class TestDoctorListView:
         assert data["success"] is True
         assert "doctors" in data
         assert len(data["doctors"]["Profesionales"]) == 0
-
-    @pytest.mark.django_db
-    @patch("sanatorio_allende.allende_api.requests.post")
-    def test_get_doctors_expired_allende_token(
-        self, mock_post: Any, client: Any, patient: PacienteAllende
-    ) -> None:
-        """Allende answers 401 with an empty body when the patient token expired"""
-        mock_response = type(
-            "MockResponse",
-            (),
-            {
-                "status_code": 401,
-                "json": lambda self: (_ for _ in ()).throw(
-                    requests.exceptions.JSONDecodeError("Expecting value", "", 0)
-                ),
-            },
-        )()
-        mock_post.return_value = mock_response
-
-        url = reverse("sanatorio_allende:api_doctors")
-        response = client.get(url, {"patient_id": patient.id, "pattern": "barrer"})
-
-        assert response.status_code == 401
-        data = json.loads(response.content)
-        assert data["success"] is False
 
 
 class TestAppointmentTypeListView:
@@ -1204,15 +1180,11 @@ class TestConfirmAppointmentView:
         assert data["error"] == "Appointment is already confirmed"
 
     @pytest.mark.django_db
-    @patch("sanatorio_allende.allende_api.requests.post")
     def test_post_confirm_appointment_unauthorized(
-        self, mock_post: Any, client: Any, best_appointment_found: Any
+        self, client: Any, best_appointment_found: Any, fake_allende: FakeAllende
     ) -> None:
-        """Test POST request when the Allende API returns unauthorized"""
-        # Mock the unauthorized response from the Allende API
-        from sanatorio_allende.allende_api import UnauthorizedException
-
-        mock_post.side_effect = UnauthorizedException()
+        """Test POST request when Allende rejects both the token and a new login"""
+        fake_allende.password = "changed-in-the-portal"
 
         url = reverse("sanatorio_allende:api_appointment")
         data = {"appointment_id": best_appointment_found.id}
@@ -1419,21 +1391,17 @@ class TestAppointmentViewDelete:
         assert response.status_code == 401
 
     @pytest.mark.django_db
-    @patch("sanatorio_allende.allende_api.requests.post")
     def test_delete_appointment_unauthorized(
-        self, mock_post: Any, client: Any, best_appointment_found: Any
+        self, client: Any, best_appointment_found: Any, fake_allende: FakeAllende
     ) -> None:
-        """Test DELETE request when the Allende API returns unauthorized"""
+        """Test DELETE request when Allende rejects both the token and a new login"""
         # Mark the appointment as confirmed first
         best_appointment_found.confirmed = True
         best_appointment_found.confirmed_at = timezone.now()
         best_appointment_found.confirmed_id_turno = "12345"
         best_appointment_found.save()
 
-        # Mock the unauthorized response from the Allende API
-        from sanatorio_allende.allende_api import UnauthorizedException
-
-        mock_post.side_effect = UnauthorizedException()
+        fake_allende.password = "changed-in-the-portal"
 
         url = reverse("sanatorio_allende:api_appointment")
         data = {"appointment_id": best_appointment_found.id}

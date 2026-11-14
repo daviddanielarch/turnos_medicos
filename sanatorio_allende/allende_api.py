@@ -100,7 +100,7 @@ class Allende:
 
         access_token = self._request_access_token(user, password)
         if not access_token:
-            raise Exception("Check username or password")
+            raise UnauthorizedException("Check username or password")
         self.auth_header = f"Bearer {access_token}"
 
         response = requests.get(

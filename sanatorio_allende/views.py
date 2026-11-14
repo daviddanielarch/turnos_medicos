@@ -12,6 +12,7 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
 from sanatorio_allende.allende_api import Allende, UnauthorizedException
+from sanatorio_allende.services.auth import AllendeAuthService
 
 from .models import (
     BestAppointmentFound,
@@ -74,9 +75,10 @@ class DoctorListView(LoginRequiredMixin, View):
                 },
                 status=401,
             )
-        allende = Allende(auth_header=patient.token)
         try:
-            doctors = allende.get_doctors(pattern=pattern)
+            doctors = AllendeAuthService(patient).call(
+                lambda allende: allende.get_doctors(pattern=pattern)
+            )
             return JsonResponse({"success": True, "doctors": doctors})
         except UnauthorizedException:
             return JsonResponse(
@@ -119,7 +121,6 @@ class AppointmentTypeListView(LoginRequiredMixin, View):
                 status=401,
             )
 
-        allende = Allende(auth_header=patient.token)
         if (
             not request.GET.get("id_especialidad")
             or not request.GET.get("id_servicio")
@@ -137,10 +138,12 @@ class AppointmentTypeListView(LoginRequiredMixin, View):
         id_sucursal = request.GET["id_sucursal"]
 
         try:
-            appointment_types = allende.get_available_appointment_types(
-                id_especialidad=id_especialidad,
-                id_servicio=id_servicio,
-                id_sucursal=id_sucursal,
+            appointment_types = AllendeAuthService(patient).call(
+                lambda allende: allende.get_available_appointment_types(
+                    id_especialidad=id_especialidad,
+                    id_servicio=id_servicio,
+                    id_sucursal=id_sucursal,
+                )
             )
             return JsonResponse(
                 {"success": True, "appointment_types": appointment_types}
@@ -716,7 +719,6 @@ class AppointmentView(LoginRequiredMixin, View):
         assert isinstance(patient.id_paciente, str)
         assert isinstance(patient.id_financiador, int)
         assert isinstance(patient.id_plan, int)
-        allende = Allende(auth_header=patient.token)
 
         appointment_data = {
             "CriterioBusquedaDto": {
@@ -752,7 +754,9 @@ class AppointmentView(LoginRequiredMixin, View):
         }
 
         try:
-            result = allende.book_appointment(appointment_data)
+            result = AllendeAuthService(patient).call(
+                lambda allende: allende.book_appointment(appointment_data)
+            )
             if result.id_turno is None:
                 print(result.data)
                 return JsonResponse(
@@ -828,11 +832,13 @@ class AppointmentView(LoginRequiredMixin, View):
         assert isinstance(patient.id_paciente, str)
         assert isinstance(patient.id_financiador, int)
         assert isinstance(patient.id_plan, int)
-        assert isinstance(appointment.confirmed_id_turno, int)
-        allende = Allende(auth_header=patient.token)
+        confirmed_id_turno = appointment.confirmed_id_turno
+        assert isinstance(confirmed_id_turno, int)
 
         try:
-            response = allende.cancel_appointment(appointment.confirmed_id_turno)
+            response = AllendeAuthService(patient).call(
+                lambda allende: allende.cancel_appointment(confirmed_id_turno)
+            )
             if not response.IsOk:
                 return JsonResponse(
                     {"success": False, "error": response.Message},
