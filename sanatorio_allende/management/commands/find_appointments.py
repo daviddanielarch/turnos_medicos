@@ -1,9 +1,10 @@
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db import connection
+from sentry_sdk.crons import monitor
 
 from sanatorio_allende.allende_api import Allende
 from sanatorio_allende.models import FindAppointment, PacienteAllende
@@ -13,10 +14,32 @@ from sanatorio_allende.services.appointment_handler import (
 )
 from sanatorio_allende.services.auth import AllendeAuthService
 
+if TYPE_CHECKING:
+    from sentry_sdk._types import MonitorConfig
+
 # Allende requires this to identify the calling system. Without it the API still
 # answers 200 with an empty result set and no validation messages, so the search
 # silently finds nothing instead of failing.
 ALLENDE_CLIENT_SYSTEM_ID = 2
+
+# Sentry alerts when the job stops checking in. Nothing else notices a job that
+# simply is not running any more, and without it no appointment is searched and
+# no Allende token is renewed.
+SENTRY_MONITOR_SLUG = "buscar-turnos"
+SENTRY_MONITOR_CONFIG: "MonitorConfig" = {
+    # Must be the schedule Railway runs this command on
+    # (terraform/configs/buscar_turnos.json), or Sentry expects runs that never come.
+    "schedule": {"type": "crontab", "value": "*/5 * * * *"},
+    "timezone": "UTC",
+    # Minutes a run may start late before it counts as missed
+    "checkin_margin": 5,
+    # Minutes a run may take before it counts as hung
+    "max_runtime": 10,
+    # Railway skips a run while the previous one is still going, so one missed or
+    # failed run is not worth an alert; three in a row are.
+    "failure_issue_threshold": 3,
+    "recovery_threshold": 1,
+}
 
 
 class Command(BaseCommand):
@@ -66,6 +89,7 @@ class Command(BaseCommand):
 
         return False
 
+    @monitor(monitor_slug=SENTRY_MONITOR_SLUG, monitor_config=SENTRY_MONITOR_CONFIG)
     def handle(self, *args: Any, **options: Any) -> None:
         if not self.check_database_connectivity():
             self.stdout.write(
