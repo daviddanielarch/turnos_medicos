@@ -1,4 +1,7 @@
+import base64
 from datetime import timedelta
+from typing import Any, Iterator, Optional
+from unittest.mock import MagicMock, patch
 
 import pytest
 from django.contrib.auth.models import User
@@ -29,6 +32,8 @@ TEST_PLANTILLA_TURNO_ID = 10
 TEST_CONFIRMED_ID_TURNO = 100
 TEST_ID_PLANTILLA_TURNO = 81268
 TEST_ID_ITEM_PLANTILLA = 767071
+TEST_PATIENT_PASSWORD = "testpass123"
+TEST_FRESH_ALLENDE_TOKEN = "Bearer fresh-token"
 
 
 @pytest.fixture
@@ -71,7 +76,7 @@ def patient(user: User) -> PacienteAllende:
         name="Juan Pérez",
         id_paciente=str(TEST_PATIENT_ID),
         docid="12345678",
-        password="testpass123",
+        password=TEST_PATIENT_PASSWORD,
         token="test_auth_token_123",
         id_financiador=TEST_FINANCIADOR_ID,
         id_plan=TEST_PLAN_ID,
@@ -121,3 +126,88 @@ def device_registration(user: User) -> DeviceRegistration:
     return DeviceRegistration.objects.create(
         user=user, push_token="test_push_token_123", platform="expo", is_active=True
     )
+
+
+class FakeAllende:
+    """
+    Stands in for the Allende HTTP API. It only accepts `valid_token`, and hands
+    that token out to whoever logs in with `password`, so a patient whose stored
+    token differs from `valid_token` is a patient with an expired token.
+    """
+
+    def __init__(self) -> None:
+        self.valid_token = TEST_FRESH_ALLENDE_TOKEN
+        self.password = TEST_PATIENT_PASSWORD
+        self.login_count = 0
+
+    @staticmethod
+    def _response(status_code: int, payload: Any = None) -> MagicMock:
+        response = MagicMock()
+        response.status_code = status_code
+        response.json.return_value = payload
+        return response
+
+    def _is_authorized(self, headers: Optional[dict]) -> bool:
+        return (headers or {}).get("authorization") == self.valid_token
+
+    def post(
+        self,
+        url: str,
+        headers: Optional[dict] = None,
+        json: Optional[dict] = None,
+        **kwargs: Any,
+    ) -> MagicMock:
+        if url.endswith("/backend/Token"):
+            self.login_count += 1
+            password = base64.b64decode((json or {})["Password"]).decode("utf-8")
+            if password != self.password:
+                return self._response(400, {"Error": "invalid_grant"})
+            access_token = self.valid_token.replace("Bearer ", "")
+            return self._response(200, {"Access_token": access_token, "Error": ""})
+
+        if not self._is_authorized(headers):
+            return self._response(401)
+        if "ObtenerEspecialidadServicioProfesionalPorCriterio" in url:
+            return self._response(
+                200,
+                {
+                    "Especialidades": [],
+                    "Profesionales": [{"Nombre": "GOBELET JAQUELINA MARICEL"}],
+                },
+            )
+        if url.endswith("turnos/Asignar"):
+            return self._response(200, {"Entidad": {"Id": TEST_CONFIRMED_ID_TURNO}})
+        if url.endswith("turnos/CancelarTurno"):
+            return self._response(200, {"IsOk": True, "Message": ""})
+        raise AssertionError(f"Unexpected POST to {url}")
+
+    def get(self, url: str, headers: Optional[dict] = None, **kwargs: Any) -> MagicMock:
+        if not self._is_authorized(headers):
+            return self._response(401)
+        if "GetInfoSeguridadCurrentUser" in url:
+            return self._response(200, {"IdPaciente": TEST_PATIENT_ID})
+        if "Paciente/ObtenerPorId" in url:
+            return self._response(
+                200,
+                {
+                    "CoberturaPorDefecto": {
+                        "IdMutual": TEST_FINANCIADOR_ID,
+                        "IdPlanMutual": TEST_PLAN_ID,
+                    }
+                },
+            )
+        if "PrestacionMedica" in url:
+            return self._response(
+                200, [{"Id": TEST_PRESTACION_ID, "Nombre": "CONSULTA"}]
+            )
+        return self._response(200, {})
+
+
+@pytest.fixture
+def fake_allende() -> Iterator[FakeAllende]:
+    """Replace the Allende HTTP API with a fake that rejects the patient's stored token"""
+    fake = FakeAllende()
+    with patch(
+        "sanatorio_allende.allende_api.requests.post", side_effect=fake.post
+    ), patch("sanatorio_allende.allende_api.requests.get", side_effect=fake.get):
+        yield fake
