@@ -19,9 +19,6 @@ resource "railway_variable" "buscar_turnos_vars" {
     "PGPORT"     = "5432"
     "PGUSER"     = "postgres"
     "PGPASSWORD" = data.aws_secretsmanager_secret_version.postgres_password.secret_string
-
-    # Selenium Configuration
-    "SELENIUM_HOSTNAME" = "standalone-chrome.railway.internal"
   }
 
   service_id     = railway_service.buscar_turnos.id

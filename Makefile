@@ -17,12 +17,6 @@ format:
 typecheck:
 	mypy --ignore-missing-imports .
 
-run-chrome-x86:
-	docker-compose -f docker-compose-selenium.yml up -d chrome-x86
-
-run-chrome-arm:
-	docker-compose -f docker-compose-selenium.yml up -d chrome-arm
-
 psql:
 	PGPASSWORD=pgpassword psql -h localhost -p 5433 -U pguser liftoff
 
